@@ -89,14 +89,8 @@ not fire for a console `coc` start.
 
 ## Open items
 
-0. Stencil mask from the overlay (idea, not built): where the overlay is fully opaque the scene behind it
-   is never seen, so those pixels need not be shaded. The VR engine already draws a hidden-area mesh at the
-   start of the frame that writes depth and stencil `0xFF`, and many passes skip stencil-`0xFF` pixels, so
-   the overlay's opaque region could be added to that mask. Fully opaque share of the canvas: Daedric 49%,
-   Iron 37%, Steel 20%, Elven 22%, Hide 18%, Mage Hood 8%. It needs a draw hooked into the engine's
-   hidden-area pass (open-shaders already hooks it), per-eye mapping of the head-locked plane, a mask
-   eroded for safety, and switched off while the overlay is fading, below full opacity, or hidden.
-
+0. Opaque-region mask (design only): skip shading where the overlay is fully opaque, flat and VR, through
+   the open-shaders `RenderWorld` hook. See [OPAQUE_MASK.md](OPAQUE_MASK.md).
 1. Verify VR parallax and the visor plane on a real headset; the null driver reports zero eye separation.
 2. Per-armor sound profiles: derive defaults from armor type, weight, material keywords and slot
    coverage, with an optional override file.
