@@ -27,7 +27,11 @@ namespace HONG
 		float GetFloat(const CSimpleIniA& a_ini, const char* a_section, const char* a_key, float a_default, float a_min, float a_max)
 		{
 			const auto value = static_cast<float>(a_ini.GetDoubleValue(a_section, a_key, a_default));
-			return std::clamp(value, a_min, a_max);
+			const auto clamped = std::isfinite(value) ? std::clamp(value, a_min, a_max) : a_default;
+			if (clamped != value) {
+				logger::warn("{} {} = {} is outside [{}, {}]; using {}.", a_section, a_key, value, a_min, a_max, clamped);
+			}
+			return clamped;
 		}
 
 		const char* StyleName(AnimStyle a_style)
@@ -192,8 +196,8 @@ namespace HONG
 		debugTools = ini.GetBoolValue("General", "bDebugTools", debugTools);
 
 		opacity = GetFloat(ini, "Appearance", "fOpacity", opacity, 0.0f, 1.0f);
-		scale = GetFloat(ini, "Appearance", "fScale", scale, 0.25f, 4.0f);
-		verticalOffset = GetFloat(ini, "Appearance", "fVerticalOffset", verticalOffset, -0.5f, 0.5f);
+		scale = GetFloat(ini, "Appearance", "fScale", scale, 0.5f, 3.0f);
+		verticalOffset = GetFloat(ini, "Appearance", "fVerticalOffset", verticalOffset, -0.3f, 0.3f);
 		extendEdges = ini.GetBoolValue("Appearance", "bExtendEdges", extendEdges);
 
 		reactiveLight = ini.GetBoolValue("Light", "bReactive", reactiveLight);
