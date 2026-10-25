@@ -24,8 +24,28 @@ namespace HONG::Renderer
 		ID3D11DeviceContext* g_d3dContext = nullptr;
 
 		std::vector<DrawLayer> g_layers;
+		float g_appliedVrDepth{ 0.0f };
+		float g_appliedVrCoverage{ 0.0f };
 
 		// Stretches the art's outermost pixel rows and columns over the part of the display the art does not reach.
+		// The helper clamps to these ranges and reads a value of 0 or less as "use the global plane".
+		constexpr float kVrDepthMin = 0.2f;
+		constexpr float kVrDepthMax = 5.0f;
+		constexpr float kVrCoverageMin = 0.2f;
+		constexpr float kVrCoverageMax = 1.6f;
+
+		void ApplyVrPlane()
+		{
+			const auto settings = Settings::GetSingleton();
+			const float depth = std::isfinite(settings->vrDepth) ? std::clamp(settings->vrDepth, kVrDepthMin, kVrDepthMax) : g_appliedVrDepth;
+			const float coverage = std::isfinite(settings->vrCoverage) ? std::clamp(settings->vrCoverage, kVrCoverageMin, kVrCoverageMax) : g_appliedVrCoverage;
+			if (depth != g_appliedVrDepth || coverage != g_appliedVrCoverage) {
+				g_vrHud.SetHudPlane(depth, coverage);
+				g_appliedVrDepth = depth;
+				g_appliedVrCoverage = coverage;
+			}
+		}
+
 		void DrawEdgeExtension(ImDrawList* a_drawList, ImTextureID a_texture, ImVec2 a_min, ImVec2 a_max, ImVec2 a_display, ImU32 a_color)
 		{
 			constexpr float kEdgeU = 0.5f / kArtWidth;
@@ -153,6 +173,7 @@ namespace HONG::Renderer
 					if (!g_vrHud.IsConnected()) {
 						return;
 					}
+					ApplyVrPlane();
 					// Draws with no layers too, so the panel clears its last frame.
 					g_vrHud.RenderHud(g_d3dDevice, g_d3dContext, display, [display]() {
 						GImGui->NavWindowingTarget = nullptr;
@@ -186,8 +207,9 @@ namespace HONG::Renderer
 			logger::warn("ImGuiVRHelper not found or registration failed - overlay disabled in VR.");
 			return;
 		}
-		const auto settings = Settings::GetSingleton();
-		g_vrHud.SetHudPlane(settings->vrDepth, settings->vrCoverage);
+		g_appliedVrDepth = 0.0f;
+		g_appliedVrCoverage = 0.0f;
+		ApplyVrPlane();
 		logger::info("Connected to ImGuiVRHelper (per-client HUD plane {}).",
 			g_vrHud.HasHudPlane() ? "supported" : "unsupported - using the helper's global plane");
 	}
