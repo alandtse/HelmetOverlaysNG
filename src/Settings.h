@@ -58,16 +58,16 @@ namespace HONG
 		bool extendEdges{ true };      // stretch the art's edge pixels over any gap the scale or offset opens
 
 		// [Light] darken the art in dark places
-		bool reactiveLight{ false };
-		float lightStrength{ 0.6f };         // darkening at zero light, 0 = none, 1 = black
-		float lightFadeSeconds{ 1.5f };      // time to move to a new light level
-		float lightIntervalSeconds{ 0.5f };  // how often the light level is sampled
+		bool reactiveLight{ true };
+		float lightStrength{ 0.25f };        // darkening at zero light, 0 = none, 1 = black
+		float lightFadeSeconds{ 1.0f };      // time to move to a new light level
+		float lightIntervalSeconds{ 1.0f };  // how often the light level is sampled
 
 		// [Animation]
 		AnimStyle animStyle{ AnimStyle::kSettle };
 		float fadeInSeconds{ 0.35f };
 		float fadeOutSeconds{ 0.20f };
-		bool sway{ true };
+		bool sway{ false };
 		bool motion{ true };          // jump, strafe and sprint nudges (flat only)
 		float motionStrength{ 1.0f };
 		float swayStrength{ 1.0f };
