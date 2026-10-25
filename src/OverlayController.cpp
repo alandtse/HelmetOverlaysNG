@@ -290,9 +290,10 @@ namespace HONG
 			out.tint = 1.0f - settings->lightStrength * _lightDarkness;
 			const auto motion = _motion.Current();
 			out.offset = { _sway.x + motion.x, _sway.y + motion.y };
+			out.scale = settings->scale;
 			switch (settings->animStyle) {
 			case AnimStyle::kSettle:
-				out.scale = 1.0f + (1.0f - eased) * kSettleScale;
+				out.scale = settings->scale * (1.0f + (1.0f - eased) * kSettleScale);
 				break;
 			case AnimStyle::kSlide:
 				out.offset.y -= (1.0f - eased) * kSlideDistance;

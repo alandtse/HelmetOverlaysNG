@@ -103,8 +103,8 @@ namespace HONG::UI
 			if (ImGuiMCP::CollapsingHeader("Appearance", ImGuiMCP::ImGuiTreeNodeFlags_DefaultOpen)) {
 				ImGuiMCP::SliderFloat("Opacity", &s->opacity, 0.0f, 1.0f, "%.2f", 0);
 				Tip("Overall strength of the overlay art (the original MCM's \"darkness\").");
-				ImGuiMCP::SliderFloat("Scale", &s->scale, 0.5f, 2.0f, "%.2f", 0);
-				Tip("Uniform scale about the screen center. 1.0 covers the screen with the 16:9 art.");
+				ImGuiMCP::SliderFloat("Scale", &s->scale, 0.5f, 3.0f, "%.2f", 0);
+				Tip("Uniform scale about the screen center. 1.0 covers the screen with the 16:9 art; larger crops the edges.");
 			}
 
 			if (ImGuiMCP::CollapsingHeader("Light", ImGuiMCP::ImGuiTreeNodeFlags_DefaultOpen)) {
