@@ -22,24 +22,18 @@ namespace logger = SKSE::log;
 
 #include "Debug.h"
 #include "Settings.h"
+#include "TextMatch.h"
 #include "UI.h"
 
 namespace HONG::UI
 {
 	namespace
 	{
-		bool IContains(const std::string& a_haystack, const char* a_needle)
+		// A text box for narrowing a list. The SMF API has no PushID, so each page passes a distinct a_id.
+		void FilterField(const char* a_id, const char* a_hint, char* a_buffer, std::size_t a_size)
 		{
-			if (!a_needle || !*a_needle) {
-				return true;
-			}
-			const std::string needle(a_needle);
-			const auto it = std::ranges::search(a_haystack, needle, [](char a, char b) {
-				return std::tolower(static_cast<unsigned char>(a)) == std::tolower(static_cast<unsigned char>(b));
-			});
-			return !it.empty();
+			ImGuiMCP::InputTextWithHint(a_id, a_hint, a_buffer, a_size, 0, nullptr, nullptr);
 		}
-
 		void Tip(const char* a_text)
 		{
 			if (ImGuiMCP::IsItemHovered(0)) {
@@ -88,6 +82,12 @@ namespace HONG::UI
 			Tip("Master switch. Off hides the overlay (and sound changes) without unloading the plugin.");
 			ImGuiMCP::Checkbox("First person only (flat)", &s->firstPersonOnly);
 			Tip("Flat game: only draw in first-person camera. VR is always first person.");
+			ImGuiMCP::Checkbox("Skip shading behind opaque overlay (experimental)", &s->opaqueMask);
+			Tip("Lets a renderer plugin that supports it (Open Shaders) skip drawing the scene behind the overlay's fully opaque pixels. Flat only for now. Applies when the helmet is next equipped.");
+			ImGuiMCP::BeginDisabled(!s->opaqueMask);
+			ImGuiMCP::SliderInt("Mask safety margin (px)", &s->maskMarginPx, 4, 32, "%d", 0);
+			Tip("How far inside the opaque area the mask stops. Larger is safer against fringes, smaller saves a little more. Applies when the helmet is next equipped.");
+			ImGuiMCP::EndDisabled();
 			ImGuiMCP::Checkbox("Suppress original Helmet Overlays widget", &s->suppressOriginal);
 			Tip("Stops ScribeOverlays.esp's quests on load so its SWF doesn't draw a second overlay. Takes effect on the next load.");
 
@@ -169,7 +169,7 @@ namespace HONG::UI
 			ImGuiMCP::Separator();
 
 			static char filter[64]{};
-			ImGuiMCP::InputTextWithHint("##hong_menufilter", "Type to filter menus...", filter, sizeof(filter), 0, nullptr, nullptr);
+			FilterField("##hong_menus_filter", "Type to filter menus...", filter, sizeof(filter));
 
 			ImGuiMCP::BeginDisabled(!s->hideInMenus);
 			static std::vector<std::string> menus;
@@ -178,19 +178,19 @@ namespace HONG::UI
 			}
 			ImGuiMCP::Text("%zu menus registered by the game and mods:", menus.size());
 			for (const auto& name : menus) {
-				if (!IContains(name, filter)) {
+				if (!ContainsNoCase(name, filter)) {
 					continue;
 				}
 				bool hidden = s->IsMenuHidden(name);
-				if (ImGuiMCP::Checkbox(name.c_str(), &hidden)) {
+				if (ImGuiMCP::Checkbox((name + "##hong_menu").c_str(), &hidden)) {
 					s->SetMenuHidden(name, hidden);
 				}
 			}
 
 			for (const auto& name : s->HiddenMenus()) {
-				if (std::ranges::find(menus, name) == menus.end() && IContains(name, filter)) {
+				if (std::ranges::find(menus, name) == menus.end() && ContainsNoCase(name, filter)) {
 					bool hidden = true;
-					if (ImGuiMCP::Checkbox((name + "  (not registered)").c_str(), &hidden) && !hidden) {
+					if (ImGuiMCP::Checkbox((name + "  (not registered)##hong_menu_missing").c_str(), &hidden) && !hidden) {
 						s->SetMenuHidden(name, false);
 					}
 				}
@@ -228,6 +228,7 @@ namespace HONG::UI
 							ImGuiMCP::Text("Overlay see-through: %.0f%%", current.openness * 100.0f);
 						}
 						ImGuiMCP::Text("Sound muffle strength: %.2f", current.strength);
+						ImGuiMCP::Text("Opaque mask: %.0f%% of the overlay", current.maskShare * 100.0f);
 					} else {
 						ImGuiMCP::TextColored({ 1.0f, 0.5f, 0.4f, 1.0f }, "No overlay art found. Paths tried:");
 						for (const auto& path : current.tried) {
@@ -269,7 +270,7 @@ namespace HONG::UI
 				}
 
 				static char filter[64]{};
-				ImGuiMCP::InputTextWithHint("##hong_helmetfilter", "Type to filter helmets...", filter, sizeof(filter), 0, nullptr, nullptr);
+				FilterField("##hong_debug_helmet_filter", "Type to filter helmets...", filter, sizeof(filter));
 
 				static bool missingOnly = false;
 				ImGuiMCP::Checkbox("Only helmets without art", &missingOnly);

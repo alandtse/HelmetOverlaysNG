@@ -19,11 +19,9 @@ namespace HONG
 		constexpr auto kIniPath = "Data\\SKSE\\Plugins\\HelmetOverlaysNG.ini";
 
 		const std::vector<std::string> kDefaultHiddenMenus{
-			"InventoryMenu", "MagicMenu", "ContainerMenu", "BarterMenu", "GiftMenu",
-			"MapMenu", "StatsMenu", "TweenMenu", "Journal Menu", "LevelUp Menu",
-			"Lockpicking Menu", "BookMenu", "Sleep/Wait Menu", "Training Menu",
-			"Crafting Menu", "RaceSex Menu", "Loading Menu", "MainMenu", "Console",
-			"MessageBoxMenu", "FavoritesMenu"
+			"Journal Menu", "MapMenu", "StatsMenu", "LevelUp Menu", "Lockpicking Menu", "Book Menu",
+			"Sleep/Wait Menu", "Training Menu", "Crafting Menu", "RaceSex Menu", "Loading Menu", "Main Menu",
+			"Console", "MessageBoxMenu", "Credits Menu", "Creation Club Menu", "Mod Manager Menu", "TitleSequence Menu"
 		};
 
 		float GetFloat(const CSimpleIniA& a_ini, const char* a_section, const char* a_key, float a_default, float a_min, float a_max)
@@ -140,6 +138,8 @@ namespace HONG
 		enabled = true;
 		overlayRoot = "Interface\\overlays";
 		firstPersonOnly = true;
+		opaqueMask = false;
+		maskMarginPx = 8;
 		hideInMenus = true;
 		suppressOriginal = true;
 		debugTools = debug;  // a view preference, not a tuning value
@@ -173,6 +173,8 @@ namespace HONG
 		enabled = ini.GetBoolValue("General", "bEnabled", enabled);
 		overlayRoot = SafeRoot(ini.GetValue("General", "sOverlayRoot", overlayRoot.c_str()), overlayRoot);
 		firstPersonOnly = ini.GetBoolValue("General", "bFirstPersonOnly", firstPersonOnly);
+		opaqueMask = ini.GetBoolValue("General", "bOpaqueMask", opaqueMask);
+		maskMarginPx = static_cast<int>(GetFloat(ini, "General", "iMaskMarginPx", static_cast<float>(maskMarginPx), 4.0f, 32.0f));
 		hideInMenus = ini.GetBoolValue("General", "bHideInMenus", hideInMenus);
 		suppressOriginal = ini.GetBoolValue("General", "bSuppressOriginal", suppressOriginal);
 		debugTools = ini.GetBoolValue("General", "bDebugTools", debugTools);
@@ -214,6 +216,8 @@ namespace HONG
 		ini.SetBoolValue("General", "bEnabled", enabled);
 		ini.SetValue("General", "sOverlayRoot", overlayRoot.c_str());
 		ini.SetBoolValue("General", "bFirstPersonOnly", firstPersonOnly);
+		ini.SetBoolValue("General", "bOpaqueMask", opaqueMask);
+		ini.SetLongValue("General", "iMaskMarginPx", maskMarginPx);
 		ini.SetBoolValue("General", "bHideInMenus", hideInMenus);
 		ini.SetBoolValue("General", "bSuppressOriginal", suppressOriginal);
 		ini.SetBoolValue("General", "bDebugTools", debugTools);

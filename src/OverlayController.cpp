@@ -33,6 +33,9 @@ namespace HONG
 			}
 		}
 
+		constexpr float kMaskMinOpacity = 0.999f;
+		constexpr float kMaskMaxStep = 0.003f;  // display fraction per frame, below the 8 px default margin
+
 		float SmoothStep(float a_t)
 		{
 			a_t = std::clamp(a_t, 0.0f, 1.0f);
@@ -167,7 +170,12 @@ namespace HONG
 			_diag.strength = _muffleStrength;
 		}
 		logger::info("Overlay '{}' for '{}' (see-through {:.0f}%, muffle strength {:.2f})", *path, armor->GetName(), openness * 100.0f, _muffleStrength);
-		_layers.push_back({ std::move(srv), armor, 0.0f, true });
+		auto mask = TextureCache::MaskFor(*path);
+		{
+			std::scoped_lock lock{ _diagLock };
+			_diag.maskShare = mask.share;
+		}
+		_layers.push_back({ std::move(srv), armor, 0.0f, true, std::move(mask) });
 	}
 
 	void OverlayController::UpdateSway(float a_dt)
@@ -244,5 +252,16 @@ namespace HONG
 			}
 			a_out.push_back(out);
 		}
+
+		_mask = {};
+		if (settings->opaqueMask && !REL::Module::IsVR() && gated && settings->opacity >= kMaskMinOpacity && _layers.size() == 1 && a_out.size() == 1) {
+			const auto& layer = _layers.front();
+			const auto& drawn = a_out.front();
+			const bool steady = std::abs(drawn.offset.x - _lastMaskOffset.x) <= kMaskMaxStep && std::abs(drawn.offset.y - _lastMaskOffset.y) <= kMaskMaxStep;
+			if (layer.wanted && layer.progress >= 1.0f && layer.mask.srv && steady) {
+				_mask = { layer.mask, drawn.offset, drawn.scale, true };
+			}
+		}
+		_lastMaskOffset = a_out.empty() ? ImVec2{ 0, 0 } : a_out.front().offset;
 	}
 }

@@ -73,7 +73,7 @@ add_rules("commonlibsse-ng.plugin", {
 add_files("src/**.cpp|UI.cpp")
 add_headerfiles("src/**.h")
 
-add_includedirs("src")
+add_includedirs("src", "api")
 set_pcxxheader("src/pch.h")
 
 -- Auto-deploy on build: SkyrimVRPluginTargets / SkyrimPluginTargets

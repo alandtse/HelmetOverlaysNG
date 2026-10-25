@@ -8,6 +8,10 @@
 
 namespace HONG
 {
+	// Overlay canvas size the art is authored at; the flat draw and the opaque mask both map from it.
+	inline constexpr float kArtWidth = 1920.0f;
+	inline constexpr float kArtHeight = 1080.0f;
+
 	// One overlay quad to draw this frame, in unit screen space: the renderer
 	// fits it to the display (cover) and applies scale/offset.
 	struct DrawLayer
@@ -39,6 +43,17 @@ namespace HONG
 		// 0..1 scale on the sound effects for the worn helmet's type (1 when disabled).
 		float MuffleStrength() const { return _muffleStrength; }
 
+		// The opaque mask for the frame being rendered next: allowed only while a single, fully faded
+		// in overlay at full opacity is shown and has not moved much since the last frame.
+		struct MaskCandidate
+		{
+			TextureCache::Mask mask;
+			ImVec2 offset{ 0, 0 };
+			float scale{ 1.0f };
+			bool allowed{ false };
+		};
+		const MaskCandidate& GetMaskCandidate() const { return _mask; }
+
 		void MarkDirty() { _dirty.store(true, std::memory_order_relaxed); }
 
 		// Debug: draw this armor's overlay regardless of what is worn (0 = off, use the
@@ -54,6 +69,7 @@ namespace HONG
 			bool previewing{ false };
 			Resolver::Resolution resolution;
 			float openness{ -1.0f };  // overlay see-through fraction, -1 unknown
+			float maskShare{ 0.0f };  // fraction of the overlay in the opaque mask
 			float strength{ 1.0f };   // how much this helmet muffles sound
 		};
 		Diagnostic GetDiagnostic() const;
@@ -67,6 +83,7 @@ namespace HONG
 			const RE::TESObjectARMO* armor{ nullptr };
 			float progress{ 0.0f };
 			bool wanted{ true };
+			TextureCache::Mask mask;
 		};
 
 		bool Gated() const;
@@ -80,6 +97,8 @@ namespace HONG
 		mutable std::mutex _diagLock;
 		Diagnostic _diag;
 		float _wornAmount{ 0.0f };
+		MaskCandidate _mask;
+		ImVec2 _lastMaskOffset{ 0, 0 };
 		float _muffleStrength{ 1.0f };
 		float _timeSinceRefresh{ 0.0f };
 

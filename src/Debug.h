@@ -64,6 +64,7 @@ namespace HONG::Debug
 		std::vector<std::string> tried;
 		float openness{ -1.0f };  // overlay see-through fraction, -1 unknown
 		float strength{ 1.0f };   // sound muffling scale for this helmet
+		float maskShare{ 0.0f };  // fraction of the overlay in the opaque mask (0 when not built)
 	};
 	Current GetCurrent();
 

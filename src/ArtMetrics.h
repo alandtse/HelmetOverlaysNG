@@ -5,6 +5,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <vector>
 
 namespace HONG::ArtMetrics
 {
@@ -15,4 +16,19 @@ namespace HONG::ArtMetrics
 	// alpha of a DXT3 or DXT5 DDS file held in memory. Returns -1 for anything else
 	// (other formats, a truncated or malformed file).
 	float SeeThroughFraction(const std::uint8_t* a_data, std::size_t a_size);
+
+	// One texel per 4x4 DDS block: 255 where every pixel of the block has alpha 255 and so does every
+	// block within the margin, 0 elsewhere. The image border counts as not opaque, so a margin also trims
+	// the edge. width and height are the block grid (480x270 for a 1920x1080 overlay).
+	struct OpaqueMask
+	{
+		std::uint32_t width{ 0 };
+		std::uint32_t height{ 0 };
+		std::vector<std::uint8_t> pixels;
+		float share{ 0.0f };  // fraction of texels that are 255
+	};
+
+	// Builds the mask from a DXT3 or DXT5 DDS file in memory. a_marginBlocks is the erosion radius in
+	// blocks (4 px each). Returns false for any other format or a truncated or malformed file.
+	bool BuildOpaqueMask(const std::uint8_t* a_data, std::size_t a_size, std::uint32_t a_marginBlocks, OpaqueMask& a_out);
 }

@@ -39,6 +39,9 @@ namespace HONG
 		std::string overlayRoot{ "Interface\\overlays" };
 		bool firstPersonOnly{ true };
 		bool hideInMenus{ true };
+		// Publish the overlay's fully opaque region so a renderer plugin can skip shading behind it.
+		bool opaqueMask{ false };
+		int maskMarginPx{ 8 };
 		// Stop ScribeOverlays.esp's quests so its SWF widget doesn't draw a second overlay.
 		bool suppressOriginal{ true };
 		// Shows the debug page in the in-game menu (live armor/path info + manual helmet preview).

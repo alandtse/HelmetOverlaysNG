@@ -7,6 +7,7 @@
 #include "ImGuiVRHelperClientSDK.h"
 #include "Muffle.h"
 #include "OverlayController.h"
+#include "OverlayMask.h"
 #include "Settings.h"
 #include "TextureCache.h"
 
@@ -15,8 +16,6 @@ namespace HONG::Renderer
 	namespace
 	{
 		constexpr float kMaxFrameDelta = 0.1f;
-		constexpr float kArtWidth = 1920.0f;
-		constexpr float kArtHeight = 1080.0f;
 
 		ImGuiVRHelperPluginAPI::Client g_vrHud;  // head-locked HUD plane (VR)
 
@@ -107,6 +106,8 @@ namespace HONG::Renderer
 
 				static const auto screenSize = RE::BSGraphics::Renderer::GetScreenSize();
 				const ImVec2 display{ static_cast<float>(screenSize.width), static_cast<float>(screenSize.height) };
+
+				OverlayMaskExport::Publish(OverlayController::GetSingleton()->GetMaskCandidate(), display, REL::Module::IsVR());
 
 				if (REL::Module::IsVR()) {
 					if (!g_vrHud.IsConnected()) {

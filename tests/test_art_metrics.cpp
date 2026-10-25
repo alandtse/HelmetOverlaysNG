@@ -4,50 +4,17 @@
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
 
-#include <cstring>
 #include <vector>
 
 #include "ArtMetrics.h"
+#include "dds_fixture.h"
 
 using Catch::Approx;
 using HONG::ArtMetrics::SeeThroughFraction;
 
-namespace
-{
-	constexpr std::size_t kHeader = 128;
-
-	std::vector<std::uint8_t> MakeDds(std::uint32_t a_width, std::uint32_t a_height, const char (&a_fourCC)[5], const std::vector<std::uint8_t>& a_blocks)
-	{
-		std::vector<std::uint8_t> file(kHeader + a_blocks.size(), 0);
-		std::memcpy(file.data(), "DDS ", 4);
-		std::memcpy(file.data() + 12, &a_height, 4);
-		std::memcpy(file.data() + 16, &a_width, 4);
-		std::memcpy(file.data() + 84, a_fourCC, 4);
-		std::memcpy(file.data() + kHeader, a_blocks.data(), a_blocks.size());
-		return file;
-	}
-
-	// One DXT5 block: alpha endpoints, 3-bit indices (pixel p at bits 3p), 8 bytes of color.
-	std::vector<std::uint8_t> Dxt5Block(std::uint8_t a_a0, std::uint8_t a_a1, std::uint64_t a_indices)
-	{
-		std::vector<std::uint8_t> block(16, 0);
-		block[0] = a_a0;
-		block[1] = a_a1;
-		for (std::size_t i = 0; i < 6; ++i) {
-			block[2 + i] = static_cast<std::uint8_t>((a_indices >> (8 * i)) & 0xFF);
-		}
-		return block;
-	}
-
-	std::vector<std::uint8_t> Dxt3Block(std::uint8_t a_fill)
-	{
-		std::vector<std::uint8_t> block(16, 0);
-		for (std::size_t i = 0; i < 8; ++i) {
-			block[i] = a_fill;
-		}
-		return block;
-	}
-}
+using fixture::Dxt3Block;
+using fixture::Dxt5Block;
+using fixture::MakeDds;
 
 TEST_CASE("an opaque DXT5 block has no see-through pixels", "[art]")
 {

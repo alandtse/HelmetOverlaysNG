@@ -5,6 +5,7 @@
 
 #include "OverlayController.h"
 #include "OverlayResolver.h"
+#include "TextMatch.h"
 
 #include <mutex>
 
@@ -28,17 +29,6 @@ namespace HONG::Debug
 		ScanState g_state = ScanState::kIdle;
 		std::size_t g_next = 0;
 		Coverage g_coverage;
-
-		bool Contains(const std::string& a_haystack, const std::string& a_needle)
-		{
-			if (a_needle.empty()) {
-				return true;
-			}
-			const auto it = std::ranges::search(a_haystack, a_needle, [](char a, char b) {
-				return std::tolower(static_cast<unsigned char>(a)) == std::tolower(static_cast<unsigned char>(b));
-			});
-			return !it.empty();
-		}
 
 		bool BuildEntries()
 		{
@@ -177,7 +167,7 @@ namespace HONG::Debug
 			if (a_missingOnly && entry.art != 0) {
 				continue;
 			}
-			if (!Contains(entry.name, a_filter) && !Contains(entry.plugin, a_filter)) {
+			if (!ContainsNoCase(entry.name, a_filter) && !ContainsNoCase(entry.plugin, a_filter)) {
 				continue;
 			}
 			if (out.size() < a_limit) {
@@ -201,6 +191,7 @@ namespace HONG::Debug
 		out.tried = diag.resolution.tried;
 		out.openness = diag.openness;
 		out.strength = diag.strength;
+		out.maskShare = diag.maskShare;
 		return out;
 	}
 
