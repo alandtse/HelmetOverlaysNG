@@ -207,6 +207,22 @@ namespace HONG
 		_sway.y = std::clamp(_sway.y * decay, -kSwayLimit, kSwayLimit);
 	}
 
+	void OverlayController::UpdateMotion(float a_dt)
+	{
+		const auto settings = Settings::GetSingleton();
+		const auto player = RE::PlayerCharacter::GetSingleton();
+		const auto controls = RE::PlayerControls::GetSingleton();
+		if (!settings->motion || REL::Module::IsVR() || !player || !controls) {
+			_motion.Reset();
+			return;
+		}
+		Motion::State state;
+		state.airborne = player->IsInMidair();
+		state.sprinting = player->AsActorState()->IsSprinting();
+		state.strafe = controls->data.moveInputVec.x;
+		_motion.Update(a_dt, state, settings->motionStrength);
+	}
+
 	void OverlayController::UpdateLight(float a_dt)
 	{
 		const auto settings = Settings::GetSingleton();
@@ -248,6 +264,7 @@ namespace HONG
 		const bool gated = Gated();
 		UpdateSway(a_dt);
 		UpdateLight(a_dt);
+		UpdateMotion(a_dt);
 
 		float worn = 0.0f;
 		for (auto& layer : _layers) {
@@ -271,7 +288,8 @@ namespace HONG
 			out.srv = layer.srv.Get();
 			out.alpha = eased * settings->opacity;
 			out.tint = 1.0f - settings->lightStrength * _lightDarkness;
-			out.offset = _sway;
+			const auto motion = _motion.Current();
+			out.offset = { _sway.x + motion.x, _sway.y + motion.y };
 			switch (settings->animStyle) {
 			case AnimStyle::kSettle:
 				out.scale = 1.0f + (1.0f - eased) * kSettleScale;

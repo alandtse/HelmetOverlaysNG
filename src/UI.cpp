@@ -134,6 +134,11 @@ namespace HONG::UI
 					ImGuiMCP::BeginDisabled(!s->sway);
 					ImGuiMCP::SliderFloat("Sway strength", &s->swayStrength, 0.0f, 4.0f, "%.2f", 0);
 					ImGuiMCP::EndDisabled();
+					ImGuiMCP::Checkbox("Jump, strafe and sprint motion", &s->motion);
+					Tip("Short nudges of the overlay when you jump, strafe or start sprinting, as in the original mod. The opaque mask is off while it moves.");
+					ImGuiMCP::BeginDisabled(!s->motion);
+					ImGuiMCP::SliderFloat("Motion strength", &s->motionStrength, 0.0f, 2.0f, "%.2f", 0);
+					ImGuiMCP::EndDisabled();
 				}
 			}
 

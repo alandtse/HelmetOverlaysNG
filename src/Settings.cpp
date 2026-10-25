@@ -156,6 +156,8 @@ namespace HONG
 		fadeOutSeconds = 0.20f;
 		sway = true;
 		swayStrength = 1.0f;
+		motion = true;
+		motionStrength = 1.0f;
 		vrDepth = 0.6f;
 		vrCoverage = 1.15f;
 		attenuate = true;
@@ -200,6 +202,8 @@ namespace HONG
 		fadeOutSeconds = GetFloat(ini, "Animation", "fFadeOutSeconds", fadeOutSeconds, 0.0f, 5.0f);
 		sway = ini.GetBoolValue("Animation", "bSway", sway);
 		swayStrength = GetFloat(ini, "Animation", "fSwayStrength", swayStrength, 0.0f, 4.0f);
+		motion = ini.GetBoolValue("Animation", "bMotion", motion);
+		motionStrength = GetFloat(ini, "Animation", "fMotionStrength", motionStrength, 0.0f, 2.0f);
 
 		vrDepth = GetFloat(ini, "VR", "fDepthMeters", vrDepth, 0.2f, 5.0f);
 		vrCoverage = GetFloat(ini, "VR", "fCoverage", vrCoverage, 0.2f, 1.6f);
@@ -250,6 +254,8 @@ namespace HONG
 		ini.SetDoubleValue("Animation", "fFadeOutSeconds", fadeOutSeconds);
 		ini.SetBoolValue("Animation", "bSway", sway);
 		ini.SetDoubleValue("Animation", "fSwayStrength", swayStrength);
+		ini.SetBoolValue("Animation", "bMotion", motion);
+		ini.SetDoubleValue("Animation", "fMotionStrength", motionStrength);
 
 		ini.SetDoubleValue("VR", "fDepthMeters", vrDepth);
 		ini.SetDoubleValue("VR", "fCoverage", vrCoverage);

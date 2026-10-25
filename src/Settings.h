@@ -66,6 +66,8 @@ namespace HONG
 		float fadeInSeconds{ 0.35f };
 		float fadeOutSeconds{ 0.20f };
 		bool sway{ true };
+		bool motion{ true };          // jump, strafe and sprint nudges (flat only)
+		float motionStrength{ 1.0f };
 		float swayStrength{ 1.0f };
 
 		// [VR]

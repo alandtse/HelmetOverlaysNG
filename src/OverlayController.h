@@ -4,6 +4,7 @@
 #pragma once
 
 #include "OverlayResolver.h"
+#include "Motion.h"
 #include "TextureCache.h"
 
 namespace HONG
@@ -92,6 +93,7 @@ namespace HONG
 		void Refresh();
 		void UpdateSway(float a_dt);
 		void UpdateLight(float a_dt);
+		void UpdateMotion(float a_dt);
 
 		std::vector<Layer> _layers;
 		const RE::TESObjectARMO* _currentArmor{ nullptr };
@@ -110,6 +112,7 @@ namespace HONG
 		float _timeSinceRefresh{ 0.0f };
 
 		ImVec2 _sway{ 0, 0 };
+		Motion::Player _motion;
 		float _lastYaw{ 0.0f };
 		float _lastPitch{ 0.0f };
 		bool _haveAngles{ false };
