@@ -15,9 +15,13 @@ See [docs/DESIGN.md](docs/DESIGN.md) for how it works and the open items, and
 
 - Switches the overlay automatically with the worn helmet (head and hair slots).
 - Flat and VR (a head-locked plane through [imgui-vr-helper](https://github.com/alandtse/imgui-vr-helper)).
-- Opacity, scale, and animated on/off (fade, settle, slide); head-turn sway on flat.
+- Opacity, scale, vertical position and edge extension, and animated on/off (fade, settle, slide).
+- Reactive lighting: dims the art in dark places, on by default with the original mod's values.
+- Flat only: jump, strafe and sprint nudges like the original, and optional head-turn sway.
 - Drawn beneath all menus and faded out for the menus you choose.
-- A coverage report: how many helmets in your load order have overlay art, per plugin.
+- A coverage report: how many helmets in your load order have overlay art, per plugin. Wigs and circlets
+  can be ignored.
+- An experimental mask that skips shading behind the overlay's fully opaque pixels to save GPU time.
 - Sound muffling scaled by helmet type, from the armor class and how closed the overlay art is.
 - Optional world-sound attenuation and a real low-pass filter, as separate settings.
 - In-game settings and a debug page through SKSE Menu Framework (optional).
@@ -32,11 +36,11 @@ xmake build
 ```
 
 Set `SkyrimVRPath`, `SkyrimVRPluginTargets`, or `SkyrimPluginTargets` to deploy after a build. Close the
-game before building, or the linker cannot write the PDB.
+game before building if it loaded a build older than the PDB path fix, or the linker cannot write the PDB.
 
-The overlay uses imgui-vr-helper interface 006 (per-client HUD plane). Until a helper release carries it,
-building needs `HONG_VRHELPER_API` set to the `api` folder of a helper checkout that has it; at runtime,
-VR needs that helper version, and an older helper falls back to its global HUD plane.
+The overlay uses imgui-vr-helper interface 006 (per-client HUD plane), pinned to the v1.10.0 release. At
+runtime, VR needs that helper version; an older helper falls back to its global HUD plane. To build against
+an unreleased local helper checkout, set `HONG_VRHELPER_API` to its `api` folder.
 
 ## Config
 

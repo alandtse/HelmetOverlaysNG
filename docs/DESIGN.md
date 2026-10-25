@@ -12,7 +12,8 @@ existing `Interface/overlays/**.dds` packs (Helmet Overlays 2.0 and Enhanced Edi
   `overlays/`, and have `overlaywidget.swf` (a SkyUI widget) load it.
 - Art: 1920x1080 DXT5 with alpha, transparent where the player sees through, with bleed past the screen
   edge for the sway animation.
-- MCM: opacity, size, size hotkeys, a reactive light effect.
+- MCM: alpha, size, reactive light (enable, strength, tween duration, update interval), debug hotkeys; the
+  widget timeline animates jump, strafe and sprint.
 - Enhanced Edition is an art pack on the same path convention, with no scripts.
 
 Any armor with art resolves without configuration, and a new helmet works as soon as a DDS exists at its
