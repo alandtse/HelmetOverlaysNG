@@ -254,7 +254,7 @@ namespace HONG
 		}
 
 		_mask = {};
-		if (settings->opaqueMask && !REL::Module::IsVR() && gated && settings->opacity >= kMaskMinOpacity && _layers.size() == 1 && a_out.size() == 1) {
+		if (settings->opaqueMask && gated && settings->opacity >= kMaskMinOpacity && _layers.size() == 1 && a_out.size() == 1) {
 			const auto& layer = _layers.front();
 			const auto& drawn = a_out.front();
 			const bool steady = std::abs(drawn.offset.x - _lastMaskOffset.x) <= kMaskMaxStep && std::abs(drawn.offset.y - _lastMaskOffset.y) <= kMaskMaxStep;

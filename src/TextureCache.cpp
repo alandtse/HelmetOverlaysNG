@@ -31,12 +31,15 @@ namespace HONG::TextureCache
 	namespace
 	{
 		constexpr std::uint32_t kMaskBlockPixels = 4;
+		constexpr std::uint32_t kVrMinMarginPixels = 48;
 
 		Mask CreateMask(const std::vector<std::uint8_t>& a_bytes)
 		{
 			Mask mask;
 			ArtMetrics::OpaqueMask built;
-			const auto marginBlocks = (static_cast<std::uint32_t>(Settings::GetSingleton()->maskMarginPx) + kMaskBlockPixels - 1) / kMaskBlockPixels;
+			// The head-locked plane shifts a few percent of the eye width between the eyes, and one mask serves both.
+			const auto marginPx = std::max<std::uint32_t>(Settings::GetSingleton()->maskMarginPx, REL::Module::IsVR() ? kVrMinMarginPixels : 0);
+			const auto marginBlocks = (marginPx + kMaskBlockPixels - 1) / kMaskBlockPixels;
 			if (!ArtMetrics::BuildOpaqueMask(a_bytes.data(), a_bytes.size(), marginBlocks, built)) {
 				return mask;
 			}
