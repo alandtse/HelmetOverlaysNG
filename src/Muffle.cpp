@@ -24,7 +24,7 @@ namespace HONG::Muffle
 		struct Tracked
 		{
 			RE::BGSSoundCategory* category{ nullptr };
-			float baseVolume{ 1.0f };  // captured when attenuation starts
+			float baseVolume{ 1.0f };  // raw volumeMult captured when attenuation starts
 		};
 
 		std::vector<Tracked> g_categories;
@@ -67,21 +67,30 @@ namespace HONG::Muffle
 					tracked.category->SetCategoryVolume(tracked.baseVolume);
 				}
 				g_applied = false;
+				logger::info("Sound attenuation off; {} categories restored (first raw volume {:.2f}).", g_categories.size(), g_categories.empty() ? 0.0f : g_categories.front().category->volumeMult);
 			}
 			return;
 		}
 
 		if (!g_applied) {
 			for (auto& tracked : g_categories) {
-				tracked.baseVolume = tracked.category->GetCategoryVolume();
+				// GetCategoryVolume scales by the user's menu volume but SetCategoryVolume stores the raw value, so
+				// restoring from Get would lower the category a little more on every helmet cycle.
+				tracked.baseVolume = tracked.category->volumeMult;
 			}
 			g_applied = true;
+			logger::info("Sound attenuation on for {} categories (target {:.0f}% of base).", g_categories.size(), settings->attenuateVolume * 100.0f);
 		}
 
 		const float eased = settings->attenuateSeconds > 0.0f ? std::pow(amount, 1.0f + settings->attenuateSeconds) : 1.0f;
 		const float mult = 1.0f + (settings->attenuateVolume - 1.0f) * eased;
 		for (const auto& tracked : g_categories) {
 			tracked.category->SetCategoryVolume(tracked.baseVolume * mult);
+		}
+		static float s_lastLogged = -1.0f;
+		if (!g_categories.empty() && std::abs(mult - s_lastLogged) >= 0.1f) {
+			s_lastLogged = mult;
+			logger::info("Attenuation multiplier {:.2f}; first category raw volume {:.2f} (base {:.2f}), effective {:.2f}.", mult, g_categories.front().category->volumeMult, g_categories.front().baseVolume, g_categories.front().category->GetCategoryVolume());
 		}
 	}
 }
