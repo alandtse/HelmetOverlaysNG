@@ -109,9 +109,10 @@ id 36559 `0x1406444b0`, VR `0x1405b9330`): RenderDepth, RenderShadowmasks, Occlu
 PrepareMainDepthPrepass, RenderWorld, RenderFirstPersonView. RenderDepth clears kMAIN depth and stencil,
 draws the prepass, then copies depth to the post-prepass copy.
 
-**Injection point.** Inside open-shaders' existing `Main_RenderWorld_Start` thunk, after
-`Deferred::StartDeferred()` and before the original call, which begins the first opaque batches. The hook
-site is `BSShaderAccumulator::FinishAccumulatingCommonPasses` (SE id 99938 `0x1412cacd0`, AE id 106583
+**Injection point.** A call-site thunk that HelmetOverlaysNG installs itself, before the original call that
+begins the first opaque batches. Plugins load alphabetically, so ours is installed after Community Shaders'
+thunk on the same call and runs first; Community Shaders' `Deferred::StartDeferred()` only swaps color
+targets and does not clear depth, so our depth write survives it. The hook site is `BSShaderAccumulator::FinishAccumulatingCommonPasses` (SE id 99938 `0x1412cacd0`, AE id 106583
 `0x1414b2d90`, VR `0x1413093a0`) at +0x8E (SE, VR) or +0x84 (AE). At that moment the prepass is finished,
 the post-prepass depth copy is taken, the shadow masks have consumed the stencil, and on VR the stereo
 optimization has already written its stencil.
@@ -120,8 +121,14 @@ optimization has already written its stencil.
 
 - Bind no color target and the kMAIN depth-stencil view; no color write.
 - Depth test ALWAYS with depth write, writing the near value for the active convention: 0.0 under standard
-  depth, 1.0 under reverse-Z (open-shaders exposes this as `FrameBuffer::NearPlaneDepth()`).
+  depth, 1.0 under reverse-Z. The convention is read from the engine camera's projection matrix: reversed
+  when `m[10]` times the perspective term is not positive. SE with Community Shaders and VR both report
+  reversed depth.
 - Fullscreen triangle, pixel shader samples the mask and discards unmasked pixels, then writes depth.
+- Draw only when the shadow-state depth target is kMAIN. The hook also fires for shadow, reflection and
+  cubemap passes, and the bound view lags behind the shadow state in VR.
+- Flat uses a viewport of the display size times the dynamic-resolution ratio. VR renders one side-by-side
+  depth buffer, so the same mask is drawn into the left and right halves; the stencil is written as `0xFF`.
 - Restore the previous state and the G-buffer targets afterwards.
 
 **AE (verified in both AE 1.6.1170 and AE 1.7.104).**
@@ -167,16 +174,28 @@ kMAIN_COPY when the overlay or the dynamic-resolution ratio changes, as the engi
 
 ## Who owns what
 
-| Component        | Role                                                                                                        |
-| ---------------- | ----------------------------------------------------------------------------------------------------------- |
-| HelmetOverlaysNG | Builds the mask texture, decides when it is allowed, publishes mask and transform                           |
-| open-shaders     | Issues the mask draw in `Main_RenderWorld_Start`; owns depth convention, state restore and the stereo logic |
-| imgui-vr-helper  | Supplies the plane parameters (depth, size) it already derives per eye                                      |
+| Component        | Role                                                                                       |
+| ---------------- | ------------------------------------------------------------------------------------------ |
+| HelmetOverlaysNG | Builds the mask texture, decides when it is allowed, hooks the world batch and draws it    |
+| open-shaders     | Nothing required; its thunk on the same call runs after ours and does not touch depth      |
+| imgui-vr-helper  | Supplies the plane parameters (depth, size) it already derives per eye                     |
 
-The draw belongs in open-shaders because it already owns that hook and the depth convention. HelmetOverlaysNG
-would hand it a small struct (mask SRV, transform or plane constants, active flag) through an exported
-function or a messaging interface, the way it talks to the helper today. A build without open-shaders
-simply has no mask.
+The draw lives in this plugin so it works with or without open-shaders and needs no exported function.
+
+## Measured
+
+Same first-person replay, head sway off, GPU time of the world batch call summed over three sampling
+windows of 1500 calls each:
+
+- **SE (Community Shaders loaded):** 7.41 ms and 7.14 ms with the mask off, 6.60 ms on, about 8-11% less.
+  Two off runs differ by about 4%, so treat this as a likely high-single-digit to 10% saving of that pass.
+- **VR (null driver):** no measurable saving. Windows were split by sample count, not by scene, and the
+  visible mask area is smaller (about 12-22% of pixels, against about 34-46% on flat, before the 48 px
+  margin).
+- **Sway:** the mask is allowed only while the overlay is steady, so head-turn sway switches it off and on
+  (466 toggles in one replay, one with sway off) and shrinks the saving. Sway is off by default for this
+  reason.
+- **Not read back:** the VR stencil write has not been verified from a capture.
 
 ## Interactions to check
 
@@ -200,7 +219,7 @@ simply has no mask.
 ## Settings
 
 `bOpaqueMask` (default off while experimental), `iMaskMarginPx` (default 8), shown on the Overlay page with
-the measured saving once measured. No effect without the open-shaders hook.
+the measured saving once measured.
 
 ## Validation
 

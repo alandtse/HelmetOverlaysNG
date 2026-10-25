@@ -89,8 +89,9 @@ not fire for a console `coc` start.
 
 ## Open items
 
-0. Opaque-region mask (design only): skip shading where the overlay is fully opaque, flat and VR, through
-   the open-shaders `RenderWorld` hook. See [OPAQUE_MASK.md](OPAQUE_MASK.md).
+0. Opaque-region mask (experimental, off by default): skip shading where the overlay is fully opaque, flat
+   and VR, through a depth write this plugin issues in its own world-batch hook. SE shows a saving; VR is
+   unmeasured. See [OPAQUE_MASK.md](OPAQUE_MASK.md).
 1. Verify VR parallax and the visor plane on a real headset; the null driver reports zero eye separation.
 2. Per-armor sound profiles: derive defaults from armor type, weight, material keywords and slot
    coverage, with an optional override file.
