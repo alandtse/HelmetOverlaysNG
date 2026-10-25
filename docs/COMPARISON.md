@@ -11,6 +11,7 @@ with SteamVR's null driver, not on a headset.
 | ------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
 | [Helmet Overlays - Improved 1st Person Experience](https://www.nexusmods.com/skyrimspecialedition/mods/35605) | SkyUI widget (SWF) driven by Papyrus and an ESP; the original mod's overlay engine and art loader      |
 | [Helmet Overlays Enhanced Edition](https://www.nexusmods.com/skyrimspecialedition/mods/189092)                | Art pack for the mod above (needs it installed); adds many more helmets, no engine of its own          |
+| [Helmet Overlay Addon](https://www.nexusmods.com/skyrimspecialedition/mods/93800)                              | Art pack for the mod above (needs it installed); loose DDS for 76+ armor mods, no plugin or engine     |
 | [VR Helmets](https://www.nexusmods.com/skyrimspecialedition/mods/47827)                                       | ReShade shader (`Layer.fx`) that draws a PNG layer over the VR image, using the VR build of ReShade    |
 | Helmet Overlays NG                                                                                            | Native SKSE plugin (CommonLibSSE-NG); reads the same art; flat and VR draw paths; no ESP/Papyrus/SkyUI |
 
@@ -32,9 +33,10 @@ with SteamVR's null driver, not on a headset.
 | Animation                      | Motion animations and reactive lighting                                              | Same                                              | None stated                                                                             | Fade, settle or slide on and off; head-turn sway on flat only. No reactive lighting yet        |
 | Sound                          | None                                                                                 | None                                              | None                                                                                    | Volume attenuation and a separate real low-pass filter                                         |
 | In-game settings               | MCM                                                                                  | MCM                                               | ReShade overlay (Home key), needs you to leave the headset view                         | SKSE Menu Framework pages: Overlay, Sound, Menus, Debug                                        |
-| Coverage report                | None                                                                                 | None                                              | None                                                                                    | Counts playable helmets with and without art, per plugin, and lists the ones missing           |
+| Coverage report                | None                                                                                 | None                                              | None                                                                                    | Counts playable helmets with and without art, per plugin; wigs and circlets can be ignored     |
 | Debugging                      | Debug menu that can stick on screen (a separate fix mod exists)                      | Same                                              | None                                                                                    | Debug page shows the model path and paths tried, and previews any helmet without equipping it  |
 | Original mod coexistence       | Not applicable                                                                       | Not applicable                                    | Not applicable                                                                          | Can stop the original ESP's quests so you never get two overlays (quest-level test in VR only) |
+| GPU cost                       | A Scaleform widget over the full screen                                              | Same                                              | Not verified                                                                           | Optional mask skips shading behind fully opaque pixels: about 8-11% less on the world pass on SE, no measurable gain in VR yet |
 | Maintenance                    | v2.5.2, Jun 2023; author asked for a successor                                       | v2.8, Oct 2026, active                            | v2.0, Mar 2024                                                                          | v0.1.0, unreleased                                                                             |
 
 ## What the native approach buys
@@ -45,7 +47,8 @@ with SteamVR's null driver, not on a headset.
 - **Fewer moving parts.** No SkyUI, MCM, Papyrus or ESP, and nothing to install in the graphics stack.
 - **VR placement that follows the headset.** The overlay is a plane with real stereo projection, sized from
   the headset's field of view instead of a resolution you type in.
-- **UI-aware.** Menu visibility is configurable, and the overlay sits beneath menus by construction.
+- **UI-aware.** Menu visibility is configurable, and the overlay sits beneath menus by construction. The
+  settings pages show only the options that apply to the running game, flat or VR.
 - **Things a widget or shader cannot do.** Sound filtering tied to the worn helmet, and a debug view of
   exactly which art file a helmet resolved to.
 
@@ -53,5 +56,7 @@ with SteamVR's null driver, not on a headset.
 
 - Reactive lighting and the original's size hotkeys.
 - Per-armor sound profiles and head-hit feedback (designed, not built).
-- Verification on a real headset, including parallax, comfort and the ideal plane depth.
+- Verification on a real headset, including parallax, comfort and the ideal plane depth. Close objects make the
+  head-locked plane's center double, as any fixed-depth visor does when your eyes converge nearer.
+- A measured VR saving from the opaque mask (the SE saving is measured; the VR run was inconclusive).
 - It ships no art, so it depends on the Helmet Overlays art packs.
