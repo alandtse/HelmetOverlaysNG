@@ -60,7 +60,7 @@ if localHelperApi and localHelperApi ~= "" then
     add_includedirs(localHelperApi, { public = false })
 end
 
-add_shflags("/DEBUG", { force = true })
+add_shflags("/DEBUG", "/PDBALTPATH:%_PDB%", { force = true })
 
 add_defines("HONG_VERSION_MAJOR=" .. ver[1], "HONG_VERSION_MINOR=" .. ver[2], "HONG_VERSION_PATCH=" .. ver[3])
 
