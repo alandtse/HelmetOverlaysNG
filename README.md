@@ -1,0 +1,44 @@
+# Helmet Overlays NG
+
+Native SKSE (CommonLibSSE-NG) replacement for the SWF-based
+[Helmet Overlays](https://www.nexusmods.com/skyrimspecialedition/mods/35605) widget, for Skyrim SE/AE
+and Skyrim VR.
+
+It reads the existing overlay art (`Data/Interface/overlays/**.dds`, from Helmet Overlays 2.0 and
+Helmet Overlays Enhanced Edition) and picks the overlay from the worn helmet's world model path.
+No ESP, no Papyrus, no SkyUI, no Scaleform. This mod ships no art; install the art packs.
+
+See [docs/DESIGN.md](docs/DESIGN.md) for how it works and the open items.
+
+## Features
+
+- Switches the overlay automatically with the worn helmet (head and hair slots).
+- Flat and VR (a head-locked plane through [imgui-vr-helper](https://github.com/alandtse/imgui-vr-helper)).
+- Opacity, scale, and animated on/off (fade, settle, slide); head-turn sway on flat.
+- Drawn beneath all menus and faded out for the menus you choose.
+- Optional world-sound attenuation and a real low-pass filter, as separate settings.
+- In-game settings and a debug page through SKSE Menu Framework (optional).
+- Can stop the original `ScribeOverlays.esp` widget from drawing a second overlay.
+
+## Build
+
+```
+git submodule update --init --recursive
+xmake f -p windows -a x64 -m releasedbg
+xmake build
+```
+
+Set `SkyrimVRPath`, `SkyrimVRPluginTargets`, or `SkyrimPluginTargets` to deploy after a build. Close the
+game before building, or the linker cannot write the PDB.
+
+The overlay uses imgui-vr-helper interface 006 (per-client HUD plane). Until a helper release carries it,
+building needs `HONG_VRHELPER_API` set to the `api` folder of a helper checkout that has it; at runtime,
+VR needs that helper version, and an older helper falls back to its global HUD plane.
+
+## Config
+
+`Data/SKSE/Plugins/HelmetOverlaysNG.ini`, or in game under "Helmet Overlays NG" in SKSE Menu Framework.
+
+## License
+
+GPL-3.0-or-later with the Modding Exception; see `COPYING` and `EXCEPTIONS.md`.

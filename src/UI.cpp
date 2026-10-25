@@ -1,0 +1,261 @@
+// SPDX-License-Identifier: GPL-3.0-or-later WITH LicenseRef-Modding-Exception
+// Copyright (c) 2026 HelmetOverlaysNG contributors. See COPYING and EXCEPTIONS.md.
+//
+
+// Built without the project PCH: the SMF header's typedefs conflict with imgui.h.
+#define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
+
+#include <RE/Skyrim.h>
+#include <REX/REX.h>
+#include <SKSE/SKSE.h>
+
+#include <algorithm>
+#include <cctype>
+#include <cstring>
+#include <string>
+#include <vector>
+
+namespace logger = SKSE::log;
+
+#include "SKSEMenuFramework.h"
+
+#include "Debug.h"
+#include "Settings.h"
+#include "UI.h"
+
+namespace HONG::UI
+{
+	namespace
+	{
+		bool IContains(const std::string& a_haystack, const char* a_needle)
+		{
+			if (!a_needle || !*a_needle) {
+				return true;
+			}
+			const std::string needle(a_needle);
+			const auto it = std::ranges::search(a_haystack, needle, [](char a, char b) {
+				return std::tolower(static_cast<unsigned char>(a)) == std::tolower(static_cast<unsigned char>(b));
+			});
+			return !it.empty();
+		}
+
+		void Tip(const char* a_text)
+		{
+			if (ImGuiMCP::IsItemHovered(0)) {
+				ImGuiMCP::SetTooltip("%s", a_text);
+			}
+		}
+
+		void SaveReloadRow()
+		{
+			auto* s = Settings::GetSingleton();
+			ImGuiMCP::Separator();
+			if (ImGuiMCP::Button("Save to INI", { 0, 0 })) {
+				s->Save();
+			}
+			ImGuiMCP::SameLine(0.0f, -1.0f);
+			if (ImGuiMCP::Button("Reload INI", { 0, 0 })) {
+				s->Load();
+			}
+			ImGuiMCP::SameLine(0.0f, -1.0f);
+			if (ImGuiMCP::Button("Reset to defaults", { 0, 0 })) {
+				s->ResetToDefaults();
+			}
+			ImGuiMCP::TextDisabled("Changes apply immediately; Save writes them to the INI.");
+		}
+
+		void __stdcall RenderOverlay()
+		{
+			auto* s = Settings::GetSingleton();
+
+			ImGuiMCP::Checkbox("Enable helmet overlays", &s->enabled);
+			Tip("Master switch. Off hides the overlay (and sound changes) without unloading the plugin.");
+			ImGuiMCP::Checkbox("First person only (flat)", &s->firstPersonOnly);
+			Tip("Flat game: only draw in first-person camera. VR is always first person.");
+			ImGuiMCP::Checkbox("Suppress original Helmet Overlays widget", &s->suppressOriginal);
+			Tip("Stops ScribeOverlays.esp's quests on load so its SWF doesn't draw a second overlay. Takes effect on the next load.");
+
+			ImGuiMCP::Separator();
+			if (ImGuiMCP::CollapsingHeader("Appearance", ImGuiMCP::ImGuiTreeNodeFlags_DefaultOpen)) {
+				ImGuiMCP::SliderFloat("Opacity", &s->opacity, 0.0f, 1.0f, "%.2f", 0);
+				Tip("Overall strength of the overlay art (the original MCM's \"darkness\").");
+				ImGuiMCP::SliderFloat("Scale", &s->scale, 0.5f, 2.0f, "%.2f", 0);
+				Tip("Uniform scale about the screen center. 1.0 covers the screen with the 16:9 art.");
+			}
+
+			if (ImGuiMCP::CollapsingHeader("Animation", ImGuiMCP::ImGuiTreeNodeFlags_DefaultOpen)) {
+				static const char* const kStyles[] = { "Fade", "Settle", "Slide" };
+				int style = static_cast<int>(s->animStyle);
+				if (ImGuiMCP::Combo("Style", &style, kStyles, 3, -1)) {
+					s->animStyle = static_cast<AnimStyle>(style);
+				}
+				ImGuiMCP::SliderFloat("Fade in (s)", &s->fadeInSeconds, 0.0f, 2.0f, "%.2f", 0);
+				ImGuiMCP::SliderFloat("Fade out (s)", &s->fadeOutSeconds, 0.0f, 2.0f, "%.2f", 0);
+				ImGuiMCP::Checkbox("Head-turn sway (flat)", &s->sway);
+				Tip("The overlay lags behind camera turns. Never applied in VR (comfort).");
+				ImGuiMCP::BeginDisabled(!s->sway);
+				ImGuiMCP::SliderFloat("Sway strength", &s->swayStrength, 0.0f, 4.0f, "%.2f", 0);
+				ImGuiMCP::EndDisabled();
+			}
+
+			if (ImGuiMCP::CollapsingHeader("VR", ImGuiMCP::ImGuiTreeNodeFlags_DefaultOpen)) {
+				ImGuiMCP::SliderFloat("Plane depth (m)", &s->vrDepth, 0.3f, 3.0f, "%.2f", 0);
+				Tip("Distance of the head-locked visor plane. Most lenses can't focus nearer than ~0.5 m. Applies on the next launch.");
+				ImGuiMCP::SliderFloat("Coverage", &s->vrCoverage, 0.5f, 1.6f, "%.2f", 0);
+				Tip("Fraction of each eye's view the plane fills; above 1 over-fills so no edge gap shows. Applies on the next launch.");
+			}
+			SaveReloadRow();
+		}
+
+		void __stdcall RenderSound()
+		{
+			auto* s = Settings::GetSingleton();
+
+			ImGuiMCP::TextDisabled("Two independent effects while a helmet is worn. Use either, both or neither.");
+			ImGuiMCP::Separator();
+
+			if (ImGuiMCP::CollapsingHeader("Volume attenuation", ImGuiMCP::ImGuiTreeNodeFlags_DefaultOpen)) {
+				ImGuiMCP::Checkbox("Attenuate world sound", &s->attenuate);
+				Tip("Lowers the volume of world sound categories (effects, footsteps). Voice and music are untouched.");
+				ImGuiMCP::BeginDisabled(!s->attenuate);
+				ImGuiMCP::SliderFloat("Volume at full helmet", &s->attenuateVolume, 0.0f, 1.0f, "%.2f", 0);
+				ImGuiMCP::SliderFloat("Ramp shaping", &s->attenuateSeconds, 0.0f, 3.0f, "%.2f", 0);
+				Tip("Higher values let the sound lag the visual fade.");
+				ImGuiMCP::EndDisabled();
+			}
+
+			if (ImGuiMCP::CollapsingHeader("Low-pass distortion", ImGuiMCP::ImGuiTreeNodeFlags_DefaultOpen)) {
+				ImGuiMCP::Checkbox("Muffle highs (low-pass)", &s->lowPass);
+				Tip("Rolls off high frequencies like a real helmet, instead of just turning things down.");
+				ImGuiMCP::TextDisabled("Applies to every sound except music, on top of the game's own distance filtering.");
+				ImGuiMCP::BeginDisabled(!s->lowPass);
+				ImGuiMCP::SliderFloat("Cutoff at full helmet (Hz)", &s->lowPassHz, 400.0f, 8000.0f, "%.0f", 0);
+				Tip("Highest frequency that still passes. The engine's filter tops out at SampleRate/6 (about 8000 Hz), so that is fully open.");
+				ImGuiMCP::EndDisabled();
+			}
+			SaveReloadRow();
+		}
+
+		void __stdcall RenderMenus()
+		{
+			auto* s = Settings::GetSingleton();
+
+			ImGuiMCP::Checkbox("Hide overlay while these menus are open", &s->hideInMenus);
+			Tip("The overlay always draws beneath menus; this fades it out so it doesn't dim a UI you are reading.");
+			ImGuiMCP::Separator();
+
+			static char filter[64]{};
+			ImGuiMCP::InputTextWithHint("##hong_menufilter", "Type to filter menus...", filter, sizeof(filter), 0, nullptr, nullptr);
+
+			ImGuiMCP::BeginDisabled(!s->hideInMenus);
+			static std::vector<std::string> menus;
+			if (menus.empty() || ImGuiMCP::Button("Refresh list", { 0, 0 })) {
+				menus = Debug::RegisteredMenus();
+			}
+			ImGuiMCP::Text("%zu menus registered by the game and mods:", menus.size());
+			for (const auto& name : menus) {
+				if (!IContains(name, filter)) {
+					continue;
+				}
+				bool hidden = s->IsMenuHidden(name);
+				if (ImGuiMCP::Checkbox(name.c_str(), &hidden)) {
+					s->SetMenuHidden(name, hidden);
+				}
+			}
+
+			for (const auto& name : s->HiddenMenus()) {
+				if (std::ranges::find(menus, name) == menus.end() && IContains(name, filter)) {
+					bool hidden = true;
+					if (ImGuiMCP::Checkbox((name + "  (not registered)").c_str(), &hidden) && !hidden) {
+						s->SetMenuHidden(name, false);
+					}
+				}
+			}
+			ImGuiMCP::EndDisabled();
+
+			ImGuiMCP::Separator();
+			if (ImGuiMCP::Button("Reset menu list to defaults", { 0, 0 })) {
+				s->ResetMenusToDefaults();
+			}
+			SaveReloadRow();
+		}
+
+		void __stdcall RenderDebug()
+		{
+			auto* s = Settings::GetSingleton();
+
+			ImGuiMCP::Checkbox("Enable debug tools", &s->debugTools);
+			Tip("Shows what the plugin resolved for the current helmet and lets you preview any helmet's overlay without equipping it.");
+			if (!s->debugTools) {
+				return;
+			}
+			ImGuiMCP::Separator();
+
+			const auto current = Debug::GetCurrent();
+			if (ImGuiMCP::CollapsingHeader("Current helmet", ImGuiMCP::ImGuiTreeNodeFlags_DefaultOpen)) {
+				if (current.armorId == 0) {
+					ImGuiMCP::TextDisabled("No helmet resolved (bare head, or nothing refreshed yet).");
+				} else {
+					ImGuiMCP::Text("%s  [%08X]%s", current.armorName.c_str(), current.armorId, current.previewing ? "  (previewing)" : "");
+					ImGuiMCP::Text("World model: %s", current.model.empty() ? "(none)" : current.model.c_str());
+					if (current.found) {
+						ImGuiMCP::Text("Overlay: %s", current.overlayPath.c_str());
+					} else {
+						ImGuiMCP::TextColored({ 1.0f, 0.5f, 0.4f, 1.0f }, "No overlay art found. Paths tried:");
+						for (const auto& path : current.tried) {
+							ImGuiMCP::BulletText("%s", path.c_str());
+						}
+					}
+				}
+			}
+
+			if (ImGuiMCP::CollapsingHeader("Preview a helmet", ImGuiMCP::ImGuiTreeNodeFlags_DefaultOpen)) {
+				const auto previewing = Debug::Previewing();
+				if (previewing != 0) {
+					if (ImGuiMCP::Button("Stop preview (use worn helmet)", { 0, 0 })) {
+						Debug::ClearPreview();
+					}
+				} else {
+					ImGuiMCP::TextDisabled("Pick a helmet to draw its overlay without equipping it.");
+				}
+
+				static char filter[64]{};
+				ImGuiMCP::InputTextWithHint("##hong_helmetfilter", "Type to filter helmets...", filter, sizeof(filter), 0, nullptr, nullptr);
+
+				const auto& helmets = Debug::Helmets();
+				ImGuiMCP::Text("%zu head/hair armors in the load order", helmets.size());
+				constexpr std::size_t kMaxRows = 60;
+				std::size_t shown = 0;
+				for (const auto& helmet : helmets) {
+					if (!IContains(helmet.name, filter) && !IContains(helmet.plugin, filter)) {
+						continue;
+					}
+					if (shown++ >= kMaxRows) {
+						ImGuiMCP::TextDisabled("... narrow the filter to see more.");
+						break;
+					}
+					const std::string label = helmet.name + "  [" + helmet.plugin + "]##" + std::to_string(helmet.id);
+					if (ImGuiMCP::Selectable(label.c_str(), helmet.id == previewing, 0, { 0, 0 })) {
+						Debug::Preview(helmet.id);
+					}
+				}
+			}
+			SaveReloadRow();
+		}
+	}
+
+	void Register()
+	{
+		if (!SKSEMenuFramework::IsInstalled()) {
+			logger::info("SKSE Menu Framework not installed; in-game settings disabled.");
+			return;
+		}
+		SKSEMenuFramework::SetSection("Helmet Overlays NG");
+		SKSEMenuFramework::AddSectionItem("Overlay", RenderOverlay);
+		SKSEMenuFramework::AddSectionItem("Sound", RenderSound);
+		SKSEMenuFramework::AddSectionItem("Menus", RenderMenus);
+		SKSEMenuFramework::AddSectionItem("Debug", RenderDebug);
+		logger::info("Registered SMF pages (framework v{:.1f}).", SKSEMenuFramework::GetMenuFrameworkVersion());
+	}
+}
