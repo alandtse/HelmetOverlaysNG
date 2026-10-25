@@ -1,0 +1,51 @@
+name: Bug report
+description: Something crashed, misbehaved, or an overlay is wrong or missing
+labels: [bug]
+body:
+  - type: dropdown
+    id: runtime
+    attributes:
+      label: Game runtime
+      options:
+        - Skyrim SE (1.5.97)
+        - Skyrim AE (1.6.x)
+        - Skyrim VR (1.4.15)
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: HelmetOverlaysNG version
+      placeholder: "0.1.0"
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: >
+        What you did, what you expected, what you saw. For a missing overlay,
+        name the helmet and the overlay art pack you installed.
+    validations:
+      required: true
+  - type: textarea
+    id: pluginlog
+    attributes:
+      label: HelmetOverlaysNG.log
+      description: >
+        From `Documents/My Games/<game>/SKSE/`. A missing overlay logs the
+        helmet's model path and every overlay path that was tried.
+      render: text
+  - type: textarea
+    id: crashlog
+    attributes:
+      label: Crash log (if it crashed)
+      description: >
+        The matching `crash-*.log` from CrashLoggerSSE / Trainwreck, same
+        folder. Paste the whole file or attach it.
+      render: text
+  - type: input
+    id: mods
+    attributes:
+      label: Related mods
+      description: Other HUD or overlay mods, the original Helmet Overlays, audio mods, ENB or Community Shaders in your load order.
