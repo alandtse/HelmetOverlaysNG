@@ -30,11 +30,37 @@ Measured on the Enhanced Edition overlays at the 1920x1080 canvas:
 - These are shares of the overlay canvas, not of rendered pixels. Part of the canvas lies outside the lens
   view, and in VR the engine's own hidden-area mesh already masks the lens corners, so the new saving is
   the opaque region minus what is already masked.
+- **Share of the visible image.** In VR the plane over-fills the view (coverage 1.15), so only the central
+  87% of the canvas is on screen, and the lens shape cuts the corners where a closed helmet's frame tends
+  to be. Flat shows the whole 16:9 canvas. Masked share after 8 px erosion (the lens column is a rough
+  ellipse inscribed in the visible rectangle, a proxy for the real lens cut and hidden-area mesh):
+
+  | Overlay       | Flat (full canvas) | VR visible rectangle | VR lens-shaped |
+  | ------------- | ------------------ | -------------------- | -------------- |
+  | Daedric       | 45.6%              | 38.9%                | 32.2%          |
+  | Iron          | 34.3%              | 21.7%                | 11.6%          |
+  | Elven         | 19.8%              | 8.7%                 | 3.6%           |
+  | Steel (light) | 17.0%              | 4.4%                 | 0.9%           |
+  | Hide (light)  | 15.7%              | 1.5%                 | 0.0%           |
+  | Mage Hood     | 7.0%               | 0.6%                 | 0.0%           |
+  | Dragon priest | 40.7%              | 31.0%                | 24.0%          |
+
+  So the mask is worth most on flat and for heavy closed helms in VR; for open helmets and hoods in VR it
+  is close to nothing.
+
 - What the saving applies to: from existing Tracy notes, the per-pixel costs are Deferred Geometry (about
   8 to 22 ms in the captured scenes), NR (about 5 ms), Skylighting and the composite passes; shadow
   rendering is geometry-bound and would not shrink. So the expected saving is roughly the masked share of
   Deferred Geometry plus the passes that early-out. No per-pixel profile exists, so the real figure is
   unknown until measured.
+- **Expected saving (an estimate, not a measurement).** The saving is the masked share of visible pixels
+  times the share of GPU frame time spent in per-pixel passes that the early depth reject skips. The
+  z-prepass runs before the injection point, so its vertex and raster work is not saved; only pixel work in
+  the main passes and anything that early-outs on near depth is. If per-pixel passes are about half of a
+  GPU-bound frame, a closed helmet on flat could save on the order of 10 to 20% of GPU frame time (Iron
+  34% masked, Daedric 46%), a heavy closed helm in VR roughly 5 to 15%, and open helmets and hoods in VR
+  about 0 to 3%. A CPU-bound frame saves nothing. The mask draw itself (a fullscreen triangle, one texture
+  sample, a depth write) should cost well under a tenth of a millisecond.
 
 ## The mask
 
@@ -98,6 +124,25 @@ optimization has already written its stencil.
 - Fullscreen triangle, pixel shader samples the mask and discards unmasked pixels, then writes depth.
 - Restore the previous state and the G-buffer targets afterwards.
 
+**AE (verified in both AE 1.6.1170 and AE 1.7.104).**
+
+| Item                                              | AE 1.6.1170   | AE 1.7.104                |
+| ------------------------------------------------- | ------------- | ------------------------- |
+| `FinishAccumulatingCommonPasses` (id 106583)      | `0x1414b2d90` | `0x14151ef40`             |
+| Hook at +0x84 reaches `RenderBatches` (id 106609) | `0x1414b4fe0` | `0x141521190`             |
+| `Renderer::CreateDepthStencilStates` (id 77650)   | `0x140e657b0` | `0x14102b120`             |
+| `BSGraphics::SetDirtyStates` (id 77386)           | `0x140e4b5b0` | `0x141010de0`             |
+| `RenderWorld` (id 107142)                         | `0x1414cdaa0` | `0x141539f10`             |
+| `RenderFirstPersonView`, after `RenderWorld`      | `0x1414cb6d0` | `0x141537b10` (id 107129) |
+
+The state table matches SE, no stencil-skip mode (`0x1d`) is written anywhere on AE, and open-shaders'
+existing hook offset (+0x84 on AE, +0x8E on SE and VR) lands on the first `RenderBatches` call in both
+builds. `FinishAccumulatingCommonPasses` switches the depth test to EQUAL when the accumulator asks for
+it and early-Z is off; with early-Z on the test stays LEQUAL, and a near-depth overwrite still rejects
+every draw because nothing is nearer than the near value. The stencil values the AE z-prepass, utility,
+lighting, water and particle code use were read from the AE decompiles and match the SE inventory; what
+each water and particle mode means is taken from the (verified) state-table builder.
+
 **Why depth alone is enough.** On flat, `RenderWorld` runs with equal-depth testing, so a pixel overwritten
 with near depth fails the early depth test for every EQUAL and LEQUAL draw and none of its geometry is
 shaded. On VR the main lighting batches also do not test stencil, so depth is the early-out there too.
@@ -149,8 +194,8 @@ simply has no mask.
   cull geometry visible through the blended area.
 - **HUD and menus.** The overlay yields to the menus chosen in settings; the mask must switch off with it.
   HUD elements are drawn after the scene and are unaffected.
-- **Runtimes.** AE builders for the depth-stencil state table were not located, so the stencil inventory is
-  complete for SE and VR only. Verify on AE before enabling there.
+- **Runtimes.** The stencil inventory is verified for SE, AE 1.6.1170, AE 1.7.104 and VR. Still unknown:
+  whether anything clears stencil between the prepass and the water pass.
 
 ## Settings
 
@@ -177,5 +222,5 @@ the measured saving once measured. No effect without the open-shaders hook.
   active conditions are what contain it.
 - The saving is unproven. Opaque pixels are often at the periphery where the lens already loses detail
   and, in VR, where the engine already masks.
-- Flat gains the most per pixel but has the least existing machinery; the SE and AE builders for the
-  state table are not yet located.
+- Flat gains the most per pixel but has the least existing machinery: it needs the new draw and has no
+  stencil consumers, so everything rests on the depth reject.
