@@ -155,6 +155,8 @@ namespace HONG
 		attenuate = true;
 		attenuateVolume = 0.6f;
 		attenuateSeconds = 0.5f;
+		autoStrength = true;
+		autoArtWeight = 0.65f;
 		lowPass = false;
 		lowPassHz = 1800.0f;
 	}
@@ -190,6 +192,8 @@ namespace HONG
 		attenuate = ini.GetBoolValue("Sound", "bAttenuate", attenuate);
 		attenuateVolume = GetFloat(ini, "Sound", "fAttenuateVolume", attenuateVolume, 0.0f, 1.0f);
 		attenuateSeconds = GetFloat(ini, "Sound", "fAttenuateSeconds", attenuateSeconds, 0.0f, 5.0f);
+		autoStrength = ini.GetBoolValue("Sound", "bAutoStrength", autoStrength);
+		autoArtWeight = GetFloat(ini, "Sound", "fAutoArtWeight", autoArtWeight, 0.0f, 1.0f);
 		lowPass = ini.GetBoolValue("Sound", "bLowPass", lowPass);
 		lowPassHz = GetFloat(ini, "Sound", "fLowPassHz", lowPassHz, 200.0f, 20000.0f);
 
@@ -229,6 +233,8 @@ namespace HONG
 		ini.SetBoolValue("Sound", "bAttenuate", attenuate);
 		ini.SetDoubleValue("Sound", "fAttenuateVolume", attenuateVolume);
 		ini.SetDoubleValue("Sound", "fAttenuateSeconds", attenuateSeconds);
+		ini.SetBoolValue("Sound", "bAutoStrength", autoStrength);
+		ini.SetDoubleValue("Sound", "fAutoArtWeight", autoArtWeight);
 		ini.SetBoolValue("Sound", "bLowPass", lowPass);
 		ini.SetDoubleValue("Sound", "fLowPassHz", lowPassHz);
 

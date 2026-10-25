@@ -199,6 +199,8 @@ namespace HONG::Debug
 		out.found = diag.resolution.path.has_value();
 		out.overlayPath = diag.resolution.path.value_or(std::string());
 		out.tried = diag.resolution.tried;
+		out.openness = diag.openness;
+		out.strength = diag.strength;
 		return out;
 	}
 

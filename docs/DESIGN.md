@@ -44,7 +44,15 @@ plane carries normal stereo parallax. Sway is disabled in VR.
 
 ## Sound
 
-Two independent effects while a helmet is worn (`[Sound]`):
+Two independent effects while a helmet is worn (`[Sound]`), scaled per helmet when `bAutoStrength` is on:
+
+- **Per-helmet strength:** `HelmetProfile` combines how see-through the overlay is (the fraction of
+  pixels with alpha below 32, read from the DXT3/DXT5 file by `ArtMetrics` when the overlay loads) with
+  the armor class (heavy 1.0, light 0.7, clothing 0.4). `fAutoArtWeight` (default 0.65) sets the blend, and
+  the art term runs from 1.0 at 45% see-through or less to 0.0 at 90% or more, the span measured over the
+  Enhanced Edition overlays. Measured: Daedric 0.99, Iron 0.84, Steel 0.60, Elven 0.48, Hide 0.43, Mage
+  Hood 0.16. The strength multiplies the worn amount for both effects. The constants are starting values
+  that have not been tuned by ear.
 
 - **Attenuation** (`bAttenuate`): lowers the volume of the SFX sound category through
   `SetCategoryVolume`, restoring the captured value when the helmet comes off. The footsteps category is
@@ -80,6 +88,14 @@ either way, so the visual effect is untested; flat has not been run against an a
 not fire for a console `coc` start.
 
 ## Open items
+
+0. Stencil mask from the overlay (idea, not built): where the overlay is fully opaque the scene behind it
+   is never seen, so those pixels need not be shaded. The VR engine already draws a hidden-area mesh at the
+   start of the frame that writes depth and stencil `0xFF`, and many passes skip stencil-`0xFF` pixels, so
+   the overlay's opaque region could be added to that mask. Fully opaque share of the canvas: Daedric 49%,
+   Iron 37%, Steel 20%, Elven 22%, Hide 18%, Mage Hood 8%. It needs a draw hooked into the engine's
+   hidden-area pass (open-shaders already hooks it), per-eye mapping of the head-locked plane, a mask
+   eroded for safety, and switched off while the overlay is fading, below full opacity, or hidden.
 
 1. Verify VR parallax and the visor plane on a real headset; the null driver reports zero eye separation.
 2. Per-armor sound profiles: derive defaults from armor type, weight, material keywords and slot

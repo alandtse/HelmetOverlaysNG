@@ -3,6 +3,7 @@
 
 #include "TextureCache.h"
 
+#include "ArtMetrics.h"
 #include "OverlayResolver.h"
 
 #include <DDSTextureLoader.h>
@@ -18,6 +19,7 @@ namespace HONG::TextureCache
 		{
 			std::string key;
 			Srv srv;  // null = remembered load failure
+			float openness{ -1.0f };
 		};
 
 		ID3D11Device* g_device = nullptr;
@@ -27,6 +29,16 @@ namespace HONG::TextureCache
 	void SetDevice(ID3D11Device* a_device)
 	{
 		g_device = a_device;
+	}
+
+	float Openness(const std::string& a_path)
+	{
+		for (const auto& entry : g_lru) {
+			if (_stricmp(entry.key.c_str(), a_path.c_str()) == 0) {
+				return entry.openness;
+			}
+		}
+		return -1.0f;
 	}
 
 	Srv Get(const std::string& a_path)
@@ -43,6 +55,7 @@ namespace HONG::TextureCache
 		}
 
 		Srv srv;
+		float openness = -1.0f;
 		const auto bytes = Resolver::ReadFile(a_path);
 		if (bytes.empty()) {
 			logger::warn("Could not read overlay {}", a_path);
@@ -52,10 +65,12 @@ namespace HONG::TextureCache
 			if (FAILED(hr)) {
 				logger::warn("Could not create texture for {} (hr {:#x})", a_path, static_cast<std::uint32_t>(hr));
 				srv.Reset();
+			} else {
+				openness = ArtMetrics::SeeThroughFraction(bytes.data(), bytes.size());
 			}
 		}
 
-		g_lru.push_front({ a_path, srv });
+		g_lru.push_front({ a_path, srv, openness });
 		if (g_lru.size() > kCapacity) {
 			g_lru.pop_back();
 		}

@@ -14,4 +14,8 @@ namespace HONG::TextureCache
 	// small LRU (each 1080p DXT5 overlay is ~2 MB VRAM). Null on failure
 	// (failures are remembered so a bad file is not re-read every equip).
 	Srv Get(const std::string& a_path);
+
+	// See-through fraction (0..1) of a path already passed to Get, or -1 if unknown
+	// (not loaded, or not a DXT3/DXT5 file).
+	float Openness(const std::string& a_path);
 }

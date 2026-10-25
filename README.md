@@ -18,6 +18,7 @@ See [docs/DESIGN.md](docs/DESIGN.md) for how it works and the open items, and
 - Opacity, scale, and animated on/off (fade, settle, slide); head-turn sway on flat.
 - Drawn beneath all menus and faded out for the menus you choose.
 - A coverage report: how many helmets in your load order have overlay art, per plugin.
+- Sound muffling scaled by helmet type, from the armor class and how closed the overlay art is.
 - Optional world-sound attenuation and a real low-pass filter, as separate settings.
 - In-game settings and a debug page through SKSE Menu Framework (optional).
 - Can stop the original `ScribeOverlays.esp` widget from drawing a second overlay.

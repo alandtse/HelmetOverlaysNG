@@ -3,6 +3,7 @@
 
 #include "OverlayController.h"
 
+#include "HelmetProfile.h"
 #include "OverlayResolver.h"
 #include "Settings.h"
 
@@ -16,6 +17,21 @@ namespace HONG
 		constexpr float kSwayGain = 0.9f;                // display fraction per radian of turn
 		constexpr float kSwayDecayPerSecond = 7.0f;
 		constexpr float kSwayLimit = 0.025f;  // fraction; the art has bleed margin for this
+
+		Profile::ArmorClass ClassOf(const RE::TESObjectARMO* a_armor)
+		{
+			using Type = RE::BGSBipedObjectForm::ArmorType;
+			switch (a_armor->GetArmorType()) {
+			case Type::kHeavyArmor:
+				return Profile::ArmorClass::kHeavy;
+			case Type::kLightArmor:
+				return Profile::ArmorClass::kLight;
+			case Type::kClothing:
+				return Profile::ArmorClass::kClothing;
+			default:
+				return Profile::ArmorClass::kUnknown;
+			}
+		}
 
 		float SmoothStep(float a_t)
 		{
@@ -140,7 +156,17 @@ namespace HONG
 		if (!srv) {
 			return;
 		}
-		logger::info("Overlay '{}' for '{}'", *path, armor->GetName());
+
+		const auto settings = Settings::GetSingleton();
+		const float openness = TextureCache::Openness(*path);
+		const auto profile = Profile::Compute(openness, ClassOf(armor), settings->autoArtWeight);
+		_muffleStrength = settings->autoStrength ? profile.strength : 1.0f;
+		{
+			std::scoped_lock lock{ _diagLock };
+			_diag.openness = openness;
+			_diag.strength = _muffleStrength;
+		}
+		logger::info("Overlay '{}' for '{}' (see-through {:.0f}%, muffle strength {:.2f})", *path, armor->GetName(), openness * 100.0f, _muffleStrength);
 		_layers.push_back({ std::move(srv), armor, 0.0f, true });
 	}
 

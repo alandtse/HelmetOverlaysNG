@@ -130,6 +130,14 @@ namespace HONG::UI
 			ImGuiMCP::TextDisabled("Two independent effects while a helmet is worn. Use either, both or neither.");
 			ImGuiMCP::Separator();
 
+			ImGuiMCP::Checkbox("Scale by helmet type", &s->autoStrength);
+			Tip("Closed helms muffle fully; open helmets and hoods muffle less. Uses the armor class (heavy, light, clothing) and how much of the overlay art is see-through. Applies when the helmet is next equipped.");
+			ImGuiMCP::BeginDisabled(!s->autoStrength);
+			ImGuiMCP::SliderFloat("Weight of overlay art", &s->autoArtWeight, 0.0f, 1.0f, "%.2f", 0);
+			Tip("0 uses only the armor class; 1 uses only how closed the overlay is.");
+			ImGuiMCP::EndDisabled();
+			ImGuiMCP::Separator();
+
 			if (ImGuiMCP::CollapsingHeader("Volume attenuation", ImGuiMCP::ImGuiTreeNodeFlags_DefaultOpen)) {
 				ImGuiMCP::Checkbox("Attenuate world sound", &s->attenuate);
 				Tip("Lowers the volume of world sound categories (effects, footsteps). Voice and music are untouched.");
@@ -216,6 +224,10 @@ namespace HONG::UI
 					ImGuiMCP::Text("World model: %s", current.model.empty() ? "(none)" : current.model.c_str());
 					if (current.found) {
 						ImGuiMCP::Text("Overlay: %s", current.overlayPath.c_str());
+						if (current.openness >= 0.0f) {
+							ImGuiMCP::Text("Overlay see-through: %.0f%%", current.openness * 100.0f);
+						}
+						ImGuiMCP::Text("Sound muffle strength: %.2f", current.strength);
 					} else {
 						ImGuiMCP::TextColored({ 1.0f, 0.5f, 0.4f, 1.0f }, "No overlay art found. Paths tried:");
 						for (const auto& path : current.tried) {

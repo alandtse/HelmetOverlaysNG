@@ -31,6 +31,7 @@ add_requires("nlohmann_json") -- imgui-vr-helper client SDK payloads
 add_requires("directxtk") -- DDSTextureLoader: overlay .dds -> SRV
 add_requires("imgui-vr-helper-api 1.5.2") -- VR head-locked HUD plane client API (LGPL, source-form)
 add_requires("skse-menu-framework-api 3.7.0") -- optional in-game settings host (LGPL header)
+add_requires("catch2") -- unit tests (HelmetOverlaysNG-Tests target only)
 
 -- The SMF-hosted settings UI lives in its own PCH-free static lib: the SMF
 -- client header's cimgui-style typedefs cannot coexist with the real imgui.h
@@ -141,3 +142,15 @@ after_build(function(target)
         })
     end
 end)
+
+-- Headless unit tests for the dependency-free logic (no CommonLib / SKSE /
+-- Skyrim runtime). Defined last so it does not inherit the plugin's deploy
+-- hook. Not built by a plain `xmake`:
+--   xmake build HelmetOverlaysNG-Tests && xmake run HelmetOverlaysNG-Tests
+target("HelmetOverlaysNG-Tests")
+set_kind("binary")
+set_default(false)
+set_group("tests")
+add_packages("catch2")
+add_includedirs("src")
+add_files("tests/**.cpp", "src/ArtMetrics.cpp", "src/HelmetProfile.cpp")

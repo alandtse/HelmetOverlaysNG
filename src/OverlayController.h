@@ -36,6 +36,9 @@ namespace HONG
 		// 0 while the overlay is gated off). Drives sound muffling.
 		float WornAmount() const { return _wornAmount; }
 
+		// 0..1 scale on the sound effects for the worn helmet's type (1 when disabled).
+		float MuffleStrength() const { return _muffleStrength; }
+
 		void MarkDirty() { _dirty.store(true, std::memory_order_relaxed); }
 
 		// Debug: draw this armor's overlay regardless of what is worn (0 = off, use the
@@ -50,6 +53,8 @@ namespace HONG
 			std::string armorName;
 			bool previewing{ false };
 			Resolver::Resolution resolution;
+			float openness{ -1.0f };  // overlay see-through fraction, -1 unknown
+			float strength{ 1.0f };   // how much this helmet muffles sound
 		};
 		Diagnostic GetDiagnostic() const;
 
@@ -75,6 +80,7 @@ namespace HONG
 		mutable std::mutex _diagLock;
 		Diagnostic _diag;
 		float _wornAmount{ 0.0f };
+		float _muffleStrength{ 1.0f };
 		float _timeSinceRefresh{ 0.0f };
 
 		ImVec2 _sway{ 0, 0 };

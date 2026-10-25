@@ -63,7 +63,9 @@ namespace HONG
 		bool attenuate{ true };         // lower world-sound volume while helmeted
 		float attenuateVolume{ 0.6f };  // multiplier reached at full helmet
 		float attenuateSeconds{ 0.5f };
-		bool lowPass{ false };  // real low-pass "distortion" (muffled highs), see LowPass.cpp
+		bool autoStrength{ true };     // scale both effects by helmet type (armor class and overlay art)
+		float autoArtWeight{ 0.65f };  // how much the overlay art outweighs the armor class
+		bool lowPass{ false };         // real low-pass "distortion" (muffled highs), see LowPass.cpp
 		float lowPassHz{ 1800.0f };
 
 		// [Menus] - which open menus fade the overlay out (when hideInMenus is on).

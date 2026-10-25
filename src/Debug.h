@@ -62,6 +62,8 @@ namespace HONG::Debug
 		std::string overlayPath;
 		bool found{ false };
 		std::vector<std::string> tried;
+		float openness{ -1.0f };  // overlay see-through fraction, -1 unknown
+		float strength{ 1.0f };   // sound muffling scale for this helmet
 	};
 	Current GetCurrent();
 
