@@ -11,11 +11,13 @@ namespace HONG::Resolver
 	{
 		constexpr std::uint32_t kMaxOverlayBytes = 32u * 1024u * 1024u;
 
-		std::string NormalizeModelPath(std::string a_path)
+		// The record's model path without its extension. Some armor mods write a leading "meshes\" into the
+		// record, and overlay packs name their files after either form, so a_stripMeshes selects which one.
+		std::string NormalizeModelPath(std::string a_path, bool a_stripMeshes)
 		{
 			std::ranges::replace(a_path, '/', '\\');
 			constexpr auto kMeshes = "meshes\\"sv;
-			if (a_path.size() > kMeshes.size() && _strnicmp(a_path.c_str(), kMeshes.data(), kMeshes.size()) == 0) {
+			if (a_stripMeshes && a_path.size() > kMeshes.size() && _strnicmp(a_path.c_str(), kMeshes.data(), kMeshes.size()) == 0) {
 				a_path.erase(0, kMeshes.size());
 			}
 			if (const auto dot = a_path.rfind('.'); dot != std::string::npos) {
@@ -66,12 +68,17 @@ namespace HONG::Resolver
 			if (result.model.empty()) {
 				result.model = model;
 			}
-			auto candidate = std::format("{}\\{}.dds", root, NormalizeModelPath(model));
-			const bool found = Exists(candidate);
-			result.tried.push_back(candidate);
-			if (found && !result.path) {
-				result.path = std::move(candidate);
-				break;
+			for (const bool strip : { true, false }) {
+				auto candidate = std::format("{}\\{}.dds", root, NormalizeModelPath(model, strip));
+				if (std::ranges::find(result.tried, candidate) != result.tried.end()) {
+					continue;
+				}
+				const bool found = Exists(candidate);
+				result.tried.push_back(candidate);
+				if (found) {
+					result.path = std::move(candidate);
+					return result;
+				}
 			}
 		}
 		return result;
