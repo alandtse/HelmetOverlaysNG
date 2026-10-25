@@ -300,6 +300,9 @@ namespace HONG::UI
 			logger::info("SKSE Menu Framework not installed; in-game settings disabled.");
 			return;
 		}
+		// The header caches the module handle in a static initialised when this DLL loads,
+		// which is null if SKSEMenuFramework.dll loads after us.
+		menuFramework = GetModuleHandle(L"SKSEMenuFramework");
 		SKSEMenuFramework::SetSection("Helmet Overlays NG");
 		SKSEMenuFramework::AddSectionItem("Overlay", RenderOverlay);
 		SKSEMenuFramework::AddSectionItem("Sound", RenderSound);
