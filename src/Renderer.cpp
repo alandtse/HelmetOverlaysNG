@@ -3,6 +3,7 @@
 
 #include "Renderer.h"
 
+#include "Debug.h"
 #include "ImGuiVRHelperClientSDK.h"
 #include "Muffle.h"
 #include "OverlayController.h"
@@ -101,6 +102,7 @@ namespace HONG::Renderer
 				}
 
 				OverlayController::GetSingleton()->Update(FrameDelta(), g_layers);
+				Debug::Tick();
 				Muffle::Update(OverlayController::GetSingleton()->WornAmount());
 
 				static const auto screenSize = RE::BSGraphics::Renderer::GetScreenSize();

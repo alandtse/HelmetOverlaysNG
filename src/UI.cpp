@@ -65,9 +65,24 @@ namespace HONG::UI
 			ImGuiMCP::TextDisabled("Changes apply immediately; Save writes them to the INI.");
 		}
 
+		void CoverageSummary()
+		{
+			const auto coverage = Debug::GetCoverage();
+			if (!coverage.done) {
+				ImGuiMCP::TextDisabled("Overlay coverage: scanning helmets (%.0f%%)...", coverage.progress * 100.0f);
+				return;
+			}
+			const float percent = coverage.eligible ? 100.0f * static_cast<float>(coverage.covered) / static_cast<float>(coverage.eligible) : 0.0f;
+			ImGuiMCP::Text("Overlay coverage: %u of %u helmets and hoods have art (%.0f%%)", coverage.covered, coverage.eligible, percent);
+			Tip("Playable head and hair armors in your load order that have a world model, checked against the overlay art on disk. Details are on the Debug page.");
+		}
+
 		void __stdcall RenderOverlay()
 		{
 			auto* s = Settings::GetSingleton();
+
+			CoverageSummary();
+			ImGuiMCP::Separator();
 
 			ImGuiMCP::Checkbox("Enable helmet overlays", &s->enabled);
 			Tip("Master switch. Off hides the overlay (and sound changes) without unloading the plugin.");
@@ -210,6 +225,27 @@ namespace HONG::UI
 				}
 			}
 
+			if (ImGuiMCP::CollapsingHeader("Coverage", ImGuiMCP::ImGuiTreeNodeFlags_DefaultOpen)) {
+				const auto coverage = Debug::GetCoverage();
+				CoverageSummary();
+				if (coverage.done) {
+					ImGuiMCP::Text("%u without art, %u skipped (no world model)", coverage.missing, coverage.noModel);
+					constexpr std::size_t kMaxPluginRows = 25;
+					std::size_t rows = 0;
+					for (const auto& plugin : coverage.byPlugin) {
+						if (rows++ >= kMaxPluginRows) {
+							ImGuiMCP::TextDisabled("... %zu more plugins", coverage.byPlugin.size() - kMaxPluginRows);
+							break;
+						}
+						ImGuiMCP::BulletText("%s: %u of %u covered", plugin.plugin.c_str(), plugin.covered, plugin.total);
+					}
+				}
+				if (ImGuiMCP::Button("Rescan", { 0, 0 })) {
+					Debug::RescanCoverage();
+				}
+				Tip("Run again after installing or removing overlay art.");
+			}
+
 			if (ImGuiMCP::CollapsingHeader("Preview a helmet", ImGuiMCP::ImGuiTreeNodeFlags_DefaultOpen)) {
 				const auto previewing = Debug::Previewing();
 				if (previewing != 0) {
@@ -223,22 +259,22 @@ namespace HONG::UI
 				static char filter[64]{};
 				ImGuiMCP::InputTextWithHint("##hong_helmetfilter", "Type to filter helmets...", filter, sizeof(filter), 0, nullptr, nullptr);
 
-				const auto& helmets = Debug::Helmets();
-				ImGuiMCP::Text("%zu head/hair armors in the load order", helmets.size());
+				static bool missingOnly = false;
+				ImGuiMCP::Checkbox("Only helmets without art", &missingOnly);
+
 				constexpr std::size_t kMaxRows = 60;
-				std::size_t shown = 0;
+				std::size_t totalMatches = 0;
+				const auto helmets = Debug::FilterHelmets(filter, missingOnly, kMaxRows, totalMatches);
+				ImGuiMCP::Text("%zu matching helmets", totalMatches);
 				for (const auto& helmet : helmets) {
-					if (!IContains(helmet.name, filter) && !IContains(helmet.plugin, filter)) {
-						continue;
-					}
-					if (shown++ >= kMaxRows) {
-						ImGuiMCP::TextDisabled("... narrow the filter to see more.");
-						break;
-					}
-					const std::string label = helmet.name + "  [" + helmet.plugin + "]##" + std::to_string(helmet.id);
+					const char* tag = helmet.art > 0 ? "" : (helmet.art == 0 ? "  (no art)" : "");
+					const std::string label = helmet.name + "  [" + helmet.plugin + "]" + tag + "##" + std::to_string(helmet.id);
 					if (ImGuiMCP::Selectable(label.c_str(), helmet.id == previewing, 0, { 0, 0 })) {
 						Debug::Preview(helmet.id);
 					}
+				}
+				if (totalMatches > helmets.size()) {
+					ImGuiMCP::TextDisabled("... narrow the filter to see more.");
 				}
 			}
 			SaveReloadRow();

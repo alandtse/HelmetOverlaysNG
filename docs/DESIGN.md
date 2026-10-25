@@ -56,6 +56,14 @@ Two independent effects while a helmet is worn (`[Sound]`):
   helmet comes off. The engine has no global or underwater low-pass; its underwater effect is category
   mutes plus a reverb preset.
 
+## Coverage
+
+A scan of every playable head or hair armor that has a world model resolves each one against the art on
+disk, in batches of 48 per frame once the player is loaded, and logs the result, for example
+"695 of 851 playable head/hair armors have art (82%)" with the plugins missing the most. The Overlay page
+shows the summary; the Debug page adds a per-plugin breakdown, a rescan button, and a filter for helmets
+without art.
+
 ## In-game settings
 
 SKSE Menu Framework page "Helmet Overlays NG": Overlay, Sound, Menus (which registered menus hide the
@@ -65,8 +73,11 @@ share a translation unit with `imgui.h`.
 
 ## Original mod coexistence
 
-`bSuppressOriginal` stops the quests of `ScribeOverlays.esp` on each load or new game so its widget does
-not draw a second overlay. It has not been run against an active `ScribeOverlays.esp`.
+`bSuppressOriginal` stops the quests of `ScribeOverlays.esp` on each save load and new game. In VR, with
+the ESP enabled, a save load logged "Suppressed 2 quest(s)" and `ScribeHelmet_Quest` reported not running;
+with the option off the same quest reported running. The original's widget never showed in VR captures
+either way, so the visual effect is untested; flat has not been run against an active ESP. The hook does
+not fire for a console `coc` start.
 
 ## Open items
 

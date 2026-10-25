@@ -8,7 +8,8 @@ It reads the existing overlay art (`Data/Interface/overlays/**.dds`, from Helmet
 Helmet Overlays Enhanced Edition) and picks the overlay from the worn helmet's world model path.
 No ESP, no Papyrus, no SkyUI, no Scaleform. This mod ships no art; install the art packs.
 
-See [docs/DESIGN.md](docs/DESIGN.md) for how it works and the open items.
+See [docs/DESIGN.md](docs/DESIGN.md) for how it works and the open items, and
+[docs/COMPARISON.md](docs/COMPARISON.md) for how it differs from the other overlay mods.
 
 ## Features
 
@@ -16,6 +17,7 @@ See [docs/DESIGN.md](docs/DESIGN.md) for how it works and the open items.
 - Flat and VR (a head-locked plane through [imgui-vr-helper](https://github.com/alandtse/imgui-vr-helper)).
 - Opacity, scale, and animated on/off (fade, settle, slide); head-turn sway on flat.
 - Drawn beneath all menus and faded out for the menus you choose.
+- A coverage report: how many helmets in your load order have overlay art, per plugin.
 - Optional world-sound attenuation and a real low-pass filter, as separate settings.
 - In-game settings and a debug page through SKSE Menu Framework (optional).
 - Can stop the original `ScribeOverlays.esp` widget from drawing a second overlay.
