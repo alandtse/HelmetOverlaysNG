@@ -4,6 +4,7 @@
 #include "OverlayController.h"
 
 #include "HelmetProfile.h"
+#include "LightLevel.h"
 #include "OverlayResolver.h"
 #include "Settings.h"
 
@@ -205,6 +206,26 @@ namespace HONG
 		_sway.y = std::clamp(_sway.y * decay, -kSwayLimit, kSwayLimit);
 	}
 
+	void OverlayController::UpdateLight(float a_dt)
+	{
+		const auto settings = Settings::GetSingleton();
+		if (!settings->reactiveLight) {
+			_lightDarkness = 0.0f;
+			_lightTarget = 0.0f;
+			_lightClock = settings->lightIntervalSeconds;
+			return;
+		}
+		_lightClock += a_dt;
+		if (_lightClock >= settings->lightIntervalSeconds) {
+			_lightClock = 0.0f;
+			if (const float level = LightLevel::SamplePlayer(); level >= 0.0f) {
+				_lightTarget = 1.0f - level;
+			}
+		}
+		const float step = settings->lightFadeSeconds > 0.0f ? a_dt / settings->lightFadeSeconds : 1.0f;
+		_lightDarkness += std::clamp(_lightTarget - _lightDarkness, -step, step);
+	}
+
 	void OverlayController::Update(float a_dt, std::vector<DrawLayer>& a_out)
 	{
 		a_out.clear();
@@ -217,6 +238,7 @@ namespace HONG
 
 		const bool gated = Gated();
 		UpdateSway(a_dt);
+		UpdateLight(a_dt);
 
 		float worn = 0.0f;
 		for (auto& layer : _layers) {
@@ -239,6 +261,7 @@ namespace HONG
 			DrawLayer out;
 			out.srv = layer.srv.Get();
 			out.alpha = eased * settings->opacity;
+			out.tint = 1.0f - settings->lightStrength * _lightDarkness;
 			out.offset = _sway;
 			switch (settings->animStyle) {
 			case AnimStyle::kSettle:

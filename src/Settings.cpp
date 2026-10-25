@@ -147,6 +147,10 @@ namespace HONG
 		debugTools = debug;  // a view preference, not a tuning value
 		opacity = 1.0f;
 		scale = 1.0f;
+		reactiveLight = false;
+		lightStrength = 0.6f;
+		lightFadeSeconds = 1.5f;
+		lightIntervalSeconds = 0.5f;
 		animStyle = AnimStyle::kSettle;
 		fadeInSeconds = 0.35f;
 		fadeOutSeconds = 0.20f;
@@ -185,6 +189,11 @@ namespace HONG
 
 		opacity = GetFloat(ini, "Appearance", "fOpacity", opacity, 0.0f, 1.0f);
 		scale = GetFloat(ini, "Appearance", "fScale", scale, 0.25f, 4.0f);
+
+		reactiveLight = ini.GetBoolValue("Light", "bReactive", reactiveLight);
+		lightStrength = GetFloat(ini, "Light", "fStrength", lightStrength, 0.0f, 1.0f);
+		lightFadeSeconds = GetFloat(ini, "Light", "fFadeSeconds", lightFadeSeconds, 0.0f, 10.0f);
+		lightIntervalSeconds = GetFloat(ini, "Light", "fIntervalSeconds", lightIntervalSeconds, 0.1f, 5.0f);
 
 		animStyle = ParseStyle(ini.GetValue("Animation", "sStyle", ""), animStyle);
 		fadeInSeconds = GetFloat(ini, "Animation", "fFadeInSeconds", fadeInSeconds, 0.0f, 5.0f);
@@ -230,6 +239,11 @@ namespace HONG
 
 		ini.SetDoubleValue("Appearance", "fOpacity", opacity);
 		ini.SetDoubleValue("Appearance", "fScale", scale);
+
+		ini.SetBoolValue("Light", "bReactive", reactiveLight);
+		ini.SetDoubleValue("Light", "fStrength", lightStrength);
+		ini.SetDoubleValue("Light", "fFadeSeconds", lightFadeSeconds);
+		ini.SetDoubleValue("Light", "fIntervalSeconds", lightIntervalSeconds);
 
 		ini.SetValue("Animation", "sStyle", StyleName(animStyle));
 		ini.SetDoubleValue("Animation", "fFadeInSeconds", fadeInSeconds);

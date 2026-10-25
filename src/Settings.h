@@ -55,6 +55,12 @@ namespace HONG
 		float opacity{ 1.0f };
 		float scale{ 1.0f };
 
+		// [Light] darken the art in dark places
+		bool reactiveLight{ false };
+		float lightStrength{ 0.6f };         // darkening at zero light, 0 = none, 1 = black
+		float lightFadeSeconds{ 1.5f };      // time to move to a new light level
+		float lightIntervalSeconds{ 0.5f };  // how often the light level is sampled
+
 		// [Animation]
 		AnimStyle animStyle{ AnimStyle::kSettle };
 		float fadeInSeconds{ 0.35f };

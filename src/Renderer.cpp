@@ -34,10 +34,11 @@ namespace HONG::Renderer
 				const ImVec2 size{ base.x * layer.scale, base.y * layer.scale };
 				const ImVec2 center{ a_display.x * (0.5f + layer.offset.x), a_display.y * (0.5f + layer.offset.y) };
 				const auto alpha = static_cast<std::uint8_t>(std::clamp(layer.alpha, 0.0f, 1.0f) * 255.0f);
+				const auto tint = static_cast<std::uint8_t>(std::clamp(layer.tint, 0.0f, 1.0f) * 255.0f);
 				drawList->AddImage(reinterpret_cast<ImTextureID>(layer.srv),
 					ImVec2(center.x - size.x * 0.5f, center.y - size.y * 0.5f),
 					ImVec2(center.x + size.x * 0.5f, center.y + size.y * 0.5f),
-					ImVec2(0, 0), ImVec2(1, 1), IM_COL32(255, 255, 255, alpha));
+					ImVec2(0, 0), ImVec2(1, 1), IM_COL32(tint, tint, tint, alpha));
 			}
 		}
 

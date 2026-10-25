@@ -107,6 +107,19 @@ namespace HONG::UI
 				Tip("Uniform scale about the screen center. 1.0 covers the screen with the 16:9 art.");
 			}
 
+			if (ImGuiMCP::CollapsingHeader("Light", ImGuiMCP::ImGuiTreeNodeFlags_DefaultOpen)) {
+				ImGuiMCP::Checkbox("Darken in dark places", &s->reactiveLight);
+				Tip("Dims the overlay art with the light level around you. Fully black parts of the art stay black.");
+				ImGuiMCP::BeginDisabled(!s->reactiveLight);
+				ImGuiMCP::SliderFloat("Darkness strength", &s->lightStrength, 0.0f, 1.0f, "%.2f", 0);
+				Tip("How dark the art gets with no light. 1.0 is black.");
+				ImGuiMCP::SliderFloat("Fade time (s)", &s->lightFadeSeconds, 0.0f, 10.0f, "%.1f", 0);
+				Tip("Time to move to a new light level.");
+				ImGuiMCP::SliderFloat("Check interval (s)", &s->lightIntervalSeconds, 0.1f, 5.0f, "%.1f", 0);
+				Tip("How often the light level is read.");
+				ImGuiMCP::EndDisabled();
+			}
+
 			if (ImGuiMCP::CollapsingHeader("Animation", ImGuiMCP::ImGuiTreeNodeFlags_DefaultOpen)) {
 				static const char* const kStyles[] = { "Fade", "Settle", "Slide" };
 				int style = static_cast<int>(s->animStyle);

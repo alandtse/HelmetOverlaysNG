@@ -18,6 +18,7 @@ namespace HONG
 	{
 		ID3D11ShaderResourceView* srv{ nullptr };
 		float alpha{ 0.0f };    // 0..1, opacity setting already applied
+		float tint{ 1.0f };     // 0..1 brightness multiplier (reactive light)
 		float scale{ 1.0f };    // animation scale about center
 		ImVec2 offset{ 0, 0 };  // fraction of display size (slide + sway)
 	};
@@ -89,6 +90,7 @@ namespace HONG
 		bool Gated() const;
 		void Refresh();
 		void UpdateSway(float a_dt);
+		void UpdateLight(float a_dt);
 
 		std::vector<Layer> _layers;
 		const RE::TESObjectARMO* _currentArmor{ nullptr };
@@ -97,6 +99,9 @@ namespace HONG
 		mutable std::mutex _diagLock;
 		Diagnostic _diag;
 		float _wornAmount{ 0.0f };
+		float _lightDarkness{ 0.0f };       // 0 lit .. 1 dark, eased toward _lightTarget
+		float _lightTarget{ 0.0f };
+		float _lightClock{ 0.0f };
 		MaskCandidate _mask;
 		ImVec2 _lastMaskOffset{ 0, 0 };
 		float _muffleStrength{ 1.0f };
