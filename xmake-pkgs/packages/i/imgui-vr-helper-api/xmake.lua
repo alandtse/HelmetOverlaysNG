@@ -9,7 +9,7 @@ set_description("LGPL client API for ImGuiVRHelper (VR world-quad billboards for
 set_license("LGPL-3.0-or-later")
 
 add_urls("https://github.com/alandtse/imgui-vr-helper.git", { submodules = false })
-add_versions("1.5.2", "eaecdd6a83ca7f2de8950835d87c0f9ce6840988")
+add_versions("1.10.0", "ea434eb1e6914f68bf24cbf9159f536b5d67b7a4")
 
 on_install(function(package)
     os.cp("api/ImGuiVRHelperAPI.h", package:installdir("include"))

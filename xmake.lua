@@ -29,7 +29,7 @@ add_requires("imgui", { configs = { dx11 = true, win32 = true } })
 add_requires("simpleini") -- Data/SKSE/Plugins/HelmetOverlaysNG.ini
 add_requires("nlohmann_json") -- imgui-vr-helper client SDK payloads
 add_requires("directxtk") -- DDSTextureLoader: overlay .dds -> SRV
-add_requires("imgui-vr-helper-api 1.5.2") -- VR head-locked HUD plane client API (LGPL, source-form)
+add_requires("imgui-vr-helper-api 1.10.0") -- VR head-locked HUD plane client API (LGPL, source-form)
 add_requires("skse-menu-framework-api 3.7.0") -- optional in-game settings host (LGPL header)
 add_requires("catch2") -- unit tests (HelmetOverlaysNG-Tests target only)
 
