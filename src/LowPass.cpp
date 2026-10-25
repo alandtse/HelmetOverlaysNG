@@ -18,6 +18,8 @@ namespace HONG::LowPass
 		std::mutex g_lock;
 		std::unordered_map<const void*, float> g_applied;
 		std::uint64_t g_inactiveSince = 0;
+		std::atomic<std::uint32_t> g_tookFilter{ 0 };   // voices whose read-back matched what we set
+		std::atomic<std::uint32_t> g_refusedFilter{ 0 };  // voices that read back a different frequency
 
 		constexpr float kPi = 3.14159265358979f;
 		constexpr float kMaxFilterFrequency = 1.0f;  // XAUDIO2_MAX_FILTER_FREQUENCY, a cutoff of SampleRate / 6
@@ -104,6 +106,11 @@ namespace HONG::LowPass
 				params.Frequency = target;
 				params.OneOverQ = current.OneOverQ > 0.0f ? current.OneOverQ : 1.0f;
 				const auto hr = voice->SetOutputFilterParameters(master, &params);
+				if (hr >= 0 && active) {
+					RE::XAUDIO2_FILTER_PARAMETERS after{};
+					voice->GetOutputFilterParameters(master, &after);
+					(std::fabs(after.Frequency - target) < kSameEpsilon ? g_tookFilter : g_refusedFilter).fetch_add(1, std::memory_order_relaxed);
+				}
 				if (hr < 0) {
 					static std::atomic<bool> warned{ false };
 					if (!warned.exchange(true)) {
@@ -155,6 +162,13 @@ namespace HONG::LowPass
 
 	void SetTarget(bool a_enabled, float a_amount, float a_cutoffHz)
 	{
+		const bool active = a_enabled && a_amount > 0.0f;
+		if (active != (g_enabled.load(std::memory_order_relaxed) && g_amount.load(std::memory_order_relaxed) > 0.0f)) {
+			logger::info("Low-pass {} (target cutoff {:.0f} Hz).", active ? "on" : "off", a_cutoffHz);
+			if (!active) {
+				logger::info("Low-pass voices: {} took the filter, {} read back a different frequency.", g_tookFilter.exchange(0), g_refusedFilter.exchange(0));
+			}
+		}
 		g_enabled.store(a_enabled, std::memory_order_relaxed);
 		g_amount.store(a_amount, std::memory_order_relaxed);
 		g_cutoffHz.store(a_cutoffHz, std::memory_order_relaxed);
