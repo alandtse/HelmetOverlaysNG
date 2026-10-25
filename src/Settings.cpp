@@ -147,6 +147,8 @@ namespace HONG
 		debugTools = debug;  // a view preference, not a tuning value
 		opacity = 1.0f;
 		scale = 1.0f;
+		verticalOffset = 0.0f;
+		extendEdges = true;
 		reactiveLight = false;
 		lightStrength = 0.6f;
 		lightFadeSeconds = 1.5f;
@@ -191,6 +193,8 @@ namespace HONG
 
 		opacity = GetFloat(ini, "Appearance", "fOpacity", opacity, 0.0f, 1.0f);
 		scale = GetFloat(ini, "Appearance", "fScale", scale, 0.25f, 4.0f);
+		verticalOffset = GetFloat(ini, "Appearance", "fVerticalOffset", verticalOffset, -0.5f, 0.5f);
+		extendEdges = ini.GetBoolValue("Appearance", "bExtendEdges", extendEdges);
 
 		reactiveLight = ini.GetBoolValue("Light", "bReactive", reactiveLight);
 		lightStrength = GetFloat(ini, "Light", "fStrength", lightStrength, 0.0f, 1.0f);
@@ -243,6 +247,8 @@ namespace HONG
 
 		ini.SetDoubleValue("Appearance", "fOpacity", opacity);
 		ini.SetDoubleValue("Appearance", "fScale", scale);
+		ini.SetDoubleValue("Appearance", "fVerticalOffset", verticalOffset);
+		ini.SetBoolValue("Appearance", "bExtendEdges", extendEdges);
 
 		ini.SetBoolValue("Light", "bReactive", reactiveLight);
 		ini.SetDoubleValue("Light", "fStrength", lightStrength);

@@ -25,6 +25,41 @@ namespace HONG::Renderer
 
 		std::vector<DrawLayer> g_layers;
 
+		// Stretches the art's outermost pixel rows and columns over the part of the display the art does not reach.
+		void DrawEdgeExtension(ImDrawList* a_drawList, ImTextureID a_texture, ImVec2 a_min, ImVec2 a_max, ImVec2 a_display, ImU32 a_color)
+		{
+			constexpr float kEdgeU = 0.5f / kArtWidth;
+			constexpr float kEdgeV = 0.5f / kArtHeight;
+			const bool left = a_min.x > 0.0f;
+			const bool right = a_max.x < a_display.x;
+			const bool top = a_min.y > 0.0f;
+			const bool bottom = a_max.y < a_display.y;
+			if (left) {
+				a_drawList->AddImage(a_texture, ImVec2(0, a_min.y), ImVec2(a_min.x, a_max.y), ImVec2(kEdgeU, 0), ImVec2(kEdgeU, 1), a_color);
+			}
+			if (right) {
+				a_drawList->AddImage(a_texture, ImVec2(a_max.x, a_min.y), ImVec2(a_display.x, a_max.y), ImVec2(1 - kEdgeU, 0), ImVec2(1 - kEdgeU, 1), a_color);
+			}
+			if (top) {
+				a_drawList->AddImage(a_texture, ImVec2(a_min.x, 0), ImVec2(a_max.x, a_min.y), ImVec2(0, kEdgeV), ImVec2(1, kEdgeV), a_color);
+			}
+			if (bottom) {
+				a_drawList->AddImage(a_texture, ImVec2(a_min.x, a_max.y), ImVec2(a_max.x, a_display.y), ImVec2(0, 1 - kEdgeV), ImVec2(1, 1 - kEdgeV), a_color);
+			}
+			if (left && top) {
+				a_drawList->AddImage(a_texture, ImVec2(0, 0), a_min, ImVec2(kEdgeU, kEdgeV), ImVec2(kEdgeU, kEdgeV), a_color);
+			}
+			if (right && top) {
+				a_drawList->AddImage(a_texture, ImVec2(a_max.x, 0), ImVec2(a_display.x, a_min.y), ImVec2(1 - kEdgeU, kEdgeV), ImVec2(1 - kEdgeU, kEdgeV), a_color);
+			}
+			if (left && bottom) {
+				a_drawList->AddImage(a_texture, ImVec2(0, a_max.y), ImVec2(a_min.x, a_display.y), ImVec2(kEdgeU, 1 - kEdgeV), ImVec2(kEdgeU, 1 - kEdgeV), a_color);
+			}
+			if (right && bottom) {
+				a_drawList->AddImage(a_texture, a_max, a_display, ImVec2(1 - kEdgeU, 1 - kEdgeV), ImVec2(1 - kEdgeU, 1 - kEdgeV), a_color);
+			}
+		}
+
 		void DrawLayers(ImVec2 a_display, bool a_stretch)
 		{
 			const auto drawList = ImGui::GetBackgroundDrawList();
@@ -35,10 +70,14 @@ namespace HONG::Renderer
 				const ImVec2 center{ a_display.x * (0.5f + layer.offset.x), a_display.y * (0.5f + layer.offset.y) };
 				const auto alpha = static_cast<std::uint8_t>(std::clamp(layer.alpha, 0.0f, 1.0f) * 255.0f);
 				const auto tint = static_cast<std::uint8_t>(std::clamp(layer.tint, 0.0f, 1.0f) * 255.0f);
-				drawList->AddImage(reinterpret_cast<ImTextureID>(layer.srv),
-					ImVec2(center.x - size.x * 0.5f, center.y - size.y * 0.5f),
-					ImVec2(center.x + size.x * 0.5f, center.y + size.y * 0.5f),
-					ImVec2(0, 0), ImVec2(1, 1), IM_COL32(tint, tint, tint, alpha));
+				const ImVec2 min(center.x - size.x * 0.5f, center.y - size.y * 0.5f);
+				const ImVec2 max(center.x + size.x * 0.5f, center.y + size.y * 0.5f);
+				const auto texture = reinterpret_cast<ImTextureID>(layer.srv);
+				const ImU32 color = IM_COL32(tint, tint, tint, alpha);
+				drawList->AddImage(texture, min, max, ImVec2(0, 0), ImVec2(1, 1), color);
+				if (Settings::GetSingleton()->extendEdges) {
+					DrawEdgeExtension(drawList, texture, min, max, a_display, color);
+				}
 			}
 		}
 

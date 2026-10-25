@@ -289,7 +289,7 @@ namespace HONG
 			out.alpha = eased * settings->opacity;
 			out.tint = 1.0f - settings->lightStrength * _lightDarkness;
 			const auto motion = _motion.Current();
-			out.offset = { _sway.x + motion.x, _sway.y + motion.y };
+			out.offset = { _sway.x + motion.x, _sway.y + motion.y + settings->verticalOffset };
 			out.scale = settings->scale;
 			switch (settings->animStyle) {
 			case AnimStyle::kSettle:
@@ -305,7 +305,8 @@ namespace HONG
 		}
 
 		_mask = {};
-		if (settings->opaqueMask && gated && settings->opacity >= kMaskMinOpacity && _layers.size() == 1 && a_out.size() == 1) {
+		const bool vrPlacementMoved = REL::Module::IsVR() && (settings->scale != 1.0f || settings->verticalOffset != 0.0f);
+		if (settings->opaqueMask && !vrPlacementMoved && gated && settings->opacity >= kMaskMinOpacity && _layers.size() == 1 && a_out.size() == 1) {
 			const auto& layer = _layers.front();
 			const auto& drawn = a_out.front();
 			const bool steady = std::abs(drawn.offset.x - _lastMaskOffset.x) <= kMaskMaxStep && std::abs(drawn.offset.y - _lastMaskOffset.y) <= kMaskMaxStep;

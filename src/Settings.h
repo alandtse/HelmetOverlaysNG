@@ -54,6 +54,8 @@ namespace HONG
 		// [Appearance]
 		float opacity{ 1.0f };
 		float scale{ 1.0f };
+		float verticalOffset{ 0.0f };  // display height fraction, positive moves the art down
+		bool extendEdges{ true };      // stretch the art's edge pixels over any gap the scale or offset opens
 
 		// [Light] darken the art in dark places
 		bool reactiveLight{ false };
