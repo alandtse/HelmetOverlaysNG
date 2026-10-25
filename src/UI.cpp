@@ -80,13 +80,17 @@ namespace HONG::UI
 
 			ImGuiMCP::Checkbox("Enable helmet overlays", &s->enabled);
 			Tip("Master switch. Off hides the overlay (and sound changes) without unloading the plugin.");
-			ImGuiMCP::Checkbox("First person only (flat)", &s->firstPersonOnly);
-			Tip("Flat game: only draw in first-person camera. VR is always first person.");
+			const bool vr = REL::Module::IsVR();
+			if (!vr) {
+				ImGuiMCP::Checkbox("First person only", &s->firstPersonOnly);
+				Tip("Only draw in the first-person camera.");
+			}
 			ImGuiMCP::Checkbox("Skip shading behind opaque overlay (experimental)", &s->opaqueMask);
-			Tip("Lets a renderer plugin that supports it (Open Shaders) skip drawing the scene behind the overlay's fully opaque pixels. Flat only for now. Applies when the helmet is next equipped.");
+			Tip("Skips shading the scene behind the overlay's fully opaque pixels to save GPU time. Applies when the helmet is next equipped.");
 			ImGuiMCP::BeginDisabled(!s->opaqueMask);
 			ImGuiMCP::SliderInt("Mask safety margin (px)", &s->maskMarginPx, 4, 32, "%d", 0);
-			Tip("How far inside the opaque area the mask stops. Larger is safer against fringes, smaller saves a little more. Applies when the helmet is next equipped.");
+			Tip(vr ? "How far inside the opaque area the mask stops. VR always keeps at least 48 px so both eyes stay covered. Applies when the helmet is next equipped."
+				   : "How far inside the opaque area the mask stops. Larger is safer against fringes, smaller saves a little more. Applies when the helmet is next equipped.");
 			ImGuiMCP::EndDisabled();
 			ImGuiMCP::Checkbox("Ignore wigs", &s->skipWigs);
 			Tip("Wigs and hairstyles that use only the hair slot never have helmet art. They are left out of the coverage scan and never get an overlay. Rescan on the Debug page to refresh the counts.");
@@ -111,14 +115,16 @@ namespace HONG::UI
 				}
 				ImGuiMCP::SliderFloat("Fade in (s)", &s->fadeInSeconds, 0.0f, 2.0f, "%.2f", 0);
 				ImGuiMCP::SliderFloat("Fade out (s)", &s->fadeOutSeconds, 0.0f, 2.0f, "%.2f", 0);
-				ImGuiMCP::Checkbox("Head-turn sway (flat)", &s->sway);
-				Tip("The overlay lags behind camera turns. Never applied in VR (comfort).");
-				ImGuiMCP::BeginDisabled(!s->sway);
-				ImGuiMCP::SliderFloat("Sway strength", &s->swayStrength, 0.0f, 4.0f, "%.2f", 0);
-				ImGuiMCP::EndDisabled();
+				if (!vr) {
+					ImGuiMCP::Checkbox("Head-turn sway", &s->sway);
+					Tip("The overlay lags behind camera turns. The opaque mask is off while it moves.");
+					ImGuiMCP::BeginDisabled(!s->sway);
+					ImGuiMCP::SliderFloat("Sway strength", &s->swayStrength, 0.0f, 4.0f, "%.2f", 0);
+					ImGuiMCP::EndDisabled();
+				}
 			}
 
-			if (ImGuiMCP::CollapsingHeader("VR", ImGuiMCP::ImGuiTreeNodeFlags_DefaultOpen)) {
+			if (vr && ImGuiMCP::CollapsingHeader("VR", ImGuiMCP::ImGuiTreeNodeFlags_DefaultOpen)) {
 				ImGuiMCP::SliderFloat("Plane depth (m)", &s->vrDepth, 0.3f, 3.0f, "%.2f", 0);
 				Tip("Distance of the head-locked visor plane. Most lenses can't focus nearer than ~0.5 m. Applies on the next launch.");
 				ImGuiMCP::SliderFloat("Coverage", &s->vrCoverage, 0.5f, 1.6f, "%.2f", 0);
