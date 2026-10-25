@@ -107,7 +107,7 @@ namespace HONG::Renderer
 				static const auto screenSize = RE::BSGraphics::Renderer::GetScreenSize();
 				const ImVec2 display{ static_cast<float>(screenSize.width), static_cast<float>(screenSize.height) };
 
-				OverlayMaskExport::Publish(OverlayController::GetSingleton()->GetMaskCandidate(), display, REL::Module::IsVR());
+				OverlayMask::Publish(OverlayController::GetSingleton()->GetMaskCandidate(), display, Settings::GetSingleton()->vrCoverage);
 
 				if (REL::Module::IsVR()) {
 					if (!g_vrHud.IsConnected()) {

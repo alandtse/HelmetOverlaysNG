@@ -7,6 +7,7 @@
 #include "Muffle.h"
 #include "OriginalMod.h"
 #include "OverlayController.h"
+#include "OverlayMask.h"
 #include "Renderer.h"
 #include "Settings.h"
 #include "UI.h"
@@ -27,6 +28,7 @@ namespace
 			// Must run before BSGraphics::InitD3D.
 			HONG::Renderer::Install();
 			HONG::LowPass::Install();
+			HONG::OverlayMask::Install();
 			HONG::Renderer::Connect();
 			break;
 		case SKSE::MessagingInterface::kDataLoaded:
