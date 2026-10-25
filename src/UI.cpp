@@ -88,6 +88,10 @@ namespace HONG::UI
 			ImGuiMCP::SliderInt("Mask safety margin (px)", &s->maskMarginPx, 4, 32, "%d", 0);
 			Tip("How far inside the opaque area the mask stops. Larger is safer against fringes, smaller saves a little more. Applies when the helmet is next equipped.");
 			ImGuiMCP::EndDisabled();
+			ImGuiMCP::Checkbox("Ignore wigs", &s->skipWigs);
+			Tip("Wigs and hairstyles that use only the hair slot never have helmet art. They are left out of the coverage scan and never get an overlay. Rescan on the Debug page to refresh the counts.");
+			ImGuiMCP::Checkbox("Ignore circlets", &s->skipCirclets);
+			Tip("Circlets do not cover the view. They are left out of the coverage scan and never get an overlay. Rescan on the Debug page to refresh the counts.");
 			ImGuiMCP::Checkbox("Suppress original Helmet Overlays widget", &s->suppressOriginal);
 			Tip("Stops ScribeOverlays.esp's quests on load so its SWF doesn't draw a second overlay. Takes effect on the next load.");
 

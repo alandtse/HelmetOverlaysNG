@@ -12,6 +12,10 @@ namespace HONG::Resolver
 		std::vector<std::string> tried;   // candidate overlay paths checked, in order
 	};
 
+	// False for wigs (hair slot alone, not named like a hood or hat) and circlets when the matching
+	// Settings::skipWigs / skipCirclets option is on.
+	bool IsHeadgearCandidate(const RE::TESObjectARMO* a_armor);
+
 	// The worn head-slot armor (kHead, then kHair - the slots the original
 	// mod's Papyrus monitor watches), or null when bare-headed.
 	RE::TESObjectARMO* FindWornHeadgear(RE::Actor* a_actor);

@@ -142,6 +142,8 @@ namespace HONG
 		maskMarginPx = 8;
 		hideInMenus = true;
 		suppressOriginal = true;
+		skipWigs = true;
+		skipCirclets = true;
 		debugTools = debug;  // a view preference, not a tuning value
 		opacity = 1.0f;
 		scale = 1.0f;
@@ -177,6 +179,8 @@ namespace HONG
 		maskMarginPx = static_cast<int>(GetFloat(ini, "General", "iMaskMarginPx", static_cast<float>(maskMarginPx), 4.0f, 32.0f));
 		hideInMenus = ini.GetBoolValue("General", "bHideInMenus", hideInMenus);
 		suppressOriginal = ini.GetBoolValue("General", "bSuppressOriginal", suppressOriginal);
+		skipWigs = ini.GetBoolValue("General", "bSkipWigs", skipWigs);
+		skipCirclets = ini.GetBoolValue("General", "bSkipCirclets", skipCirclets);
 		debugTools = ini.GetBoolValue("General", "bDebugTools", debugTools);
 
 		opacity = GetFloat(ini, "Appearance", "fOpacity", opacity, 0.0f, 1.0f);
@@ -220,6 +224,8 @@ namespace HONG
 		ini.SetLongValue("General", "iMaskMarginPx", maskMarginPx);
 		ini.SetBoolValue("General", "bHideInMenus", hideInMenus);
 		ini.SetBoolValue("General", "bSuppressOriginal", suppressOriginal);
+		ini.SetBoolValue("General", "bSkipWigs", skipWigs);
+		ini.SetBoolValue("General", "bSkipCirclets", skipCirclets);
 		ini.SetBoolValue("General", "bDebugTools", debugTools);
 
 		ini.SetDoubleValue("Appearance", "fOpacity", opacity);

@@ -44,6 +44,10 @@ namespace HONG
 		int maskMarginPx{ 8 };
 		// Stop ScribeOverlays.esp's quests so its SWF widget doesn't draw a second overlay.
 		bool suppressOriginal{ true };
+		// Wigs (hair slot alone) and circlets (circlet slot without the hair or head slot, which helmets and
+		// masks also occupy) have no helmet art; skip them in the coverage scan and when picking the worn headgear.
+		bool skipWigs{ true };
+		bool skipCirclets{ true };
 		// Shows the debug page in the in-game menu (live armor/path info + manual helmet preview).
 		bool debugTools{ false };
 

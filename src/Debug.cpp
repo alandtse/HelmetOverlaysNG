@@ -43,6 +43,9 @@ namespace HONG::Debug
 				if (!armor || (!armor->HasPartOf(Slot::kHead) && !armor->HasPartOf(Slot::kHair))) {
 					continue;
 				}
+				if (!Resolver::IsHeadgearCandidate(armor)) {
+					continue;
+				}
 				if (armor->GetFormFlags() & RE::TESObjectARMO::RecordFlags::kNonPlayable) {
 					continue;
 				}
@@ -147,6 +150,7 @@ namespace HONG::Debug
 		g_coverage = Coverage{};
 		g_next = 0;
 		g_state = ScanState::kIdle;
+		g_built = false;
 	}
 
 	Coverage GetCoverage()

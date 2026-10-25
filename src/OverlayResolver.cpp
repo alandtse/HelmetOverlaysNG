@@ -4,6 +4,7 @@
 #include "OverlayResolver.h"
 
 #include "Settings.h"
+#include "TextMatch.h"
 
 namespace HONG::Resolver
 {
@@ -37,6 +38,41 @@ namespace HONG::Resolver
 		}
 	}
 
+	namespace
+	{
+		constexpr std::string_view kHeadgearWords[] = { "hood", "hat", "cowl", "helm", "mask", "crown" };
+
+		// Vanilla helmets occupy the hair and circlet slots rather than the head slot, so a wig is hair
+		// alone: no head, circlet or body slot, and no headgear word in its name (hoods use the hair slot too).
+		bool IsWig(const RE::TESObjectARMO* a_armor)
+		{
+			using Slot = RE::BGSBipedObjectForm::BipedObjectSlot;
+			if (!a_armor->HasPartOf(Slot::kHair) || a_armor->HasPartOf(Slot::kHead) || a_armor->HasPartOf(Slot::kCirclet) || a_armor->HasPartOf(Slot::kBody)) {
+				return false;
+			}
+			const std::string_view name = a_armor->GetName();
+			return std::ranges::none_of(kHeadgearWords, [&](std::string_view a_word) { return ContainsNoCase(name, a_word); });
+		}
+
+		// Masks such as the dragon priest masks use the head slot as well as the circlet slot.
+		bool IsCircletOnly(const RE::TESObjectARMO* a_armor)
+		{
+			return a_armor->IsCirclet() && !a_armor->HasPartOf(RE::BGSBipedObjectForm::BipedObjectSlot::kHead);
+		}
+	}
+
+	bool IsHeadgearCandidate(const RE::TESObjectARMO* a_armor)
+	{
+		if (!a_armor) {
+			return false;
+		}
+		const auto* settings = Settings::GetSingleton();
+		if (settings->skipWigs && IsWig(a_armor)) {
+			return false;
+		}
+		return !(settings->skipCirclets && IsCircletOnly(a_armor));
+	}
+
 	RE::TESObjectARMO* FindWornHeadgear(RE::Actor* a_actor)
 	{
 		if (!a_actor) {
@@ -44,7 +80,7 @@ namespace HONG::Resolver
 		}
 		using Slot = RE::BGSBipedObjectForm::BipedObjectSlot;
 		for (const auto slot : { Slot::kHead, Slot::kHair }) {
-			if (const auto armor = a_actor->GetWornArmor(slot)) {
+			if (const auto armor = a_actor->GetWornArmor(slot); IsHeadgearCandidate(armor)) {
 				return armor;
 			}
 		}
