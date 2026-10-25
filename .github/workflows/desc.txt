@@ -21,7 +21,7 @@ If you still have the original Helmet Overlays plugin enabled, the "Suppress ori
 
 [size=4][b]Requirements[/b][/size]
 [color=#D4D4D8]SE/AE: SKSE64 + Address Library. VR: SKSE VR + VR Address Library + [url=https://github.com/alandtse/imgui-vr-helper]ImGuiVRHelper[/url] with per-client HUD plane support (without it the overlay falls back to the helper's global HUD plane).
-Overlay art (required for anything to show): [url=https://www.nexusmods.com/skyrimspecialedition/mods/35605]Helmet Overlays[/url] and/or [url=https://www.nexusmods.com/skyrimspecialedition/mods/189092]Helmet Overlays Enhanced Edition[/url]. Install the art; you do not need the original plugin enabled.
+Overlay art (required for anything to show): [url=https://www.nexusmods.com/skyrimspecialedition/mods/35605]Helmet Overlays[/url] and/or [url=https://www.nexusmods.com/skyrimspecialedition/mods/189092]Helmet Overlays Enhanced Edition[/url], plus the [url=https://www.nexusmods.com/skyrimspecialedition/mods/93800]Helmet Overlay Addon[/url] for more armor mods. Install the art; you do not need the original plugin enabled.
 Optional: [url=https://github.com/alandtse/SKSE-Menu-Framework-3]SKSE Menu Framework[/url] for the in-game settings and debug pages.
 
 Report issues on the [url=https://github.com/alandtse/HelmetOverlaysNG/issues]issue tracker[/url]. Bug reports with your HelmetOverlaysNG.log (and crash log if applicable) are the most useful thing you can send.[/color]
