@@ -196,6 +196,7 @@ namespace HONG::Debug
 		out.openness = diag.openness;
 		out.strength = diag.strength;
 		out.maskShare = diag.maskShare;
+		out.light = diag.light;
 		return out;
 	}
 

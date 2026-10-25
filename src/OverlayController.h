@@ -72,6 +72,7 @@ namespace HONG
 			float openness{ -1.0f };  // overlay see-through fraction, -1 unknown
 			float maskShare{ 0.0f };  // fraction of the overlay in the opaque mask
 			float strength{ 1.0f };   // how much this helmet muffles sound
+			float light{ -1.0f };     // last sampled light level 0..1, -1 when reactive light is off
 		};
 		Diagnostic GetDiagnostic() const;
 
@@ -102,6 +103,7 @@ namespace HONG
 		float _lightDarkness{ 0.0f };       // 0 lit .. 1 dark, eased toward _lightTarget
 		float _lightTarget{ 0.0f };
 		float _lightClock{ 0.0f };
+		float _lightLogged{ -1.0f };  // last level written to the log
 		MaskCandidate _mask;
 		ImVec2 _lastMaskOffset{ 0, 0 };
 		float _muffleStrength{ 1.0f };

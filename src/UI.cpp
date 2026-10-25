@@ -252,6 +252,9 @@ namespace HONG::UI
 						}
 						ImGuiMCP::Text("Sound muffle strength: %.2f", current.strength);
 						ImGuiMCP::Text("Opaque mask: %.0f%% of the overlay", current.maskShare * 100.0f);
+						if (current.light >= 0.0f) {
+							ImGuiMCP::Text("Light level: %.0f%%", current.light * 100.0f);
+						}
 					} else {
 						ImGuiMCP::TextColored({ 1.0f, 0.5f, 0.4f, 1.0f }, "No overlay art found. Paths tried:");
 						for (const auto& path : current.tried) {

@@ -13,6 +13,7 @@ namespace HONG
 	namespace
 	{
 		constexpr float kRefreshIntervalSeconds = 1.0f;  // safety net if an equip event is missed
+		constexpr float kLightLogStep = 0.05f;           // log the light level when it moves this much
 		constexpr float kSettleScale = 0.06f;            // extra scale at progress 0 for kSettle
 		constexpr float kSlideDistance = 0.12f;          // fraction of display height for kSlide
 		constexpr float kSwayGain = 0.9f;                // display fraction per radian of turn
@@ -213,6 +214,8 @@ namespace HONG
 			_lightDarkness = 0.0f;
 			_lightTarget = 0.0f;
 			_lightClock = settings->lightIntervalSeconds;
+			std::scoped_lock lock{ _diagLock };
+			_diag.light = -1.0f;
 			return;
 		}
 		_lightClock += a_dt;
@@ -220,6 +223,12 @@ namespace HONG
 			_lightClock = 0.0f;
 			if (const float level = LightLevel::SamplePlayer(); level >= 0.0f) {
 				_lightTarget = 1.0f - level;
+				std::scoped_lock lock{ _diagLock };
+				_diag.light = level;
+				if (std::abs(level - _lightLogged) >= kLightLogStep) {
+					_lightLogged = level;
+					logger::info("Light level {:.0f}% (overlay tint {:.0f}%)", level * 100.0f, (1.0f - settings->lightStrength * (1.0f - level)) * 100.0f);
+				}
 			}
 		}
 		const float step = settings->lightFadeSeconds > 0.0f ? a_dt / settings->lightFadeSeconds : 1.0f;

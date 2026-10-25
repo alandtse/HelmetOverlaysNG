@@ -65,6 +65,7 @@ namespace HONG::Debug
 		float openness{ -1.0f };  // overlay see-through fraction, -1 unknown
 		float strength{ 1.0f };   // sound muffling scale for this helmet
 		float maskShare{ 0.0f };  // fraction of the overlay in the opaque mask (0 when not built)
+		float light{ -1.0f };     // sampled light level 0..1, -1 when reactive light is off
 	};
 	Current GetCurrent();
 
