@@ -64,7 +64,9 @@ namespace HONG::UI
 				const float scaled = std::max(a_channel * a_exposure, 0.0f);
 				return std::pow(scaled / (1.0f + scaled), 1.0f / 2.2f);
 			};
-			ImGuiMCP::TextColored({ display(a_color.r), display(a_color.g), display(a_color.b), 1.0f }, "%s", "########");
+			constexpr float kSwatchWidth = 56.0f;
+			constexpr float kSwatchHeight = 18.0f;
+			ImGuiMCP::ColorButton((std::string("##hong_swatch_") + a_label).c_str(), { display(a_color.r), display(a_color.g), display(a_color.b), 1.0f }, 0, { kSwatchWidth, kSwatchHeight });
 			ImGuiMCP::SameLine(0.0f, -1.0f);
 			ImGuiMCP::Text("%s", a_label);
 		}
