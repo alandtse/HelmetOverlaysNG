@@ -64,9 +64,7 @@ Two independent effects while a helmet is worn (`[Sound]`), scaled per helmet wh
   the mastering voice through `SetOutputFilterParameters`, the call the engine uses for its own distance
   filter. The result is never more open than the engine's value, and voices are released to open when the
   helmet comes off. The engine has no global or underwater low-pass; its underwater effect is category
-  mutes plus a reverb preset. Status: experimental. The call returns success but reads back the old
-  frequency on every voice checked (read-back timing may explain this), and the audible effect is
-  untested.
+  mutes plus a reverb preset. The effect is audible in game, though the voice read-back is unreliable.
 
 ## Coverage
 
@@ -93,14 +91,12 @@ not fire for a console `coc` start.
 
 ## Open items
 
-1. Opaque-region mask (experimental, off by default): skip shading where the overlay is fully opaque, flat
+1. Opaque-region mask (on by default): skip shading where the overlay is fully opaque, flat
    and VR, through a depth write this plugin issues in its own world-batch hook. SE saves about 8-11% and
    VR about 16-18% of the world pass. See [OPAQUE_MASK.md](OPAQUE_MASK.md).
-2. Low-pass filter (experimental): the filter call returns success but reads back unchanged; the audible
-   effect is unconfirmed.
-3. Per-armor sound profiles: derive defaults from armor type, weight, material keywords and slot
+2. Per-armor sound profiles: derive defaults from armor type, weight, material keywords and slot
    coverage, with an optional override file.
-4. Head-hit feedback: `HitData::damageLimb == kHead` on the player, played as a material-appropriate
+3. Head-hit feedback: `HitData::damageLimb == kHead` on the player, played as a material-appropriate
    sound.
-5. Overrides for helmets whose model path has no art.
-6. The footsteps sound category needs its form found another way.
+4. Overrides for helmets whose model path has no art.
+5. The footsteps sound category needs its form found another way.

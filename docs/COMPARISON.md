@@ -35,12 +35,12 @@ a short detail in brackets. Helmet Overlays NG is unreleased.
 | Jump, strafe, sprint motion     | Yes                                           | Not verified                       | Yes (flat only)                                          |
 | Head-turn sway                  | No                                            | Not verified                       | Yes (flat only, off by default)                          |
 | Fade, settle or slide on change | Not verified                                  | Not verified                       | Yes                                                      |
-| Sound muffling                  | No                                            | No                                 | Yes (volume; low-pass effect unconfirmed)                   |
+| Sound muffling                  | No                                            | No                                 | Yes (volume and low-pass)                                   |
 | Hides in menus                  | Yes (Loading, RaceSex; others not verified)                | Not verified                       | Yes (menus you select)                                   |
 | Reacts to camera state          | Yes (first person, third person, horse, furniture) | No                            | Yes (first person only on flat, option)                  |
 | Per-eye VR placement            | No                                            | Not verified                       | Yes (head-locked plane, per-eye projection)              |
 | Fits the headset's field of view | No                                           | Yes (8:9 and 9:10 templates)       | Yes (plane sized from the eyes' field of view)           |
-| GPU saving option               | No                                            | Not verified                       | Yes (about 8-11% on SE, 16-18% on VR; world pass) |
+| GPU saving (opaque mask)        | No                                            | Not verified                       | Yes, on by default (about 8-11% on SE, 16-18% on VR; world pass) |
 | In-game settings                | Yes (MCM)                                     | Yes (ReShade overlay)              | Yes (ini file, and optional SKSE Menu Framework pages)                                |
 | Coverage report                 | No                                            | No                                 | Yes (per plugin; can ignore wigs and circlets)           |
 | Debug tools                     | Yes (panel, add-equipment hotkey)             | No                                 | Yes (Debug page, helmet preview)                         |
@@ -51,7 +51,6 @@ a short detail in brackets. Helmet Overlays NG is unreleased.
 - Size and add-equipment hotkeys.
 - swf, png, jpg and gif art.
 - Per-armor sound profiles and head-hit feedback.
-- A confirmed low-pass filter: the option exists, but its effect on the audio is unconfirmed.
 
 ## Known limits
 

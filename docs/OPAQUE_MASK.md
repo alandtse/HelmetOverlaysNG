@@ -219,7 +219,7 @@ windows of 1500 calls each:
 
 ## Settings
 
-`bOpaqueMask` (default off while experimental), `iMaskMarginPx` (default 8), shown on the Overlay page with
+`bOpaqueMask` (default on), `iMaskMarginPx` (default 8), shown on the Overlay page with
 the measured saving once measured.
 
 ## Validation
