@@ -74,7 +74,7 @@ add_files("src/**.cpp|UI.cpp")
 add_headerfiles("src/**.h")
 
 add_includedirs("src")
-add_syslinks("d3dcompiler")
+add_syslinks("d3dcompiler", "shell32")
 set_pcxxheader("src/pch.h")
 
 -- Auto-deploy on build: SkyrimVRPluginTargets / SkyrimPluginTargets

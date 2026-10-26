@@ -13,6 +13,7 @@
 #include <algorithm>
 #include <cctype>
 #include <cstring>
+#include <shellapi.h>
 #include <string>
 #include <vector>
 
@@ -79,6 +80,26 @@ namespace HONG::UI
 			ImGuiMCP::TextDisabled("These buttons cover every page. Changes apply immediately; Save writes them to the INI.");
 		}
 
+		// Text that opens a URL in the default browser when clicked.
+		void Link(const char* a_label, const char* a_url)
+		{
+			ImGuiMCP::TextColored({ 0.45f, 0.70f, 1.0f, 1.0f }, "%s", a_label);
+			if (ImGuiMCP::IsItemHovered(0)) {
+				ImGuiMCP::SetTooltip("Open %s in your browser", a_url);
+			}
+			if (ImGuiMCP::IsItemClicked(0)) {
+				const std::string url{ a_url };
+				ShellExecuteW(nullptr, L"open", std::wstring(url.begin(), url.end()).c_str(), nullptr, nullptr, SW_SHOWNORMAL);
+			}
+		}
+
+		void ArtSourceLinks()
+		{
+			Link("Helmet Overlays (Nexus 35605)", "https://www.nexusmods.com/skyrimspecialedition/mods/35605");
+			Link("Helmet Overlays Enhanced Edition (Nexus 189092)", "https://www.nexusmods.com/skyrimspecialedition/mods/189092");
+			Link("Helmet Overlay Addon (Nexus 93800)", "https://www.nexusmods.com/skyrimspecialedition/mods/93800");
+		}
+
 		void CoverageSummary()
 		{
 			const auto coverage = Debug::GetCoverage();
@@ -88,7 +109,8 @@ namespace HONG::UI
 			}
 			if (coverage.eligible > 0 && coverage.covered == 0) {
 				ImGuiMCP::TextColored({ 1.0f, 0.5f, 0.4f, 1.0f }, "No overlay art found. This mod ships none.");
-				ImGuiMCP::TextWrapped("Install an overlay art pack from Nexus Mods: Helmet Overlays (mod 35605), Helmet Overlays Enhanced Edition (189092) or Helmet Overlay Addon (93800).");
+				ImGuiMCP::TextWrapped("Install an overlay art pack (click to open):");
+				ArtSourceLinks();
 				return;
 			}
 			const float percent = coverage.eligible ? 100.0f * static_cast<float>(coverage.covered) / static_cast<float>(coverage.eligible) : 0.0f;
@@ -177,6 +199,11 @@ namespace HONG::UI
 				Tip("Wigs and hairstyles that use only the hair slot never have helmet art. They are left out of the coverage scan and never get an overlay. Rescan on the Debug page to refresh the counts.");
 				ImGuiMCP::Checkbox("Ignore circlets", &s->skipCirclets);
 				Tip("Circlets do not cover the view. They are left out of the coverage scan and never get an overlay. Rescan on the Debug page to refresh the counts.");
+			}
+
+			if (ImGuiMCP::CollapsingHeader("Overlay art sources", 0)) {
+				ImGuiMCP::TextWrapped("This mod ships no art. Any of these provides it (click to open):");
+				ArtSourceLinks();
 			}
 
 			if (ImGuiMCP::CollapsingHeader("Compatibility", 0)) {
