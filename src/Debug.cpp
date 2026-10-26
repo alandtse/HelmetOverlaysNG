@@ -5,6 +5,7 @@
 
 #include "OverlayController.h"
 #include "OverlayResolver.h"
+#include "Settings.h"
 #include "TextMatch.h"
 
 #include <mutex>
@@ -98,6 +99,9 @@ namespace HONG::Debug
 			const float percent = g_coverage.eligible ? 100.0f * static_cast<float>(g_coverage.covered) / static_cast<float>(g_coverage.eligible) : 0.0f;
 			logger::info("Overlay coverage: {} of {} playable head/hair armors have art ({:.0f}%); {} without art; {} skipped (no world model).",
 				g_coverage.covered, g_coverage.eligible, percent, g_coverage.missing, g_coverage.noModel);
+			if (g_coverage.eligible > 0 && g_coverage.covered == 0) {
+				logger::warn("No overlay art was found for any helmet. Install an overlay art pack (Helmet Overlays, Helmet Overlays Enhanced Edition or Helmet Overlay Addon) and check that Data\\{} exists.", Settings::GetSingleton()->overlayRoot);
+			}
 			std::size_t logged = 0;
 			for (const auto& plugin : g_coverage.byPlugin) {
 				if (plugin.total == plugin.covered || logged++ >= kLogWorstPlugins) {

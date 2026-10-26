@@ -86,6 +86,11 @@ namespace HONG::UI
 				ImGuiMCP::TextDisabled("Overlay coverage: scanning helmets (%.0f%%)...", coverage.progress * 100.0f);
 				return;
 			}
+			if (coverage.eligible > 0 && coverage.covered == 0) {
+				ImGuiMCP::TextColored({ 1.0f, 0.5f, 0.4f, 1.0f }, "No overlay art found. This mod ships none.");
+				ImGuiMCP::TextWrapped("Install an overlay art pack from Nexus Mods: Helmet Overlays (mod 35605), Helmet Overlays Enhanced Edition (189092) or Helmet Overlay Addon (93800).");
+				return;
+			}
 			const float percent = coverage.eligible ? 100.0f * static_cast<float>(coverage.covered) / static_cast<float>(coverage.eligible) : 0.0f;
 			ImGuiMCP::Text("Overlay coverage: %u of %u helmets and hoods have art (%.0f%%)", coverage.covered, coverage.eligible, percent);
 			Tip("Playable head and hair armors in your load order that have a world model, checked against the overlay art on disk. Details are on the Debug page.");

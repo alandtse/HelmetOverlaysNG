@@ -6,7 +6,13 @@ and Skyrim VR.
 
 It reads the existing overlay art (`Data/Interface/overlays/**.dds`, from Helmet Overlays 2.0 and
 Helmet Overlays Enhanced Edition) and picks the overlay from the worn helmet's world model path.
-No ESP, no Papyrus, no SkyUI, no Scaleform. This mod ships no art; install the art packs.
+No ESP, no Papyrus, no SkyUI, no Scaleform. This mod ships no art; install at least one overlay art pack:
+
+- [Helmet Overlays](https://www.nexusmods.com/skyrimspecialedition/mods/35605): the original mod and its art.
+- [Helmet Overlays Enhanced Edition](https://www.nexusmods.com/skyrimspecialedition/mods/189092): more helmets.
+- [Helmet Overlay Addon](https://www.nexusmods.com/skyrimspecialedition/mods/93800): art for more armor mods.
+
+If no art is found, the log and the settings page say so.
 
 See [docs/DESIGN.md](docs/DESIGN.md) for how it works and the open items, and
 [docs/COMPARISON.md](docs/COMPARISON.md) for how it differs from the other overlay mods.
