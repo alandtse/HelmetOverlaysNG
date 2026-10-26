@@ -233,6 +233,8 @@ namespace HONG::UI
 				Tip("Distance of the head-locked visor plane. Most lenses can't focus nearer than ~0.5 m.");
 				ImGuiMCP::SliderFloat("Coverage", &s->vrCoverage, Range::kVrCoverage.min, Range::kVrCoverage.max, "%.2f", ImGuiMCP::ImGuiSliderFlags_AlwaysClamp);
 				Tip("Fraction of each eye's view the plane fills; above 1 over-fills so no edge gap shows.");
+				PercentSlider("Art stretch", &s->vrStretch, Range::kUnit);
+				Tip("0% keeps the art's own proportions, as on a flat screen, and fills the rest of the view with the art's edge. 100% stretches the art to fill the whole view.");
 			}
 
 			if (ImGuiMCP::CollapsingHeader("Armor filtering", 0)) {

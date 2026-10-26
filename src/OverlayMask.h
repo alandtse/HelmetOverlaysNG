@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include "ArtFit.h"
 #include "OverlayController.h"
 
 namespace HONG::OverlayMask
@@ -12,6 +13,6 @@ namespace HONG::OverlayMask
 	void Install();
 
 	// Sets the mask for the next world render. Main thread, after the overlay has been updated;
-	// a_display is the display size in pixels; a_vrCoverage is the VR plane coverage of each eye.
-	void Publish(const OverlayController::MaskCandidate& a_candidate, ImVec2 a_display, float a_vrCoverage);
+	// a_fit is how much of the display the art covers; a_vrCoverage is the VR plane coverage of each eye.
+	void Publish(const OverlayController::MaskCandidate& a_candidate, ArtFit::Fraction a_fit, float a_vrCoverage);
 }

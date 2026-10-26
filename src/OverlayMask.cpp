@@ -359,9 +359,9 @@ float main(float4 position : SV_Position) : SV_Depth
 		logger::info("Overlay mask hook installed.");
 	}
 
-	void Publish(const OverlayController::MaskCandidate& a_candidate, ImVec2 a_display, float a_vrCoverage)
+	void Publish(const OverlayController::MaskCandidate& a_candidate, ArtFit::Fraction a_fit, float a_vrCoverage)
 	{
-		g_pending.active = a_candidate.allowed && a_display.x > 0.0f && a_display.y > 0.0f;
+		g_pending.active = a_candidate.allowed && a_fit.x > 0.0f && a_fit.y > 0.0f;
 		if (!g_pending.active) {
 			g_pending.mask.Reset();
 			return;
@@ -369,15 +369,15 @@ float main(float4 position : SV_Position) : SV_Depth
 		g_pending.mask = a_candidate.mask.srv;
 		g_pending.vr = REL::Module::IsVR();
 		if (g_pending.vr) {
-			// The head-locked plane stretches the art over each eye field of view, scaled by the coverage.
+			// The head-locked plane covers each eye field of view, scaled by the coverage.
 			g_pending.center[0] = g_pending.center[1] = 0.5f;
-			g_pending.size[0] = g_pending.size[1] = a_vrCoverage;
+			g_pending.size[0] = a_fit.x * a_vrCoverage;
+			g_pending.size[1] = a_fit.y * a_vrCoverage;
 			return;
 		}
-		const float cover = std::max(a_display.x / kArtWidth, a_display.y / kArtHeight);
 		g_pending.center[0] = 0.5f + a_candidate.offset.x;
 		g_pending.center[1] = 0.5f + a_candidate.offset.y;
-		g_pending.size[0] = kArtWidth * cover * a_candidate.scale / a_display.x;
-		g_pending.size[1] = kArtHeight * cover * a_candidate.scale / a_display.y;
+		g_pending.size[0] = a_fit.x * a_candidate.scale;
+		g_pending.size[1] = a_fit.y * a_candidate.scale;
 	}
 }

@@ -95,6 +95,7 @@ namespace HONG
 		// [VR]
 		float vrDepth{ 0.6f };      // meters; head-locked visor plane
 		float vrCoverage{ 1.15f };  // > 1 over-fills each eye's FOV
+		float vrStretch{ 0.5f };    // 0 keeps the art's proportions in the view, 1 stretches it to fill
 
 		// [Sound] - two independent effects; either, both or neither can be on.
 		bool attenuate{ true };         // lower world-sound volume while helmeted

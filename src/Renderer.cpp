@@ -3,7 +3,9 @@
 
 #include "Renderer.h"
 
+#include "ArtFit.h"
 #include "Debug.h"
+#include "EyeView.h"
 #include "ImGuiVRHelperClientSDK.h"
 #include "Muffle.h"
 #include "OverlayController.h"
@@ -81,11 +83,19 @@ namespace HONG::Renderer
 			}
 		}
 
-		void DrawLayers(ImVec2 a_display, bool a_stretch)
+		// How much of the display the art covers: cropped to fill on a flat screen, fitted into the eye view in VR.
+		ArtFit::Fraction CurrentFit(ImVec2 a_display)
+		{
+			constexpr float kArtAspect = kArtWidth / kArtHeight;
+			const float displayAspect = a_display.x / a_display.y;
+			return REL::Module::IsVR() ? ArtFit::Fit(displayAspect, kArtAspect, Settings::GetSingleton()->vrStretch) : ArtFit::Cover(displayAspect, kArtAspect);
+		}
+
+		void DrawLayers(ImVec2 a_display)
 		{
 			const auto drawList = ImGui::GetBackgroundDrawList();
-			const float cover = std::max(a_display.x / kArtWidth, a_display.y / kArtHeight);
-			const ImVec2 base = a_stretch ? a_display : ImVec2(kArtWidth * cover, kArtHeight * cover);
+			const auto fit = CurrentFit(a_display);
+			const ImVec2 base{ a_display.x * fit.x, a_display.y * fit.y };
 			for (const auto& layer : g_layers) {
 				const ImVec2 size{ base.x * layer.scale, base.y * layer.scale };
 				const ImVec2 center{ a_display.x * (0.5f + layer.offset.x), a_display.y * (0.5f + layer.offset.y) };
@@ -168,9 +178,13 @@ namespace HONG::Renderer
 				Muffle::Update(OverlayController::GetSingleton()->WornAmount() * Debug::SoundStrengthOverride().Apply(OverlayController::GetSingleton()->MuffleStrength()));
 
 				static const auto screenSize = RE::BSGraphics::Renderer::GetScreenSize();
-				const ImVec2 display{ static_cast<float>(screenSize.width), static_cast<float>(screenSize.height) };
+				ImVec2 display{ static_cast<float>(screenSize.width), static_cast<float>(screenSize.height) };
+				if (REL::Module::IsVR()) {
+					// The helper maps this canvas onto each eye's field of view, so give it the view's shape.
+					display.x = display.y * EyeView::Aspect();
+				}
 
-				OverlayMask::Publish(OverlayController::GetSingleton()->GetMaskCandidate(), display, Settings::GetSingleton()->vrCoverage);
+				OverlayMask::Publish(OverlayController::GetSingleton()->GetMaskCandidate(), CurrentFit(display), Settings::GetSingleton()->vrCoverage);
 
 				if (REL::Module::IsVR()) {
 					if (!g_vrHud.IsConnected()) {
@@ -180,7 +194,7 @@ namespace HONG::Renderer
 					// Draws with no layers too, so the panel clears its last frame.
 					g_vrHud.RenderHud(g_d3dDevice, g_d3dContext, display, [display]() {
 						GImGui->NavWindowingTarget = nullptr;
-						DrawLayers(display, true);
+						DrawLayers(display);
 					});
 				} else {
 					if (g_layers.empty()) {
@@ -190,7 +204,7 @@ namespace HONG::Renderer
 					ImGui_ImplWin32_NewFrame();
 					ImGui::GetIO().DisplaySize = display;
 					ImGui::NewFrame();
-					DrawLayers(display, false);
+					DrawLayers(display);
 					ImGui::EndFrame();
 					ImGui::Render();
 					ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());

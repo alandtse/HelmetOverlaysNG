@@ -185,6 +185,7 @@ namespace HONG
 
 		vrDepth = GetFloat(ini, "VR", "fDepthMeters", vrDepth, Range::kVrDepth);
 		vrCoverage = GetFloat(ini, "VR", "fCoverage", vrCoverage, Range::kVrCoverage);
+		vrStretch = GetFloat(ini, "VR", "fStretch", vrStretch, Range::kUnit);
 
 		attenuate = ini.GetBoolValue("Sound", "bAttenuate", attenuate);
 		attenuateVolume = GetFloat(ini, "Sound", "fAttenuateVolume", attenuateVolume, Range::kAttenuateVolume);
@@ -241,6 +242,7 @@ namespace HONG
 
 		ini.SetDoubleValue("VR", "fDepthMeters", vrDepth);
 		ini.SetDoubleValue("VR", "fCoverage", vrCoverage);
+		ini.SetDoubleValue("VR", "fStretch", vrStretch);
 
 		ini.SetBoolValue("Sound", "bAttenuate", attenuate);
 		ini.SetDoubleValue("Sound", "fAttenuateVolume", attenuateVolume);
