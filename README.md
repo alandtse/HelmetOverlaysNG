@@ -4,6 +4,9 @@ Native SKSE (CommonLibSSE-NG) replacement for the SWF-based
 [Helmet Overlays](https://www.nexusmods.com/skyrimspecialedition/mods/35605) widget, for Skyrim SE/AE
 and Skyrim VR.
 
+Source and issues: <https://github.com/alandtse/HelmetOverlaysNG>. Licensed GPL-3.0-or-later with a modding
+exception (see [License](#license)).
+
 It reads the existing overlay art (`Data/Interface/overlays/**.dds`, from Helmet Overlays 2.0 and
 Helmet Overlays Enhanced Edition) and picks the overlay from the worn helmet's world model path.
 No ESP, no Papyrus, no SkyUI, no Scaleform. This mod ships no art; install at least one overlay art pack:
@@ -56,3 +59,4 @@ optional SKSE Menu Framework.
 ## License
 
 GPL-3.0-or-later with the Modding Exception; see `COPYING` and `EXCEPTIONS.md`.
+Source: <https://github.com/alandtse/HelmetOverlaysNG>.
