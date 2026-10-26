@@ -142,7 +142,7 @@ namespace HONG
 		enabled = true;
 		overlayRoot = "Interface\\overlays";
 		firstPersonOnly = true;
-		opaqueMask = false;
+		opaqueMask = true;
 		maskMarginPx = 8;
 		hideInMenus = true;
 		suppressOriginal = true;
