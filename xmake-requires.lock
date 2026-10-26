@@ -47,7 +47,7 @@
             repo = {
                 url = "xmake-pkgs"
             },
-            version = "1.5.2"
+            version = "1.10.0"
         },
         ["ninja#31fecfc4"] = {
             repo = {
