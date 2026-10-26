@@ -3,6 +3,7 @@
 
 #include "OverlayController.h"
 
+#include "Debug.h"
 #include "HelmetProfile.h"
 #include "LightLevel.h"
 #include "OverlayResolver.h"
@@ -246,6 +247,9 @@ namespace HONG
 					logger::info("Light level {:.0f}% (overlay tint {:.0f}%)", level * 100.0f, (1.0f - settings->lightStrength * (1.0f - level)) * 100.0f);
 				}
 			}
+		}
+		if (const auto& forced = Debug::LightLevelOverride(); forced.Active()) {
+			_lightTarget = 1.0f - forced.Value();
 		}
 		const float step = settings->lightFadeSeconds > 0.0f ? a_dt / settings->lightFadeSeconds : 1.0f;
 		_lightDarkness += std::clamp(_lightTarget - _lightDarkness, -step, step);

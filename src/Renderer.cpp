@@ -162,7 +162,7 @@ namespace HONG::Renderer
 
 				OverlayController::GetSingleton()->Update(FrameDelta(), g_layers);
 				Debug::Tick();
-				Muffle::Update(OverlayController::GetSingleton()->WornAmount() * OverlayController::GetSingleton()->MuffleStrength());
+				Muffle::Update(OverlayController::GetSingleton()->WornAmount() * Debug::SoundStrengthOverride().Apply(OverlayController::GetSingleton()->MuffleStrength()));
 
 				static const auto screenSize = RE::BSGraphics::Renderer::GetScreenSize();
 				const ImVec2 display{ static_cast<float>(screenSize.width), static_cast<float>(screenSize.height) };

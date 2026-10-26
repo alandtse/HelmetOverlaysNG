@@ -7,6 +7,8 @@
 
 #pragma once
 
+#include "DebugOverride.h"
+
 #include <cstddef>
 #include <cstdint>
 #include <string>

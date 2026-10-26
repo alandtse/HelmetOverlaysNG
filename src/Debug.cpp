@@ -232,4 +232,16 @@ namespace HONG::Debug
 		});
 		return out;
 	}
+
+	Override& SoundStrengthOverride()
+	{
+		static Override instance;
+		return instance;
+	}
+
+	Override& LightLevelOverride()
+	{
+		static Override instance;
+		return instance;
+	}
 }
