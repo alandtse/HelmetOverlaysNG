@@ -59,11 +59,15 @@ optional [SKSE Menu Framework](https://github.com/alandtse/SKSE-Menu-Framework-3
 
 ## Credits
 
-- [scrivener07](https://www.nexusmods.com/profile/scrivener07?gameId=110) made the original
-  [Helmet Overlays](https://www.nexusmods.com/skyrim/mods/69611) for LE, which defined the art format and the
+- [scrivener07](https://www.nexusmods.com/profile/scrivener07?gameId=110) and megapolom for the original
+  concept, [Helmet Overlays](https://www.nexusmods.com/skyrim/mods/69611) on LE. It defined the art format and the
   model-path convention this mod reads.
-- [GSA2011](https://www.nexusmods.com/profile/GSA2011?gameId=1704) maintains the SE version,
+- [GSA2011](https://www.nexusmods.com/profile/GSA2011?gameId=1704) for the first SE port,
   [Helmet Overlays - Improved 1st Person Experience](https://www.nexusmods.com/skyrimspecialedition/mods/35605).
+- HoodiePledge and rotol for keeping it alive with new overlays
+  ([Enhanced Edition](https://www.nexusmods.com/skyrimspecialedition/mods/189092) and
+  [Helmet Overlay Addon](https://www.nexusmods.com/skyrimspecialedition/mods/93800)). This mod packages no art; install
+  their mods.
 
 ## License
 

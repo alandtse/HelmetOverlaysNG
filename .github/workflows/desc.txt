@@ -1,45 +1,54 @@
 [size=4][b]Description[/b][/size]
 [size=3][color=#D4D4D8]First-person helmet overlays for Skyrim, drawn by a native plugin instead of the original [url=https://www.nexusmods.com/skyrimspecialedition/mods/35605]Helmet Overlays[/url] SWF widget. One DLL for [b]SE, AE, and VR[/b]. It needs no ESP, Papyrus, [url=https://www.nexusmods.com/skyrimspecialedition/mods/12604]SkyUI[/url] or Scaleform. Open source.
 
-The overlay changes with the helmet you wear and uses the art from [url=https://www.nexusmods.com/skyrimspecialedition/mods/35605]Helmet Overlays[/url], [url=https://www.nexusmods.com/skyrimspecialedition/mods/189092]Helmet Overlays Enhanced Edition[/url] or [url=https://www.nexusmods.com/skyrimspecialedition/mods/93800]Helmet Overlay Addon[/url]. It is drawn under all menus. In VR it is a head-locked plane drawn into each eye through [url=https://github.com/alandtse/imgui-vr-helper]ImGuiVRHelper[/url].[/color][/size]
+The overlay changes with the helmet you wear and uses the art from [url=https://www.nexusmods.com/skyrimspecialedition/mods/35605]Helmet Overlays[/url], [url=https://www.nexusmods.com/skyrimspecialedition/mods/189092]Helmet Overlays Enhanced Edition[/url] or [url=https://www.nexusmods.com/skyrimspecialedition/mods/93800]Helmet Overlay Addon[/url]. Some additional improvements:[/color][/size]
+[list]
+[*][color=#D4D4D8][b]Improved Performance[/b] for higher coverage overlays - Because we're blocking the underlying screen anyway, we tell the engine to skip draws there.[/color][/*]
+[*][color=#D4D4D8][b]Adaptive Sound muffling[/b] - Wear a heavier helmet? Muffle more sounds.[/color][/*]
+[*][color=#D4D4D8][b]Colored Lighting detection[/b] (flat) - We can detect the color of the scene and lighten with the right light color. Orange/red fire in front? Expect that tint on the overlay.[/color][/*]
+[/list]
 
 [b][size=4]Installation instructions[/size][/b]
 [size=3][color=#D4D4D8]Install with MO2 or Vortex like any other SKSE plugin. This mod ships no art, so install the art from at least one of these: [url=https://www.nexusmods.com/skyrimspecialedition/mods/35605]Helmet Overlays[/url], [url=https://www.nexusmods.com/skyrimspecialedition/mods/189092]Enhanced Edition[/url] or [url=https://www.nexusmods.com/skyrimspecialedition/mods/93800]Helmet Overlay Addon[/url]. Configure in game with [url=https://github.com/alandtse/SKSE-Menu-Framework-3]SKSE Menu Framework[/url], or edit [i]Data/SKSE/Plugins/HelmetOverlaysNG.ini[/i] (created on first save).
 
-This replaces the old SWF widget. Only the art files are used, so the old plugin should stay off. If it is still enabled, leave "Suppress original" on so you don't get two overlays.[/color][/size]
+This replaces the old SWF widget. Only the art files are used, so the old plugin can be turned off. If it is still enabled, leave "Suppress original" on so you don't get two overlays.[/color][/size]
 
 [size=4][b]Main features[/b][/size]
-
+[list]
 [*][color=#D4D4D8][b]Overlay per helmet:[/b] the overlay is found from the worn helmet's world model path, the same convention [url=https://www.nexusmods.com/skyrimspecialedition/mods/35605]Helmet Overlays[/url] uses. Any helmet that has art works without setup, and new art works as soon as the file exists. Changing helmets cross-fades.[/color][/*]
-[*][color=#D4D4D8][b]Flat and VR:[/b] in VR the overlay sits on its own near plane, slightly over-filled, with normal stereo parallax. Head-turn sway and jump motion are flat only.[/color][/*]
+[*][color=#D4D4D8][b]Flat and VR:[/b] in VR the overlay sits on its own near plane, slightly over-filled, with normal stereo parallax. Head-turn sway, jump motion and the scene color tint are flat only.[/color][/*]
 [*][color=#D4D4D8][b]Menus:[/b] the overlay is drawn under every menu and fades out for the ones you pick (inventory, map, dialogue and so on).[/color][/*]
 [*][color=#D4D4D8][b]Appearance:[/b] opacity, scale and vertical position sliders, optional edge extension so a smaller or shifted overlay leaves no gap, and a fade, settle or slide animation when the helmet goes on or off.[/color][/*]
-[*][color=#D4D4D8][b]Lighting:[/b] the art darkens in dark places, using the original mod's defaults. Fully black parts stay black. On flat, the art also takes on the colour of the scene around the screen edges, such as firelight or lightning. The debug page shows the tinted and untinted look side by side.[/color][/*]
+[*][color=#D4D4D8][b]Lighting:[/b] the art darkens in dark places, using the original mod's defaults. Fully black parts stay black. On flat it also takes on the color of the scene around the screen edges, with a strength setting.[/color][/*]
 [*][color=#D4D4D8][b]Motion (flat):[/b] the same short nudges on jump, strafe and sprint as the original, plus optional head-turn sway.[/color][/*]
 [*][color=#D4D4D8][b]Opaque mask (on by default):[/b] the renderer skips the scene behind the overlay's fully opaque pixels. Measured saving is about 8-11% of the world pass on SE and 16-18% on VR. The mask follows sway and motion.[/color][/*]
 [*][color=#D4D4D8][b]Sound:[/b] two separate options, lower world-sound volume while helmeted and a low-pass filter on every non-music sound. Both scale with the helmet: heavy closed helms muffle the most, hoods and open helmets the least.[/color][/*]
 [*][color=#D4D4D8][b]Coverage report:[/b] counts the helmets in your load order that have art, per plugin. Wigs and circlets can be ignored.[/color][/*]
-[*][color=#D4D4D8][b]Settings and debug page:[/b] [url=https://github.com/alandtse/SKSE-Menu-Framework-3]SKSE Menu Framework[/url] pages for every option. The debug page shows the helmet's model path and the overlay paths tried, previews any helmet's overlay without equipping it, and can force the sound strength and light level to check each effect.[/color]
+[*][color=#D4D4D8][b]Settings and debug page:[/b] [url=https://github.com/alandtse/SKSE-Menu-Framework-3]SKSE Menu Framework[/url] pages for every option. The debug page shows the helmet's model path and the overlay paths tried, previews any helmet's overlay without equipping it, shows the sampled scene color next to the light-only look, and can force the sound strength, tint strength and light level to check each effect.[/color][/*]
+[/list]
 
 [size=4][b]Requirements[/b][/size]
 [color=#D4D4D8]SE/AE: [url=https://skse.silverlock.org/]SKSE64[/url] and [url=https://www.nexusmods.com/skyrimspecialedition/mods/32444]Address Library[/url]. VR: [url=https://skse.silverlock.org/]SKSE VR[/url], [url=https://www.nexusmods.com/skyrimspecialedition/mods/58101]VR Address Library[/url] and [url=https://github.com/alandtse/imgui-vr-helper]ImGuiVRHelper[/url] 1.10.0 or newer. With an older helper the overlay falls back to the helper's global HUD plane.
 
-[b]Overlay art[/b] (at least one is required, or nothing shows):[/color][/*]
+[b]Overlay art[/b] (at least one is required, or nothing shows):[/color]
+[list]
 [*][color=#D4D4D8][url=https://www.nexusmods.com/skyrimspecialedition/mods/35605]Helmet Overlays[/url]: the SE version of the original mod. Its art is used; the SWF plugin is not.[/color][/*]
 [*][color=#D4D4D8][url=https://www.nexusmods.com/skyrimspecialedition/mods/189092]Helmet Overlays Enhanced Edition[/url]: art for more helmets.[/color][/*]
-[*][color=#D4D4D8][url=https://www.nexusmods.com/skyrimspecialedition/mods/93800]Helmet Overlay Addon[/url]: art for more armor mods.[/color]
+[*][color=#D4D4D8][url=https://www.nexusmods.com/skyrimspecialedition/mods/93800]Helmet Overlay Addon[/url]: art for more armor mods.[/color][/*]
+[/list]
 [color=#D4D4D8]None of these plugins need to be enabled. Only their art files are read.
 
 Optional: [url=https://github.com/alandtse/SKSE-Menu-Framework-3]SKSE Menu Framework[/url] for the in-game settings and debug pages.
 
 Report issues on the [url=https://github.com/alandtse/HelmetOverlaysNG/issues]issue tracker[/url]. A HelmetOverlaysNG.log (and the crash log, if there is one) is the most useful thing to include.[/color]
 
-[size=4][b]Shout outs[/b][/size]
-[color=#D4D4D8][url=https://www.nexusmods.com/profile/scrivener07?gameId=110]scrivener07[/url] for the original [url=https://www.nexusmods.com/skyrim/mods/69611]Helmet Overlays[/url] on LE, which defined the art format and the model-path convention this mod reads. [url=https://www.nexusmods.com/profile/GSA2011?gameId=1704]GSA2011[/url] for maintaining it and bringing it to SE. The [url=https://www.nexusmods.com/skyrimspecialedition/mods/189092]Helmet Overlays Enhanced Edition[/url] author for the broad art coverage. The [url=https://github.com/alandtse/CommonLibVR/tree/ng]CommonLibSSE-NG[/url] maintainers and contributors, whose work makes one DLL for three runtimes possible.[/color]
+[size=4][b]Credits[/b][/size]
+[color=#D4D4D8][url=https://www.nexusmods.com/profile/scrivener07?gameId=110]scrivener07[/url] and megapolom for the original concept, [url=https://www.nexusmods.com/skyrim/mods/69611]Helmet Overlays[/url] on LE. It defined the art format and the model-path convention this mod reads.
+[url=https://www.nexusmods.com/profile/GSA2011?gameId=1704]GSA2011[/url] for the first SE port.
+HoodiePledge and rotol for keeping it alive with new overlays ([url=https://www.nexusmods.com/skyrimspecialedition/mods/189092]Helmet Overlays Enhanced Edition[/url] and [url=https://www.nexusmods.com/skyrimspecialedition/mods/93800]Helmet Overlay Addon[/url]). Note that I do not package any art assets; you need to download and install their mods.
+The [url=https://github.com/alandtse/CommonLibVR/tree/ng]CommonLibSSE-NG[/url] maintainers and contributors, whose work makes one DLL for three runtimes possible.[/color]
 
 Want to support me or help me top off my AI credits? [url=https://buymeacoffee.com/alandtse]Buy Me a Coffee[/url]
 
 [size=4][b]Source[/b][/size]
 [url=https://github.com/alandtse/HelmetOverlaysNG]github.com/alandtse/HelmetOverlaysNG[/url] (GPL-3.0-or-later with modding exception; see COPYING and EXCEPTIONS.md in the repository)
-
-[/*]
