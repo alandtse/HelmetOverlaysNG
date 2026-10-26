@@ -81,7 +81,7 @@ namespace HONG
 		float lightFadeSeconds{ 1.0f };      // time to move to a new light level
 		float lightIntervalSeconds{ 1.0f };  // how often the light level is sampled
 		bool screenTint{ true };             // shift the art toward the colour of the scene around the edges
-		float screenTintStrength{ 0.5f };    // 0 = no shift, 1 = the full hue
+		float screenTintStrength{ 1.0f };    // 0 = no shift, 1 = the full hue
 
 		// [Animation]
 		AnimStyle animStyle{ AnimStyle::kSettle };
