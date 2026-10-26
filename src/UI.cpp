@@ -194,13 +194,13 @@ namespace HONG::UI
 				Tip("Time to remove the overlay when the helmet comes off.");
 				if (!vr) {
 					ImGuiMCP::Checkbox("Head-turn sway", &s->sway);
-					Tip("The overlay lags behind camera turns. The opaque mask is off while it moves.");
+					Tip("The overlay lags behind camera turns. The opaque mask follows it.");
 					ImGuiMCP::BeginDisabled(!s->sway);
 					ImGuiMCP::SliderFloat("Sway strength", &s->swayStrength, 0.0f, 4.0f, "%.2f", ImGuiMCP::ImGuiSliderFlags_AlwaysClamp);
 					Tip("Multiplier on how far the overlay lags; 1.0 is the default amount.");
 					ImGuiMCP::EndDisabled();
 					ImGuiMCP::Checkbox("Jump, strafe and sprint motion", &s->motion);
-					Tip("Short nudges of the overlay when you jump, strafe or start sprinting, as in the original mod. The opaque mask is off while it moves.");
+					Tip("Short nudges of the overlay when you jump, strafe or start sprinting, as in the original mod. The opaque mask follows them.");
 					ImGuiMCP::BeginDisabled(!s->motion);
 					ImGuiMCP::SliderFloat("Motion strength", &s->motionStrength, 0.0f, 2.0f, "%.2f", ImGuiMCP::ImGuiSliderFlags_AlwaysClamp);
 					Tip("Multiplier on the size of the nudges; 1.0 matches the original mod.");
@@ -254,7 +254,7 @@ namespace HONG::UI
 			if (ImGuiMCP::CollapsingHeader("Current helmet", ImGuiMCP::ImGuiTreeNodeFlags_DefaultOpen)) {
 				const auto current = Debug::GetCurrent();
 				if (current.armorId == 0) {
-					ImGuiMCP::TextDisabled("No helmet worn.");
+					ImGuiMCP::TextDisabled("No helmet worn. Equip one, or preview one on the Debug page.");
 				} else {
 					const auto& forced = Debug::SoundStrengthOverride();
 					const float strength = forced.Apply(current.strength);
