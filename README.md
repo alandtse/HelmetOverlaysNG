@@ -7,8 +7,8 @@ and Skyrim VR.
 Source and issues: <https://github.com/alandtse/HelmetOverlaysNG>. Licensed GPL-3.0-or-later with a modding
 exception (see [License](#license)).
 
-It reads the existing overlay art (`Data/Interface/overlays/**.dds`, from Helmet Overlays 2.0 and
-Helmet Overlays Enhanced Edition) and picks the overlay from the worn helmet's world model path.
+It reads the existing overlay art (`Data/Interface/overlays/**.dds`, from [Helmet Overlays](https://www.nexusmods.com/skyrimspecialedition/mods/35605) and
+[Helmet Overlays Enhanced Edition](https://www.nexusmods.com/skyrimspecialedition/mods/189092)) and picks the overlay from the worn helmet's world model path.
 No ESP, no Papyrus, no SkyUI, no Scaleform. This mod ships no art; install at least one overlay art pack:
 
 - [Helmet Overlays](https://www.nexusmods.com/skyrimspecialedition/mods/35605): the original mod and its art.
@@ -33,7 +33,7 @@ See [docs/DESIGN.md](docs/DESIGN.md) for how it works and the open items, and
 - An opaque-pixel mask, on by default and unique to this mod: it skips shading the scene behind the overlay's fully opaque pixels, saving about 8-11% of the world pass on SE and 16-18% on VR.
 - Sound muffling scaled by helmet type, from the armor class and how closed the overlay art is.
 - Optional world-sound attenuation and a low-pass filter, as separate settings.
-- In-game settings and a debug page through SKSE Menu Framework (optional).
+- In-game settings and a debug page through [SKSE Menu Framework](https://github.com/alandtse/SKSE-Menu-Framework-3) (optional).
 - Can stop the original `ScribeOverlays.esp` widget from drawing a second overlay.
 
 ## Build
@@ -54,7 +54,7 @@ an unreleased local helper checkout, set `HONG_VRHELPER_API` to its `api` folder
 ## Config
 
 Edit `Data/SKSE/Plugins/HelmetOverlaysNG.ini`, or change the same settings in game under "Helmet Overlays NG" with the
-optional SKSE Menu Framework.
+optional [SKSE Menu Framework](https://github.com/alandtse/SKSE-Menu-Framework-3).
 
 ## License
 
