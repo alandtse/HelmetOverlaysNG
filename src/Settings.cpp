@@ -24,12 +24,12 @@ namespace HONG
 			"Console", "MessageBoxMenu", "Credits Menu", "Creation Club Menu", "Mod Manager Menu", "TitleSequence Menu"
 		};
 
-		float GetFloat(const CSimpleIniA& a_ini, const char* a_section, const char* a_key, float a_default, float a_min, float a_max)
+		float GetFloat(const CSimpleIniA& a_ini, const char* a_section, const char* a_key, float a_default, Bounds a_range)
 		{
 			const auto value = static_cast<float>(a_ini.GetDoubleValue(a_section, a_key, a_default));
-			const auto clamped = std::isfinite(value) ? std::clamp(value, a_min, a_max) : a_default;
+			const auto clamped = std::isfinite(value) ? std::clamp(value, a_range.min, a_range.max) : a_default;
 			if (clamped != value) {
-				logger::warn("{} {} = {} is outside [{}, {}]; using {}.", a_section, a_key, value, a_min, a_max, clamped);
+				logger::warn("{} {} = {} is outside [{}, {}]; using {}.", a_section, a_key, value, a_range.min, a_range.max, clamped);
 			}
 			return clamped;
 		}
@@ -156,41 +156,41 @@ namespace HONG
 		overlayRoot = SafeRoot(ini.GetValue("General", "sOverlayRoot", overlayRoot.c_str()), overlayRoot);
 		firstPersonOnly = ini.GetBoolValue("General", "bFirstPersonOnly", firstPersonOnly);
 		opaqueMask = ini.GetBoolValue("General", "bOpaqueMask", opaqueMask);
-		maskMarginPx = static_cast<int>(GetFloat(ini, "General", "iMaskMarginPx", static_cast<float>(maskMarginPx), 4.0f, 32.0f));
+		maskMarginPx = static_cast<int>(GetFloat(ini, "General", "iMaskMarginPx", static_cast<float>(maskMarginPx), Range::kMaskMargin));
 		hideInMenus = ini.GetBoolValue("General", "bHideInMenus", hideInMenus);
 		suppressOriginal = ini.GetBoolValue("General", "bSuppressOriginal", suppressOriginal);
 		skipWigs = ini.GetBoolValue("General", "bSkipWigs", skipWigs);
 		skipCirclets = ini.GetBoolValue("General", "bSkipCirclets", skipCirclets);
 		debugTools = ini.GetBoolValue("General", "bDebugTools", debugTools);
 
-		opacity = GetFloat(ini, "Appearance", "fOpacity", opacity, 0.0f, 1.0f);
-		scale = GetFloat(ini, "Appearance", "fScale", scale, 0.5f, 3.0f);
-		verticalOffset = GetFloat(ini, "Appearance", "fVerticalOffset", verticalOffset, -0.3f, 0.3f);
+		opacity = GetFloat(ini, "Appearance", "fOpacity", opacity, Range::kOpacity);
+		scale = GetFloat(ini, "Appearance", "fScale", scale, Range::kScale);
+		verticalOffset = GetFloat(ini, "Appearance", "fVerticalOffset", verticalOffset, Range::kVerticalOffset);
 		extendEdges = ini.GetBoolValue("Appearance", "bExtendEdges", extendEdges);
 
 		reactiveLight = ini.GetBoolValue("Light", "bReactive", reactiveLight);
-		lightStrength = GetFloat(ini, "Light", "fStrength", lightStrength, 0.0f, 1.0f);
-		lightFadeSeconds = GetFloat(ini, "Light", "fFadeSeconds", lightFadeSeconds, 0.0f, 10.0f);
-		lightIntervalSeconds = GetFloat(ini, "Light", "fIntervalSeconds", lightIntervalSeconds, 0.1f, 5.0f);
+		lightStrength = GetFloat(ini, "Light", "fStrength", lightStrength, Range::kLightStrength);
+		lightFadeSeconds = GetFloat(ini, "Light", "fFadeSeconds", lightFadeSeconds, Range::kLightFade);
+		lightIntervalSeconds = GetFloat(ini, "Light", "fIntervalSeconds", lightIntervalSeconds, Range::kLightInterval);
 
 		animStyle = ParseStyle(ini.GetValue("Animation", "sStyle", ""), animStyle);
-		fadeInSeconds = GetFloat(ini, "Animation", "fFadeInSeconds", fadeInSeconds, 0.0f, 5.0f);
-		fadeOutSeconds = GetFloat(ini, "Animation", "fFadeOutSeconds", fadeOutSeconds, 0.0f, 5.0f);
+		fadeInSeconds = GetFloat(ini, "Animation", "fFadeInSeconds", fadeInSeconds, Range::kFade);
+		fadeOutSeconds = GetFloat(ini, "Animation", "fFadeOutSeconds", fadeOutSeconds, Range::kFade);
 		sway = ini.GetBoolValue("Animation", "bSway", sway);
-		swayStrength = GetFloat(ini, "Animation", "fSwayStrength", swayStrength, 0.0f, 4.0f);
+		swayStrength = GetFloat(ini, "Animation", "fSwayStrength", swayStrength, Range::kSwayStrength);
 		motion = ini.GetBoolValue("Animation", "bMotion", motion);
-		motionStrength = GetFloat(ini, "Animation", "fMotionStrength", motionStrength, 0.0f, 2.0f);
+		motionStrength = GetFloat(ini, "Animation", "fMotionStrength", motionStrength, Range::kMotionStrength);
 
-		vrDepth = GetFloat(ini, "VR", "fDepthMeters", vrDepth, 0.2f, 5.0f);
-		vrCoverage = GetFloat(ini, "VR", "fCoverage", vrCoverage, 0.2f, 1.6f);
+		vrDepth = GetFloat(ini, "VR", "fDepthMeters", vrDepth, Range::kVrDepth);
+		vrCoverage = GetFloat(ini, "VR", "fCoverage", vrCoverage, Range::kVrCoverage);
 
 		attenuate = ini.GetBoolValue("Sound", "bAttenuate", attenuate);
-		attenuateVolume = GetFloat(ini, "Sound", "fAttenuateVolume", attenuateVolume, 0.0f, 1.0f);
-		attenuateSeconds = GetFloat(ini, "Sound", "fAttenuateSeconds", attenuateSeconds, 0.0f, 5.0f);
+		attenuateVolume = GetFloat(ini, "Sound", "fAttenuateVolume", attenuateVolume, Range::kAttenuateVolume);
+		attenuateSeconds = GetFloat(ini, "Sound", "fAttenuateSeconds", attenuateSeconds, Range::kAttenuateLag);
 		autoStrength = ini.GetBoolValue("Sound", "bAutoStrength", autoStrength);
-		autoArtWeight = GetFloat(ini, "Sound", "fAutoArtWeight", autoArtWeight, 0.0f, 1.0f);
+		autoArtWeight = GetFloat(ini, "Sound", "fAutoArtWeight", autoArtWeight, Range::kAutoArtWeight);
 		lowPass = ini.GetBoolValue("Sound", "bLowPass", lowPass);
-		lowPassHz = GetFloat(ini, "Sound", "fLowPassHz", lowPassHz, 200.0f, 20000.0f);
+		lowPassHz = GetFloat(ini, "Sound", "fLowPassHz", lowPassHz, Range::kLowPassHz);
 
 		if (const auto* menus = ini.GetValue("Menus", "sHidden", nullptr)) {
 			std::scoped_lock lock{ _menuLock };

@@ -22,6 +22,33 @@ namespace HONG
 		kSlide,   // alpha + drop in from above
 	};
 
+	// Accepted range of each tunable; the INI loader clamps to it and the settings sliders span it.
+	struct Bounds
+	{
+		float min;
+		float max;
+	};
+	namespace Range
+	{
+		inline constexpr Bounds kUnit{ 0.0f, 1.0f };
+		inline constexpr Bounds kOpacity{ 0.0f, 1.0f };
+		inline constexpr Bounds kScale{ 0.5f, 3.0f };
+		inline constexpr Bounds kVerticalOffset{ -0.3f, 0.3f };
+		inline constexpr Bounds kLightStrength{ 0.0f, 1.0f };
+		inline constexpr Bounds kLightFade{ 0.0f, 10.0f };
+		inline constexpr Bounds kLightInterval{ 0.1f, 5.0f };
+		inline constexpr Bounds kFade{ 0.0f, 2.0f };
+		inline constexpr Bounds kSwayStrength{ 0.0f, 4.0f };
+		inline constexpr Bounds kMotionStrength{ 0.0f, 2.0f };
+		inline constexpr Bounds kVrDepth{ 0.3f, 3.0f };
+		inline constexpr Bounds kVrCoverage{ 0.5f, 1.6f };
+		inline constexpr Bounds kMaskMargin{ 4.0f, 32.0f };
+		inline constexpr Bounds kAutoArtWeight{ 0.0f, 1.0f };
+		inline constexpr Bounds kAttenuateVolume{ 0.0f, 1.0f };
+		inline constexpr Bounds kAttenuateLag{ 0.0f, 3.0f };
+		inline constexpr Bounds kLowPassHz{ 400.0f, 8000.0f };
+	}
+
 	// Every tunable with its default; ResetToDefaults restores them by assigning a fresh instance.
 	struct SettingValues
 	{

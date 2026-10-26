@@ -45,10 +45,10 @@ namespace HONG::UI
 		}
 
 		// A slider over a 0..1 setting shown as a percentage.
-		bool PercentSlider(const char* a_label, float* a_value, float a_min, float a_max)
+		bool PercentSlider(const char* a_label, float* a_value, Bounds a_range)
 		{
 			float percent = *a_value * 100.0f;
-			const bool changed = ImGuiMCP::SliderFloat(a_label, &percent, a_min * 100.0f, a_max * 100.0f, "%.0f%%", ImGuiMCP::ImGuiSliderFlags_AlwaysClamp);
+			const bool changed = ImGuiMCP::SliderFloat(a_label, &percent, a_range.min * 100.0f, a_range.max * 100.0f, "%.0f%%", ImGuiMCP::ImGuiSliderFlags_AlwaysClamp);
 			if (changed) {
 				*a_value = percent / 100.0f;
 			}
@@ -69,7 +69,7 @@ namespace HONG::UI
 			if (active) {
 				ImGuiMCP::SameLine(0.0f, -1.0f);
 				ImGuiMCP::TextDisabled("(game value %.0f%%)", a_natural * 100.0f);
-				PercentSlider((std::string("##hong_force_") + a_label).c_str(), &value, 0.0f, 1.0f);
+				PercentSlider((std::string("##hong_force_") + a_label).c_str(), &value, Range::kUnit);
 			}
 			a_override.Set(active, value);
 		}
@@ -158,11 +158,11 @@ namespace HONG::UI
 			}
 
 			if (ImGuiMCP::CollapsingHeader("Appearance", ImGuiMCP::ImGuiTreeNodeFlags_DefaultOpen)) {
-				PercentSlider("Opacity", &s->opacity, 0.0f, 1.0f);
+				PercentSlider("Opacity", &s->opacity, Range::kOpacity);
 				Tip("Overall strength of the overlay art (the original MCM's \"Alpha\").");
-				ImGuiMCP::SliderFloat("Scale", &s->scale, 0.5f, 3.0f, "%.2f", ImGuiMCP::ImGuiSliderFlags_AlwaysClamp);
+				ImGuiMCP::SliderFloat("Scale", &s->scale, Range::kScale.min, Range::kScale.max, "%.2f", ImGuiMCP::ImGuiSliderFlags_AlwaysClamp);
 				Tip("Uniform scale about the screen center. 1.0 covers the screen with the 16:9 art; larger crops the edges.");
-				PercentSlider("Vertical position (% of height)", &s->verticalOffset, -0.3f, 0.3f);
+				PercentSlider("Vertical position (% of height)", &s->verticalOffset, Range::kVerticalOffset);
 				Tip("Moves the art up (negative) or down (positive).");
 				ImGuiMCP::Checkbox("Extend image edges", &s->extendEdges);
 				Tip("Stretches the art's outermost pixels over any gap that a smaller scale or a vertical shift opens at the screen edge.");
@@ -172,11 +172,11 @@ namespace HONG::UI
 				ImGuiMCP::Checkbox("Darken in dark places", &s->reactiveLight);
 				Tip("Dims the overlay art with the light level around you. Fully black parts of the art stay black.");
 				ImGuiMCP::BeginDisabled(!s->reactiveLight);
-				PercentSlider("Darkness strength", &s->lightStrength, 0.0f, 1.0f);
+				PercentSlider("Darkness strength", &s->lightStrength, Range::kLightStrength);
 				Tip("How dark the art gets with no light. 100% is black.");
-				ImGuiMCP::SliderFloat("Fade time (s)", &s->lightFadeSeconds, 0.0f, 10.0f, "%.1f", ImGuiMCP::ImGuiSliderFlags_AlwaysClamp);
+				ImGuiMCP::SliderFloat("Fade time (s)", &s->lightFadeSeconds, Range::kLightFade.min, Range::kLightFade.max, "%.1f", ImGuiMCP::ImGuiSliderFlags_AlwaysClamp);
 				Tip("Time to move to a new light level.");
-				ImGuiMCP::SliderFloat("Check interval (s)", &s->lightIntervalSeconds, 0.1f, 5.0f, "%.1f", ImGuiMCP::ImGuiSliderFlags_AlwaysClamp);
+				ImGuiMCP::SliderFloat("Check interval (s)", &s->lightIntervalSeconds, Range::kLightInterval.min, Range::kLightInterval.max, "%.1f", ImGuiMCP::ImGuiSliderFlags_AlwaysClamp);
 				Tip("How often the light level is read.");
 				ImGuiMCP::EndDisabled();
 			}
@@ -188,30 +188,30 @@ namespace HONG::UI
 					s->animStyle = static_cast<AnimStyle>(style);
 				}
 				Tip("How the overlay appears and disappears. Fade changes opacity only, Settle also starts slightly larger, Slide moves in from above.");
-				ImGuiMCP::SliderFloat("Fade in (s)", &s->fadeInSeconds, 0.0f, 2.0f, "%.2f", ImGuiMCP::ImGuiSliderFlags_AlwaysClamp);
+				ImGuiMCP::SliderFloat("Fade in (s)", &s->fadeInSeconds, Range::kFade.min, Range::kFade.max, "%.2f", ImGuiMCP::ImGuiSliderFlags_AlwaysClamp);
 				Tip("Time to bring the overlay in when a helmet is equipped.");
-				ImGuiMCP::SliderFloat("Fade out (s)", &s->fadeOutSeconds, 0.0f, 2.0f, "%.2f", ImGuiMCP::ImGuiSliderFlags_AlwaysClamp);
+				ImGuiMCP::SliderFloat("Fade out (s)", &s->fadeOutSeconds, Range::kFade.min, Range::kFade.max, "%.2f", ImGuiMCP::ImGuiSliderFlags_AlwaysClamp);
 				Tip("Time to remove the overlay when the helmet comes off.");
 				if (!vr) {
 					ImGuiMCP::Checkbox("Head-turn sway", &s->sway);
 					Tip("The overlay lags behind camera turns. The opaque mask follows it.");
 					ImGuiMCP::BeginDisabled(!s->sway);
-					ImGuiMCP::SliderFloat("Sway strength", &s->swayStrength, 0.0f, 4.0f, "%.2f", ImGuiMCP::ImGuiSliderFlags_AlwaysClamp);
+					ImGuiMCP::SliderFloat("Sway strength", &s->swayStrength, Range::kSwayStrength.min, Range::kSwayStrength.max, "%.2f", ImGuiMCP::ImGuiSliderFlags_AlwaysClamp);
 					Tip("Multiplier on how far the overlay lags; 1.0 is the default amount.");
 					ImGuiMCP::EndDisabled();
 					ImGuiMCP::Checkbox("Jump, strafe and sprint motion", &s->motion);
 					Tip("Short nudges of the overlay when you jump, strafe or start sprinting, as in the original mod. The opaque mask follows them.");
 					ImGuiMCP::BeginDisabled(!s->motion);
-					ImGuiMCP::SliderFloat("Motion strength", &s->motionStrength, 0.0f, 2.0f, "%.2f", ImGuiMCP::ImGuiSliderFlags_AlwaysClamp);
+					ImGuiMCP::SliderFloat("Motion strength", &s->motionStrength, Range::kMotionStrength.min, Range::kMotionStrength.max, "%.2f", ImGuiMCP::ImGuiSliderFlags_AlwaysClamp);
 					Tip("Multiplier on the size of the nudges; 1.0 matches the original mod.");
 					ImGuiMCP::EndDisabled();
 				}
 			}
 
 			if (vr && ImGuiMCP::CollapsingHeader("VR", ImGuiMCP::ImGuiTreeNodeFlags_DefaultOpen)) {
-				ImGuiMCP::SliderFloat("Plane depth (m)", &s->vrDepth, 0.3f, 3.0f, "%.2f", ImGuiMCP::ImGuiSliderFlags_AlwaysClamp);
+				ImGuiMCP::SliderFloat("Plane depth (m)", &s->vrDepth, Range::kVrDepth.min, Range::kVrDepth.max, "%.2f", ImGuiMCP::ImGuiSliderFlags_AlwaysClamp);
 				Tip("Distance of the head-locked visor plane. Most lenses can't focus nearer than ~0.5 m.");
-				ImGuiMCP::SliderFloat("Coverage", &s->vrCoverage, 0.5f, 1.6f, "%.2f", ImGuiMCP::ImGuiSliderFlags_AlwaysClamp);
+				ImGuiMCP::SliderFloat("Coverage", &s->vrCoverage, Range::kVrCoverage.min, Range::kVrCoverage.max, "%.2f", ImGuiMCP::ImGuiSliderFlags_AlwaysClamp);
 				Tip("Fraction of each eye's view the plane fills; above 1 over-fills so no edge gap shows.");
 			}
 
@@ -236,7 +236,7 @@ namespace HONG::UI
 				ImGuiMCP::Checkbox("Skip shading behind opaque overlay", &s->opaqueMask);
 				Tip("Skips shading the scene behind the overlay's fully opaque pixels to save GPU time. Applies when the helmet is next equipped.");
 				ImGuiMCP::BeginDisabled(!s->opaqueMask);
-				ImGuiMCP::SliderInt("Mask safety margin (px)", &s->maskMarginPx, 4, 32, "%d", ImGuiMCP::ImGuiSliderFlags_AlwaysClamp);
+				ImGuiMCP::SliderInt("Mask safety margin (px)", &s->maskMarginPx, static_cast<int>(Range::kMaskMargin.min), static_cast<int>(Range::kMaskMargin.max), "%d", ImGuiMCP::ImGuiSliderFlags_AlwaysClamp);
 				Tip(vr ? "How far inside the opaque area the mask stops. VR always keeps at least 48 px so both eyes stay covered. Applies when the helmet is next equipped."
 					   : "How far inside the opaque area the mask stops. Larger is safer against fringes, smaller saves a little more. Applies when the helmet is next equipped.");
 				ImGuiMCP::EndDisabled();
@@ -277,7 +277,7 @@ namespace HONG::UI
 			ImGuiMCP::Checkbox("Scale by helmet type", &s->autoStrength);
 			Tip("Closed helms muffle fully; open helmets and hoods muffle less. Uses the armor class (heavy, light, clothing) and how much of the overlay art is see-through. Applies when the helmet is next equipped.");
 			ImGuiMCP::BeginDisabled(!s->autoStrength);
-			ImGuiMCP::SliderFloat("Weight of overlay art", &s->autoArtWeight, 0.0f, 1.0f, "%.2f", ImGuiMCP::ImGuiSliderFlags_AlwaysClamp);
+			ImGuiMCP::SliderFloat("Weight of overlay art", &s->autoArtWeight, Range::kAutoArtWeight.min, Range::kAutoArtWeight.max, "%.2f", ImGuiMCP::ImGuiSliderFlags_AlwaysClamp);
 			Tip("0 uses only the armor class; 1 uses only how closed the overlay is.");
 			ImGuiMCP::EndDisabled();
 			ImGuiMCP::Separator();
@@ -286,9 +286,9 @@ namespace HONG::UI
 				ImGuiMCP::Checkbox("Attenuate world sound", &s->attenuate);
 				Tip("Lowers the volume of world sound categories (effects, footsteps). Voice and music are untouched.");
 				ImGuiMCP::BeginDisabled(!s->attenuate);
-				PercentSlider("Volume at full helmet", &s->attenuateVolume, 0.0f, 1.0f);
+				PercentSlider("Volume at full helmet", &s->attenuateVolume, Range::kAttenuateVolume);
 				Tip("World sound volume when the helmet is fully worn; 100% leaves it unchanged.");
-				ImGuiMCP::SliderFloat("Sound fade lag (s)", &s->attenuateSeconds, 0.0f, 3.0f, "%.2f", ImGuiMCP::ImGuiSliderFlags_AlwaysClamp);
+				ImGuiMCP::SliderFloat("Sound fade lag (s)", &s->attenuateSeconds, Range::kAttenuateLag.min, Range::kAttenuateLag.max, "%.2f", ImGuiMCP::ImGuiSliderFlags_AlwaysClamp);
 				Tip("Extra time the sound takes to follow the visual fade; higher values lag more.");
 				ImGuiMCP::EndDisabled();
 			}
@@ -298,7 +298,7 @@ namespace HONG::UI
 				Tip("Rolls off high frequencies like a real helmet, instead of just turning things down.");
 				ImGuiMCP::TextDisabled("Applies to every sound except music, on top of the game's own distance filtering.");
 				ImGuiMCP::BeginDisabled(!s->lowPass);
-				ImGuiMCP::SliderFloat("Cutoff at full helmet (Hz)", &s->lowPassHz, 400.0f, 8000.0f, "%.0f", ImGuiMCP::ImGuiSliderFlags_AlwaysClamp);
+				ImGuiMCP::SliderFloat("Cutoff at full helmet (Hz)", &s->lowPassHz, Range::kLowPassHz.min, Range::kLowPassHz.max, "%.0f", ImGuiMCP::ImGuiSliderFlags_AlwaysClamp);
 				Tip("Highest frequency that still passes. The engine's filter tops out at SampleRate/6 (about 8000 Hz), so that is fully open.");
 				ImGuiMCP::EndDisabled();
 			}
