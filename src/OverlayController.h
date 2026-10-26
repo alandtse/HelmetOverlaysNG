@@ -5,6 +5,7 @@
 
 #include "OverlayResolver.h"
 #include "Motion.h"
+#include "TintColor.h"
 #include "TextureCache.h"
 
 namespace HONG
@@ -20,6 +21,7 @@ namespace HONG
 		ID3D11ShaderResourceView* srv{ nullptr };
 		float alpha{ 0.0f };    // 0..1, opacity setting already applied
 		float tint{ 1.0f };     // 0..1 brightness multiplier (reactive light)
+		Tint::Rgb color;        // per-channel multiplier toward the scene colour, peak 1
 		float scale{ 1.0f };    // animation scale about center
 		ImVec2 offset{ 0, 0 };  // fraction of display size (slide + sway)
 	};
@@ -56,6 +58,9 @@ namespace HONG
 		};
 		const MaskCandidate& GetMaskCandidate() const { return _mask; }
 
+		// True while the overlay is shown and the screen colour tint (or its debug override) is on.
+		bool WantsScreenColor() const;
+
 		void MarkDirty() { _dirty.store(true, std::memory_order_relaxed); }
 
 		// Debug: draw this armor's overlay regardless of what is worn (0 = off, use the
@@ -74,6 +79,10 @@ namespace HONG
 			float maskShare{ 0.0f };  // fraction of the overlay in the opaque mask
 			float strength{ 1.0f };   // how much this helmet muffles sound
 			float light{ -1.0f };     // last sampled light level 0..1, -1 when reactive light is off
+			bool sceneSampled{ false };
+			Tint::Rgb scene;
+			Tint::Rgb tint;
+			float lightTint{ 1.0f };
 		};
 		Diagnostic GetDiagnostic() const;
 
@@ -93,6 +102,7 @@ namespace HONG
 		void Refresh();
 		void UpdateSway(float a_dt);
 		void UpdateLight(float a_dt);
+		void UpdateTint(float a_dt);
 		void UpdateMotion(float a_dt);
 
 		std::vector<Layer> _layers;
@@ -106,6 +116,7 @@ namespace HONG
 		float _lightTarget{ 0.0f };
 		float _lightClock{ 0.0f };
 		float _lightLogged{ -1.0f };  // last level written to the log
+		Tint::Rgb _tint;
 		MaskCandidate _mask;
 		ImVec2 _lastMaskOffset{ 0, 0 };
 		ImVec2 _lastMaskVelocity{ 0, 0 };

@@ -172,6 +172,8 @@ namespace HONG
 		lightStrength = GetFloat(ini, "Light", "fStrength", lightStrength, Range::kLightStrength);
 		lightFadeSeconds = GetFloat(ini, "Light", "fFadeSeconds", lightFadeSeconds, Range::kLightFade);
 		lightIntervalSeconds = GetFloat(ini, "Light", "fIntervalSeconds", lightIntervalSeconds, Range::kLightInterval);
+		screenTint = ini.GetBoolValue("Light", "bScreenTint", screenTint);
+		screenTintStrength = GetFloat(ini, "Light", "fScreenTintStrength", screenTintStrength, Range::kUnit);
 
 		animStyle = ParseStyle(ini.GetValue("Animation", "sStyle", ""), animStyle);
 		fadeInSeconds = GetFloat(ini, "Animation", "fFadeInSeconds", fadeInSeconds, Range::kFade);
@@ -226,6 +228,8 @@ namespace HONG
 		ini.SetDoubleValue("Light", "fStrength", lightStrength);
 		ini.SetDoubleValue("Light", "fFadeSeconds", lightFadeSeconds);
 		ini.SetDoubleValue("Light", "fIntervalSeconds", lightIntervalSeconds);
+		ini.SetBoolValue("Light", "bScreenTint", screenTint);
+		ini.SetDoubleValue("Light", "fScreenTintStrength", screenTintStrength);
 
 		ini.SetValue("Animation", "sStyle", StyleName(animStyle));
 		ini.SetDoubleValue("Animation", "fFadeInSeconds", fadeInSeconds);

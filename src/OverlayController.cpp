@@ -7,6 +7,7 @@
 #include "HelmetProfile.h"
 #include "LightLevel.h"
 #include "OverlayResolver.h"
+#include "ScreenColor.h"
 #include "Settings.h"
 
 namespace HONG
@@ -14,6 +15,7 @@ namespace HONG
 	namespace
 	{
 		constexpr float kRefreshIntervalSeconds = 1.0f;  // safety net if an equip event is missed
+		constexpr float kTintFadeSeconds = 0.3f;         // time for the screen colour tint to follow the scene
 		constexpr float kLightLogStep = 0.05f;           // log the light level when it moves this much
 		constexpr float kSettleScale = 0.06f;            // extra scale at progress 0 for kSettle
 		constexpr float kSlideDistance = 0.12f;          // fraction of display height for kSlide
@@ -255,6 +257,28 @@ namespace HONG
 		_lightDarkness += std::clamp(_lightTarget - _lightDarkness, -step, step);
 	}
 
+	bool OverlayController::WantsScreenColor() const
+	{
+		const auto settings = Settings::GetSingleton();
+		return !REL::Module::IsVR() && settings->enabled && _wornAmount > 0.0f && (settings->screenTint || Debug::TintStrengthOverride().Active());
+	}
+
+	void OverlayController::UpdateTint(float a_dt)
+	{
+		const auto settings = Settings::GetSingleton();
+		const float strength = Debug::TintStrengthOverride().Apply(settings->screenTint ? settings->screenTintStrength : 0.0f);
+		Tint::Rgb scene;
+		const bool sampled = WantsScreenColor() && ScreenColor::Latest(scene);
+		const auto target = sampled ? Tint::Chroma(scene, strength) : Tint::Rgb{};
+		_tint = Tint::Approach(_tint, target, a_dt / kTintFadeSeconds);
+
+		std::scoped_lock lock{ _diagLock };
+		_diag.sceneSampled = sampled;
+		_diag.scene = scene;
+		_diag.tint = _tint;
+		_diag.lightTint = 1.0f - settings->lightStrength * _lightDarkness;
+	}
+
 	void OverlayController::Update(float a_dt, std::vector<DrawLayer>& a_out)
 	{
 		a_out.clear();
@@ -268,6 +292,7 @@ namespace HONG
 		const bool gated = Gated();
 		UpdateSway(a_dt);
 		UpdateLight(a_dt);
+		UpdateTint(a_dt);
 		UpdateMotion(a_dt);
 
 		float worn = 0.0f;
@@ -292,6 +317,7 @@ namespace HONG
 			out.srv = layer.srv.Get();
 			out.alpha = eased * settings->opacity;
 			out.tint = 1.0f - settings->lightStrength * _lightDarkness;
+			out.color = _tint;
 			const auto motion = _motion.Current();
 			out.offset = { _sway.x + motion.x, _sway.y + motion.y + settings->verticalOffset };
 			out.scale = settings->scale;

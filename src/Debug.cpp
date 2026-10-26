@@ -201,6 +201,10 @@ namespace HONG::Debug
 		out.strength = diag.strength;
 		out.maskShare = diag.maskShare;
 		out.light = diag.light;
+		out.sceneSampled = diag.sceneSampled;
+		out.scene = diag.scene;
+		out.tint = diag.tint;
+		out.lightTint = diag.lightTint;
 		return out;
 	}
 
@@ -234,6 +238,12 @@ namespace HONG::Debug
 	}
 
 	Override& SoundStrengthOverride()
+	{
+		static Override instance;
+		return instance;
+	}
+
+	Override& TintStrengthOverride()
 	{
 		static Override instance;
 		return instance;

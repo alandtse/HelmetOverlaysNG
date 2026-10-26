@@ -29,6 +29,8 @@ namespace HONG::Debug
 
 	// 0..1 scale on the sound effects for the worn helmet.
 	Override& SoundStrengthOverride();
+	// 0..1 strength of the screen colour tint (0 = the default light-level look).
+	Override& TintStrengthOverride();
 	// 0..1 light level (0 dark, 1 full light) fed to the reactive light.
 	Override& LightLevelOverride();
 }

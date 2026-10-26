@@ -8,6 +8,7 @@
 #include "Muffle.h"
 #include "OverlayController.h"
 #include "OverlayMask.h"
+#include "ScreenColor.h"
 #include "Settings.h"
 #include "TextureCache.h"
 
@@ -89,11 +90,11 @@ namespace HONG::Renderer
 				const ImVec2 size{ base.x * layer.scale, base.y * layer.scale };
 				const ImVec2 center{ a_display.x * (0.5f + layer.offset.x), a_display.y * (0.5f + layer.offset.y) };
 				const auto alpha = static_cast<std::uint8_t>(std::clamp(layer.alpha, 0.0f, 1.0f) * 255.0f);
-				const auto tint = static_cast<std::uint8_t>(std::clamp(layer.tint, 0.0f, 1.0f) * 255.0f);
+				const auto channel = [&](float a_color) { return static_cast<std::uint8_t>(std::clamp(layer.tint * a_color, 0.0f, 1.0f) * 255.0f); };
 				const ImVec2 min(center.x - size.x * 0.5f, center.y - size.y * 0.5f);
 				const ImVec2 max(center.x + size.x * 0.5f, center.y + size.y * 0.5f);
 				const auto texture = reinterpret_cast<ImTextureID>(layer.srv);
-				const ImU32 color = IM_COL32(tint, tint, tint, alpha);
+				const ImU32 color = IM_COL32(channel(layer.color.r), channel(layer.color.g), channel(layer.color.b), alpha);
 				drawList->AddImage(texture, min, max, ImVec2(0, 0), ImVec2(1, 1), color);
 				if (Settings::GetSingleton()->extendEdges) {
 					DrawEdgeExtension(drawList, texture, min, max, a_display, color);
@@ -160,7 +161,9 @@ namespace HONG::Renderer
 					return;
 				}
 
-				OverlayController::GetSingleton()->Update(FrameDelta(), g_layers);
+				const float dt = FrameDelta();
+				OverlayController::GetSingleton()->Update(dt, g_layers);
+				ScreenColor::Update(dt, OverlayController::GetSingleton()->WantsScreenColor());
 				Debug::Tick();
 				Muffle::Update(OverlayController::GetSingleton()->WornAmount() * Debug::SoundStrengthOverride().Apply(OverlayController::GetSingleton()->MuffleStrength()));
 
