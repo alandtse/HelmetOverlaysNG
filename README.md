@@ -23,7 +23,7 @@ See [docs/DESIGN.md](docs/DESIGN.md) for how it works and the open items, and
   can be ignored.
 - An experimental mask that skips shading behind the overlay's fully opaque pixels to save GPU time.
 - Sound muffling scaled by helmet type, from the armor class and how closed the overlay art is.
-- Optional world-sound attenuation and a real low-pass filter, as separate settings.
+- Optional world-sound attenuation and an experimental low-pass filter, as separate settings.
 - In-game settings and a debug page through SKSE Menu Framework (optional).
 - Can stop the original `ScribeOverlays.esp` widget from drawing a second overlay.
 

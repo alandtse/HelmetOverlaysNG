@@ -56,14 +56,17 @@ Two independent effects while a helmet is worn (`[Sound]`), scaled per helmet wh
   that have not been tuned by ear.
 
 - **Attenuation** (`bAttenuate`): lowers the volume of the SFX sound category through
-  `SetCategoryVolume`, restoring the captured value when the helmet comes off. The footsteps category is
+  `SetCategoryVolume`, restoring the captured raw `volumeMult` when the helmet comes off (`GetCategoryVolume`
+  returns the value scaled by the menu volume, so it cannot be used to restore). The footsteps category is
   not found by name, so it is skipped.
 - **Low-pass** (`bLowPass`): `LowPass.cpp` hooks `BSXAudio2GameSound::UpdateEmitterPosition` (vtable slot
   0x0D) and `Update` (0x0E). After the engine runs, each non-music voice gets a low-pass on its send to
   the mastering voice through `SetOutputFilterParameters`, the call the engine uses for its own distance
   filter. The result is never more open than the engine's value, and voices are released to open when the
   helmet comes off. The engine has no global or underwater low-pass; its underwater effect is category
-  mutes plus a reverb preset.
+  mutes plus a reverb preset. Status: experimental. The call returns success but reads back the old
+  frequency on every voice checked (read-back timing may explain this), and the audible effect is
+  untested.
 
 ## Coverage
 

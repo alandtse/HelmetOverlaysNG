@@ -19,7 +19,7 @@ If you still have the original Helmet Overlays plugin enabled, the "Suppress ori
 [*][color=#D4D4D8][b]Reactive lighting:[/b] the art dims in dark places, with the original mod's defaults; fully black parts stay black.[/color][/*]
 [*][color=#D4D4D8][b]Jump, strafe and sprint motion (flat):[/b] the same short nudges as the original mod.[/color][/*]
 [*][color=#D4D4D8][b]Coverage report:[/b] counts the helmets in your load order that have art, per plugin, and can ignore wigs and circlets.[/color][/*]
-[*][color=#D4D4D8][b]Sound muffling, two independent options:[/b] lower the world-sound volume while helmeted, and a real low-pass filter that rolls off the highs on every non-music sound, on top of the game's own distance filtering.[/color][/*]
+[*][color=#D4D4D8][b]Sound muffling, two independent options:[/b] lower the world-sound volume while helmeted, and an experimental low-pass filter that rolls off the highs on every non-music sound. The volume option is tested; the filter's audible effect is not yet confirmed.[/color][/*]
 [*][color=#D4D4D8][b]In-game settings and debug page:[/b] SKSE Menu Framework pages for all options. The debug page shows the helmet's model path and the overlay paths tried, and previews any helmet's overlay without equipping it.[/color][/*]
 
 [size=4][b]Requirements[/b][/size]

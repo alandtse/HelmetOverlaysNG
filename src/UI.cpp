@@ -218,7 +218,7 @@ namespace HONG::UI
 			}
 
 			if (ImGuiMCP::CollapsingHeader("Low-pass distortion", ImGuiMCP::ImGuiTreeNodeFlags_DefaultOpen)) {
-				ImGuiMCP::Checkbox("Muffle highs (low-pass)", &s->lowPass);
+				ImGuiMCP::Checkbox("Muffle highs (low-pass, experimental)", &s->lowPass);
 				Tip("Rolls off high frequencies like a real helmet, instead of just turning things down.");
 				ImGuiMCP::TextDisabled("Applies to every sound except music, on top of the game's own distance filtering.");
 				ImGuiMCP::BeginDisabled(!s->lowPass);
