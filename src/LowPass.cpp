@@ -4,6 +4,7 @@
 #include "LowPass.h"
 
 #include <mutex>
+#include <unordered_set>
 
 namespace HONG::LowPass
 {
@@ -18,8 +19,11 @@ namespace HONG::LowPass
 		std::mutex g_lock;
 		std::unordered_map<const void*, float> g_applied;
 		std::uint64_t g_inactiveSince = 0;
-		std::atomic<std::uint32_t> g_tookFilter{ 0 };   // voices whose read-back matched what we set
-		std::atomic<std::uint32_t> g_refusedFilter{ 0 };  // voices that read back a different frequency
+		// First result per voice, split by whether the hook that saw it is the positional one:
+		// [0] = Update (every voice), [1] = UpdateEmitterPosition (3D voices only).
+		std::unordered_set<const void*> g_seenVoices[2];
+		std::uint32_t g_tookFilter[2]{};
+		std::uint32_t g_refusedFilter[2]{};
 
 		constexpr float kPi = 3.14159265358979f;
 		constexpr float kMaxFilterFrequency = 1.0f;  // XAUDIO2_MAX_FILTER_FREQUENCY, a cutoff of SampleRate / 6
@@ -50,7 +54,7 @@ namespace HONG::LowPass
 			return openHz * std::pow(targetHz / openHz, std::clamp(a_amount, 0.0f, 1.0f));
 		}
 
-		void Apply(RE::BSXAudio2GameSound* a_sound)
+		void Apply(RE::BSXAudio2GameSound* a_sound, bool a_positional)
 		{
 			const bool active = g_enabled.load(std::memory_order_relaxed) && g_amount.load(std::memory_order_relaxed) > 0.0f;
 
@@ -109,7 +113,9 @@ namespace HONG::LowPass
 				if (hr >= 0 && active) {
 					RE::XAUDIO2_FILTER_PARAMETERS after{};
 					voice->GetOutputFilterParameters(master, &after);
-					(std::fabs(after.Frequency - target) < kSameEpsilon ? g_tookFilter : g_refusedFilter).fetch_add(1, std::memory_order_relaxed);
+					if (g_seenVoices[a_positional].insert(voice).second) {
+						++(std::fabs(after.Frequency - target) < kSameEpsilon ? g_tookFilter : g_refusedFilter)[a_positional];
+					}
 				}
 				if (hr < 0) {
 					static std::atomic<bool> warned{ false };
@@ -134,7 +140,7 @@ namespace HONG::LowPass
 			static void thunk(RE::BSXAudio2GameSound* a_this)
 			{
 				func(a_this);
-				Apply(a_this);
+				Apply(a_this, true);
 			}
 			static inline REL::Relocation<decltype(thunk)> func;
 			static inline std::size_t idx{ 0x0D };
@@ -145,7 +151,7 @@ namespace HONG::LowPass
 			static bool thunk(RE::BSXAudio2GameSound* a_this)
 			{
 				const bool result = func(a_this);
-				Apply(a_this);
+				Apply(a_this, false);
 				return result;
 			}
 			static inline REL::Relocation<decltype(thunk)> func;
@@ -166,7 +172,12 @@ namespace HONG::LowPass
 		if (active != (g_enabled.load(std::memory_order_relaxed) && g_amount.load(std::memory_order_relaxed) > 0.0f)) {
 			logger::info("Low-pass {} (target cutoff {:.0f} Hz).", active ? "on" : "off", a_cutoffHz);
 			if (!active) {
-				logger::info("Low-pass voices: {} took the filter, {} read back a different frequency.", g_tookFilter.exchange(0), g_refusedFilter.exchange(0));
+				std::scoped_lock lock{ g_lock };
+				logger::info("Low-pass voices (first result each): 3D {} took the filter, {} did not; all {} took, {} did not.", g_tookFilter[1], g_refusedFilter[1], g_tookFilter[0] + g_tookFilter[1], g_refusedFilter[0] + g_refusedFilter[1]);
+				for (std::size_t i = 0; i < 2; ++i) {
+					g_seenVoices[i].clear();
+					g_tookFilter[i] = g_refusedFilter[i] = 0;
+				}
 			}
 		}
 		g_enabled.store(a_enabled, std::memory_order_relaxed);
