@@ -315,7 +315,7 @@ namespace HONG::UI
 			if (ImGuiMCP::CollapsingHeader("Low-pass distortion", ImGuiMCP::ImGuiTreeNodeFlags_DefaultOpen)) {
 				ImGuiMCP::Checkbox("Muffle highs (low-pass)", &s->lowPass);
 				Tip("Rolls off high frequencies like a real helmet, instead of just turning things down.");
-				ImGuiMCP::TextDisabled("Applies to every sound except music, on top of the game's own distance filtering.");
+				ImGuiMCP::TextDisabled("Applies to every sound except music. While the helmet is worn it replaces the game's distance muffling on those sounds.");
 				ImGuiMCP::BeginDisabled(!s->lowPass);
 				ImGuiMCP::SliderFloat("Cutoff at full helmet (Hz)", &s->lowPassHz, Range::kLowPassHz.min, Range::kLowPassHz.max, "%.0f", ImGuiMCP::ImGuiSliderFlags_AlwaysClamp);
 				Tip("Highest frequency that still passes. The engine's filter tops out at SampleRate/6 (about 8000 Hz), so that is fully open.");

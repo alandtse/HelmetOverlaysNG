@@ -62,9 +62,11 @@ Two independent effects while a helmet is worn (`[Sound]`), scaled per helmet wh
 - **Low-pass** (`bLowPass`): `LowPass.cpp` hooks `BSXAudio2GameSound::UpdateEmitterPosition` (vtable slot
   0x0D) and `Update` (0x0E). After the engine runs, each non-music voice gets a low-pass on its send to
   the mastering voice through `SetOutputFilterParameters`, the call the engine uses for its own distance
-  filter. The result is never more open than the engine's value, and voices are released to open when the
+  filter, so while the helmet is worn the plugin's cutoff replaces the engine's on those voices. The plugin
+  never reads the filter back: XAudio2 waits without a timeout for its engine thread when a voice is read
+  right after a write, and a stalled device hangs the audio thread. Voices are released to open when the
   helmet comes off. The engine has no global or underwater low-pass; its underwater effect is category
-  mutes plus a reverb preset. The effect is audible in game, though the voice read-back is unreliable.
+  mutes plus a reverb preset. The effect is audible in game.
 
 ## Coverage
 

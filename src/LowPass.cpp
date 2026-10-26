@@ -4,8 +4,7 @@
 #include "LowPass.h"
 
 #include "SoundEffect.h"
-
-#include <mutex>
+#include "VoiceTracker.h"
 
 namespace HONG::LowPass
 {
@@ -15,19 +14,13 @@ namespace HONG::LowPass
 		std::atomic<float> g_amount{ 0.0f };
 		std::atomic<float> g_cutoffHz{ 1800.0f };
 
-		// Voice -> filter frequency we last wrote. A voice that still reports that
-		// value was not rewritten by the engine, so its engine base is fully open.
-		std::mutex g_lock;
-		std::unordered_map<const void*, float> g_applied;
-		std::uint64_t g_inactiveSince = 0;
+		VoiceTracker g_voices;
 
 		constexpr float kPi = 3.14159265358979f;
 		constexpr float kMaxFilterFrequency = 1.0f;  // XAUDIO2_MAX_FILTER_FREQUENCY, a cutoff of SampleRate / 6
-		constexpr float kSameEpsilon = 1e-4f;
+		constexpr float kFilterOneOverQ = 1.0f;
 		constexpr float kMinSampleRate = 20000.0f;
 		constexpr float kMaxSampleRate = 48000.0f;
-		constexpr std::size_t kMaxTracked = 2048;
-		constexpr std::uint64_t kReleaseWindowMs = 2000;
 
 		float SampleRate(const RE::BSXAudio2Audio* a_impl)
 		{
@@ -40,29 +33,14 @@ namespace HONG::LowPass
 			return std::clamp(2.0f * std::sin(kPi * a_cutoffHz / a_sampleRate), 0.0f, kMaxFilterFrequency);
 		}
 
+		// Never reads the filter back: XAudio2 waits without a timeout for its engine thread when a voice is
+		// read right after a write, and hangs the audio thread if that thread is not running.
 		void Apply(RE::BSXAudio2GameSound* a_sound)
 		{
 			const bool active = g_enabled.load(std::memory_order_relaxed) && g_amount.load(std::memory_order_relaxed) > 0.0f;
-
-			std::scoped_lock lock{ g_lock };
-
-			if (active) {
-				g_inactiveSince = 0;
-			} else {
-				if (g_applied.empty()) {
-					return;
-				}
-				const auto now = GetTickCount64();
-				if (g_inactiveSince == 0) {
-					g_inactiveSince = now;
-				}
-				if (now - g_inactiveSince > kReleaseWindowMs) {
-					g_applied.clear();
-					g_inactiveSince = 0;
-					return;
-				}
+			if (!active && !g_voices.Releasing(GetTickCount64())) {
+				return;
 			}
-
 			if (a_sound->IsMusic() || !a_sound->sourceVoice) {
 				return;
 			}
@@ -74,43 +52,26 @@ namespace HONG::LowPass
 			auto* voice = reinterpret_cast<RE::IXAudio2Voice*>(a_sound->sourceVoice);
 			auto* master = reinterpret_cast<RE::IXAudio2Voice*>(impl->masteringVoice);
 
-			RE::XAUDIO2_FILTER_PARAMETERS current{};
-			voice->GetOutputFilterParameters(master, &current);
-
-			const auto tracked = g_applied.find(voice);
-			const bool ours = tracked != g_applied.end() && std::fabs(current.Frequency - tracked->second) < kSameEpsilon;
-			const float engineBase = (!ours && current.Type == RE::XAUDIO2_FILTER_TYPE::LowPassFilter) ? current.Frequency : kMaxFilterFrequency;
-
-			float target = engineBase;
+			float target = kMaxFilterFrequency;
 			if (active) {
 				const float sampleRate = SampleRate(impl);
 				const float hz = SoundEffect::CutoffHz(g_amount.load(std::memory_order_relaxed), g_cutoffHz.load(std::memory_order_relaxed), sampleRate);
-				target = std::min(engineBase, Coefficient(hz, sampleRate));
-			} else if (tracked == g_applied.end()) {
+				target = Coefficient(hz, sampleRate);
+				g_voices.Remember(voice);
+			} else if (!g_voices.Forget(voice)) {
 				return;
 			}
 
-			if (current.Type != RE::XAUDIO2_FILTER_TYPE::LowPassFilter || std::fabs(current.Frequency - target) > kSameEpsilon) {
-				RE::XAUDIO2_FILTER_PARAMETERS params{};
-				params.Type = RE::XAUDIO2_FILTER_TYPE::LowPassFilter;
-				params.Frequency = target;
-				params.OneOverQ = current.OneOverQ > 0.0f ? current.OneOverQ : 1.0f;
-				const auto hr = voice->SetOutputFilterParameters(master, &params);
-				if (hr < 0) {
-					static std::atomic<bool> warned{ false };
-					if (!warned.exchange(true)) {
-						logger::warn("SetOutputFilterParameters failed (hr {:#x}); low-pass may be inactive on some voices.", static_cast<std::uint32_t>(hr));
-					}
+			RE::XAUDIO2_FILTER_PARAMETERS params{};
+			params.Type = RE::XAUDIO2_FILTER_TYPE::LowPassFilter;
+			params.Frequency = target;
+			params.OneOverQ = kFilterOneOverQ;
+			const auto hr = voice->SetOutputFilterParameters(master, &params);
+			if (hr < 0) {
+				static std::atomic<bool> warned{ false };
+				if (!warned.exchange(true)) {
+					logger::warn("SetOutputFilterParameters failed (hr {:#x}); low-pass may be inactive on some voices.", static_cast<std::uint32_t>(hr));
 				}
-			}
-
-			if (active) {
-				if (g_applied.size() >= kMaxTracked) {
-					g_applied.clear();
-				}
-				g_applied[voice] = target;
-			} else {
-				g_applied.erase(voice);
 			}
 		}
 
