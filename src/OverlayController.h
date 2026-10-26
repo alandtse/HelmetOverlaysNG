@@ -108,6 +108,7 @@ namespace HONG
 		float _lightLogged{ -1.0f };  // last level written to the log
 		MaskCandidate _mask;
 		ImVec2 _lastMaskOffset{ 0, 0 };
+		ImVec2 _lastMaskVelocity{ 0, 0 };
 		float _muffleStrength{ 1.0f };
 		float _timeSinceRefresh{ 0.0f };
 

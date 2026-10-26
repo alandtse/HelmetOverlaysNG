@@ -36,7 +36,7 @@ namespace HONG
 		}
 
 		constexpr float kMaskMinOpacity = 0.999f;
-		constexpr float kMaskMaxStep = 0.003f;  // display fraction per frame, below the 8 px default margin
+		constexpr float kMaskMaxAccel = 0.002f;  // display fraction per frame of change in speed, below the 8 px default margin
 
 		float SmoothStep(float a_t)
 		{
@@ -309,10 +309,15 @@ namespace HONG
 		if (settings->opaqueMask && !vrPlacementMoved && gated && settings->opacity >= kMaskMinOpacity && _layers.size() == 1 && a_out.size() == 1) {
 			const auto& layer = _layers.front();
 			const auto& drawn = a_out.front();
-			const bool steady = std::abs(drawn.offset.x - _lastMaskOffset.x) <= kMaskMaxStep && std::abs(drawn.offset.y - _lastMaskOffset.y) <= kMaskMaxStep;
-			if (layer.wanted && layer.progress >= 1.0f && layer.mask.srv && steady) {
-				_mask = { layer.mask, drawn.offset, drawn.scale, true };
+			// The mask is used by the next frame's world render, so it follows the overlay one frame ahead.
+			const ImVec2 velocity{ drawn.offset.x - _lastMaskOffset.x, drawn.offset.y - _lastMaskOffset.y };
+			const bool smooth = std::abs(velocity.x - _lastMaskVelocity.x) <= kMaskMaxAccel && std::abs(velocity.y - _lastMaskVelocity.y) <= kMaskMaxAccel;
+			if (layer.wanted && layer.progress >= 1.0f && layer.mask.srv && smooth) {
+				_mask = { layer.mask, { drawn.offset.x + velocity.x, drawn.offset.y + velocity.y }, drawn.scale, true };
 			}
+			_lastMaskVelocity = velocity;
+		} else {
+			_lastMaskVelocity = { 0, 0 };
 		}
 		_lastMaskOffset = a_out.empty() ? ImVec2{ 0, 0 } : a_out.front().offset;
 	}

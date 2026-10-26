@@ -94,9 +94,9 @@ Measured on the Enhanced Edition overlays at the 1920x1080 canvas:
   per-eye parallax as the visible overlay. How the eye viewport rectangle is laid out in the engine's
   stereo-instanced mode is unknown and must be read from the bound viewport.
 - **Flat.** The overlay is drawn with a cover-fit, a scale, and a sway offset. The mask applies the same
-  transform to the same texture coordinates. Sway moves the art by up to 2.5% of the display per frame in
-  the extreme; use the previous frame's transform plus a margin of the largest per-frame step, or switch
-  the mask off while the sway velocity is high.
+  transform to the same texture coordinates. The mask is used by the next frame's world render, so it is
+  published with the overlay's offset extrapolated one frame ahead (offset plus last frame's change). It
+  drops out for a frame when the change in speed exceeds `kMaskMaxAccel`, which the safety margin covers.
 
 ## Where the draw goes (same point for VR and flat)
 
@@ -193,11 +193,9 @@ windows of 1500 calls each:
   wall-clock second over the same first-person replay, mask off then on. The two runs were aligned by
   cross-correlating the per-second series (correlation 0.83, 110 s overlap). Mean 2.83 ms off, 2.32 ms on
   (-18%); over the 84 seconds the mask was armed, 3.60 ms off, 3.04 ms on (-16%). The mask run was faster
-  in 86 of 110 seconds, with a median per-second change of -0.49 ms. Measured with one run per setting
-  on the null driver, not on a headset.
-- **Sway:** the mask is allowed only while the overlay is steady, so head-turn sway switches it off and on
-  (466 toggles in one replay, one with sway off) and shrinks the saving. Sway is off by default for this
-  reason.
+  in 86 of 110 seconds, with a median per-second change of -0.49 ms.
+- **Sway and motion:** the mask follows them with the one-frame prediction above. An earlier version
+  switched it off whenever the overlay moved (466 toggles in one sway replay) and kept little of the saving.
 - **Not read back:** the VR stencil write has not been verified from a capture.
 
 ## Interactions to check
