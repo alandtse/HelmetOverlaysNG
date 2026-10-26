@@ -24,6 +24,9 @@ namespace HONG::LowPass
 		std::unordered_set<const void*> g_seenVoices[2];
 		std::uint32_t g_tookFilter[2]{};
 		std::uint32_t g_refusedFilter[2]{};
+		// Non-positional voices the engine never rewrites: did the value we wrote still read back on a later update?
+		std::uint32_t g_persisted{ 0 };
+		std::uint32_t g_lost{ 0 };
 
 		constexpr float kPi = 3.14159265358979f;
 		constexpr float kMaxFilterFrequency = 1.0f;  // XAUDIO2_MAX_FILTER_FREQUENCY, a cutoff of SampleRate / 6
@@ -93,6 +96,9 @@ namespace HONG::LowPass
 
 			const auto tracked = g_applied.find(voice);
 			const bool ours = tracked != g_applied.end() && std::fabs(current.Frequency - tracked->second) < kSameEpsilon;
+			if (tracked != g_applied.end() && !a_positional && !g_seenVoices[1].contains(voice)) {
+				++(ours ? g_persisted : g_lost);
+			}
 			const float engineBase = (!ours && current.Type == RE::XAUDIO2_FILTER_TYPE::LowPassFilter) ? current.Frequency : kMaxFilterFrequency;
 
 			float target = engineBase;
@@ -173,11 +179,12 @@ namespace HONG::LowPass
 			logger::info("Low-pass {} (target cutoff {:.0f} Hz).", active ? "on" : "off", a_cutoffHz);
 			if (!active) {
 				std::scoped_lock lock{ g_lock };
-				logger::info("Low-pass voices (first result each): 3D {} took the filter, {} did not; all {} took, {} did not.", g_tookFilter[1], g_refusedFilter[1], g_tookFilter[0] + g_tookFilter[1], g_refusedFilter[0] + g_refusedFilter[1]);
+				logger::info("Low-pass voices (first result each): 3D {} took the filter, {} did not; all {} took, {} did not. Later updates of non-3D voices: {} still read back our value, {} did not.", g_tookFilter[1], g_refusedFilter[1], g_tookFilter[0] + g_tookFilter[1], g_refusedFilter[0] + g_refusedFilter[1], g_persisted, g_lost);
 				for (std::size_t i = 0; i < 2; ++i) {
 					g_seenVoices[i].clear();
 					g_tookFilter[i] = g_refusedFilter[i] = 0;
 				}
+				g_persisted = g_lost = 0;
 			}
 		}
 		g_enabled.store(a_enabled, std::memory_order_relaxed);
