@@ -260,7 +260,7 @@ namespace HONG
 	bool OverlayController::WantsScreenColor() const
 	{
 		const auto settings = Settings::GetSingleton();
-		return !REL::Module::IsVR() && settings->enabled && _wornAmount > 0.0f && (settings->screenTint || Debug::TintStrengthOverride().Active());
+		return settings->enabled && _wornAmount > 0.0f && (settings->screenTint || Debug::TintStrengthOverride().Active());
 	}
 
 	void OverlayController::UpdateTint(float a_dt)

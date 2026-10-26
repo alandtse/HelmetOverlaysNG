@@ -14,8 +14,20 @@ namespace HONG::Tint
 		float b{ 1.0f };
 	};
 
-	// Average of the cells on the outer ring of a_width x a_height cells; white for an empty grid.
-	Rgb RingAverage(const Rgb* a_cells, std::uint32_t a_width, std::uint32_t a_height);
+	// A rectangle of cells inside a grid that is a_stride cells wide.
+	struct Region
+	{
+		std::uint32_t x{ 0 };
+		std::uint32_t y{ 0 };
+		std::uint32_t width{ 0 };
+		std::uint32_t height{ 0 };
+	};
+
+	// Average of the cells on the outer ring of a_region; white for an empty region.
+	Rgb RingAverage(const Rgb* a_cells, std::uint32_t a_stride, Region a_region);
+
+	// Per-channel mean of two colours.
+	Rgb Mean(Rgb a_first, Rgb a_second);
 
 	// Multiplier that moves white toward the hue of a_average. Its brightest channel stays 1, so the
 	// light level remains the only thing that changes brightness.

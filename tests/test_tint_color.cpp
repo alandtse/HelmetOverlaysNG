@@ -50,14 +50,14 @@ TEST_CASE("the ring average ignores the interior", "[tint]")
 			cells[y * 5 + x] = { 100.0f, 100.0f, 100.0f };
 		}
 	}
-	const auto average = RingAverage(cells.data(), 5, 4);
+	const auto average = RingAverage(cells.data(), 5, { 0, 0, 5, 4 });
 	REQUIRE(average.r == Approx(0.0f));
 }
 
 TEST_CASE("the ring average counts every border cell once", "[tint]")
 {
 	std::vector<Rgb> cells(3 * 3, Rgb{ 1.0f, 2.0f, 4.0f });
-	const auto average = RingAverage(cells.data(), 3, 3);
+	const auto average = RingAverage(cells.data(), 3, { 0, 0, 3, 3 });
 	REQUIRE(average.r == Approx(1.0f));
 	REQUIRE(average.g == Approx(2.0f));
 	REQUIRE(average.b == Approx(4.0f));
@@ -69,4 +69,24 @@ TEST_CASE("approach moves by at most the step", "[tint]")
 	REQUIRE(next.r == Approx(0.9f));
 	REQUIRE(next.g == Approx(0.95f));
 	REQUIRE(next.b == Approx(1.0f));
+}
+
+TEST_CASE("a ring average reads only its own region of the grid", "[tint]")
+{
+	std::vector<Rgb> cells(8 * 3, Rgb{ 1.0f, 1.0f, 1.0f });
+	for (std::uint32_t y = 0; y < 3; ++y) {
+		for (std::uint32_t x = 4; x < 8; ++x) {
+			cells[y * 8 + x] = { 5.0f, 5.0f, 5.0f };
+		}
+	}
+	REQUIRE(RingAverage(cells.data(), 8, { 0, 0, 4, 3 }).r == Approx(1.0f));
+	REQUIRE(RingAverage(cells.data(), 8, { 4, 0, 4, 3 }).r == Approx(5.0f));
+}
+
+TEST_CASE("the mean of two colours is per channel", "[tint]")
+{
+	const auto mean = Mean({ 1.0f, 2.0f, 3.0f }, { 3.0f, 2.0f, 1.0f });
+	REQUIRE(mean.r == Approx(2.0f));
+	REQUIRE(mean.g == Approx(2.0f));
+	REQUIRE(mean.b == Approx(2.0f));
 }

@@ -28,6 +28,7 @@ namespace HONG::ScreenColor
 			std::array<Slot, kSlots> slots;
 			std::uint32_t width{ 0 };
 			std::uint32_t height{ 0 };
+			std::uint32_t eyes{ 1 };  // side-by-side images in the scene target: 2 in VR
 			std::uint32_t level{ 0 };
 			std::uint32_t cellsX{ 0 };
 			std::uint32_t cellsY{ 0 };
@@ -68,7 +69,8 @@ namespace HONG::ScreenColor
 			g_state.source = a_source;
 			g_state.width = desc.Width;
 			g_state.height = desc.Height;
-			while ((desc.Width >> g_state.level) > kMaxCellsAcross) {
+			g_state.eyes = REL::Module::IsVR() ? 2 : 1;
+			while ((desc.Width / g_state.eyes >> g_state.level) > kMaxCellsAcross) {
 				++g_state.level;
 			}
 			g_state.cellsX = std::max(1u, desc.Width >> g_state.level);
@@ -101,8 +103,19 @@ namespace HONG::ScreenColor
 					return false;
 				}
 			}
-			logger::info("Screen colour tint sampling {}x{} scene colour through a {}x{} image.", desc.Width, desc.Height, g_state.cellsX, g_state.cellsY);
+			logger::info("Screen colour tint sampling {}x{} scene colour ({} eye{}) through a {}x{} image.", desc.Width, desc.Height, g_state.eyes, g_state.eyes == 1 ? "" : "s", g_state.cellsX, g_state.cellsY);
 			return true;
+		}
+
+		// Ring average of each eye's half of the reduced image, averaged so both eyes get the same tint.
+		Tint::Rgb EyeAverage(const Tint::Rgb* a_cells)
+		{
+			const std::uint32_t eyeWidth = g_state.cellsX / g_state.eyes;
+			Tint::Rgb sum = Tint::RingAverage(a_cells, g_state.cellsX, { 0, 0, eyeWidth, g_state.cellsY });
+			if (g_state.eyes == 2) {
+				sum = Tint::Mean(sum, Tint::RingAverage(a_cells, g_state.cellsX, { g_state.cellsX - eyeWidth, 0, eyeWidth, g_state.cellsY }));
+			}
+			return sum;
 		}
 
 		void Harvest(ID3D11DeviceContext* a_context)
@@ -129,7 +142,7 @@ namespace HONG::ScreenColor
 				}
 				a_context->Unmap(slot.staging.Get(), 0);
 				slot.pending = false;
-				g_state.latest = Tint::RingAverage(cells.data(), g_state.cellsX, g_state.cellsY);
+				g_state.latest = EyeAverage(cells.data());
 				if (!std::exchange(g_state.haveLatest, true)) {
 					logger::info("First scene colour sample: edge ring average {:.3f} {:.3f} {:.3f}.", g_state.latest.r, g_state.latest.g, g_state.latest.b);
 				}

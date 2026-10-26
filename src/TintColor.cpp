@@ -17,19 +17,19 @@ namespace HONG::Tint
 		}
 	}
 
-	Rgb RingAverage(const Rgb* a_cells, std::uint32_t a_width, std::uint32_t a_height)
+	Rgb RingAverage(const Rgb* a_cells, std::uint32_t a_stride, Region a_region)
 	{
-		if (!a_cells || a_width == 0 || a_height == 0) {
+		if (!a_cells || a_region.width == 0 || a_region.height == 0) {
 			return {};
 		}
 		double r = 0.0, g = 0.0, b = 0.0;
 		std::uint32_t count = 0;
-		for (std::uint32_t y = 0; y < a_height; ++y) {
-			for (std::uint32_t x = 0; x < a_width; ++x) {
-				if (x != 0 && y != 0 && x != a_width - 1 && y != a_height - 1) {
+		for (std::uint32_t y = 0; y < a_region.height; ++y) {
+			for (std::uint32_t x = 0; x < a_region.width; ++x) {
+				if (x != 0 && y != 0 && x != a_region.width - 1 && y != a_region.height - 1) {
 					continue;
 				}
-				const auto& cell = a_cells[y * a_width + x];
+				const auto& cell = a_cells[(a_region.y + y) * a_stride + a_region.x + x];
 				r += cell.r;
 				g += cell.g;
 				b += cell.b;
@@ -38,6 +38,11 @@ namespace HONG::Tint
 		}
 		const auto n = static_cast<double>(count);
 		return { static_cast<float>(r / n), static_cast<float>(g / n), static_cast<float>(b / n) };
+	}
+
+	Rgb Mean(Rgb a_first, Rgb a_second)
+	{
+		return { (a_first.r + a_second.r) * 0.5f, (a_first.g + a_second.g) * 0.5f, (a_first.b + a_second.b) * 0.5f };
 	}
 
 	Rgb Chroma(Rgb a_average, float a_strength)

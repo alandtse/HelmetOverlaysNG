@@ -191,14 +191,12 @@ namespace HONG::UI
 				ImGuiMCP::SliderFloat("Check interval (s)", &s->lightIntervalSeconds, Range::kLightInterval.min, Range::kLightInterval.max, "%.1f", ImGuiMCP::ImGuiSliderFlags_AlwaysClamp);
 				Tip("How often the light level is read.");
 				ImGuiMCP::EndDisabled();
-				if (!vr) {
-					ImGuiMCP::Checkbox("Tint with screen colour", &s->screenTint);
-					Tip("Shifts the art toward the colour of the scene around the screen edges, so firelight turns it orange and lightning purple. Brightness still comes from the light level. Flat only; the Debug page shows the effect side by side.");
-					ImGuiMCP::BeginDisabled(!s->screenTint);
-					PercentSlider("Tint strength", &s->screenTintStrength, Range::kUnit);
-					Tip("0% keeps the art's own colour; 100% takes the full hue of the scene.");
-					ImGuiMCP::EndDisabled();
-				}
+				ImGuiMCP::Checkbox("Tint with screen colour", &s->screenTint);
+				Tip("Shifts the art toward the colour of the scene around the screen edges, so firelight turns it orange and lightning purple. Brightness still comes from the light level. The Debug page shows the effect side by side.");
+				ImGuiMCP::BeginDisabled(!s->screenTint);
+				PercentSlider("Tint strength", &s->screenTintStrength, Range::kUnit);
+				Tip("0% keeps the art's own colour; 100% takes the full hue of the scene.");
+				ImGuiMCP::EndDisabled();
 			}
 
 			if (ImGuiMCP::CollapsingHeader("Animation", ImGuiMCP::ImGuiTreeNodeFlags_DefaultOpen)) {
@@ -406,7 +404,7 @@ namespace HONG::UI
 				}
 			}
 
-			if (!REL::Module::IsVR() && ImGuiMCP::CollapsingHeader("Screen colour tint", ImGuiMCP::ImGuiTreeNodeFlags_DefaultOpen)) {
+			if (ImGuiMCP::CollapsingHeader("Screen colour tint", ImGuiMCP::ImGuiTreeNodeFlags_DefaultOpen)) {
 				if (!current.sceneSampled) {
 					ImGuiMCP::TextDisabled("No scene colour sampled (no overlay shown, or the tint is off).");
 				} else {
@@ -423,10 +421,8 @@ namespace HONG::UI
 				ImGuiMCP::TextDisabled("Push an effect to an extreme to see or hear it. Not saved; cleared on restart.");
 				OverrideSlider("sound muffle strength", Debug::SoundStrengthOverride(), current.strength,
 					"Replaces the helmet's muffle strength for both sound effects. 100% applies the full volume drop and cutoff from the Sound page.");
-				if (!REL::Module::IsVR()) {
-					OverrideSlider("screen tint strength", Debug::TintStrengthOverride(), s->screenTint ? s->screenTintStrength : 0.0f,
-						"Replaces the tint strength. 0% shows the default light-level look, 100% the full hue of the scene colour, even with the tint turned off.");
-				}
+				OverrideSlider("screen tint strength", Debug::TintStrengthOverride(), s->screenTint ? s->screenTintStrength : 0.0f,
+					"Replaces the tint strength. 0% shows the default light-level look, 100% the full hue of the scene colour, even with the tint turned off.");
 				ImGuiMCP::BeginDisabled(!s->reactiveLight);
 				OverrideSlider("light level", Debug::LightLevelOverride(), current.light >= 0.0f ? current.light : 1.0f,
 					"Replaces the sampled light level (0% is dark, 100% is fully lit). Needs \"Darken in dark places\".");
