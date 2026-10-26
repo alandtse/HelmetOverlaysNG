@@ -93,15 +93,14 @@ not fire for a console `coc` start.
 
 ## Open items
 
-0. Opaque-region mask (experimental, off by default): skip shading where the overlay is fully opaque, flat
-   and VR, through a depth write this plugin issues in its own world-batch hook. SE shows a saving; VR is
-   unmeasured. See [OPAQUE_MASK.md](OPAQUE_MASK.md).
-1. Verify VR parallax and the visor plane on a real headset; the null driver reports zero eye separation.
-2. Per-armor sound profiles: derive defaults from armor type, weight, material keywords and slot
+1. Opaque-region mask (experimental, off by default): skip shading where the overlay is fully opaque, flat
+   and VR, through a depth write this plugin issues in its own world-batch hook. SE saves about 8-11% and
+   VR about 16-18% of the world pass. See [OPAQUE_MASK.md](OPAQUE_MASK.md).
+2. Low-pass filter (experimental): the filter call returns success but reads back unchanged; the audible
+   effect is unconfirmed.
+3. Per-armor sound profiles: derive defaults from armor type, weight, material keywords and slot
    coverage, with an optional override file.
-3. Head-hit feedback: `HitData::damageLimb == kHead` on the player, played as a material-appropriate
+4. Head-hit feedback: `HitData::damageLimb == kHead` on the player, played as a material-appropriate
    sound.
-4. Overrides for helmets whose model path has no art.
-5. The footsteps sound category needs its form found another way.
-6. The helper interface 006 must be released and the `imgui-vr-helper-api` package pin raised; until
-   then builds need `HONG_VRHELPER_API` pointing at a helper checkout's `api/` folder.
+5. Overrides for helmets whose model path has no art.
+6. The footsteps sound category needs its form found another way.

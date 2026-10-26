@@ -2,8 +2,7 @@
 
 Facts come from each mod's Nexus page (linked), its shipped scripts and SWF, or Helmet Overlays NG's own
 tests. Capability rows answer Yes, No or Not verified (the source does not say and it was not tested), with
-a short detail in brackets. Helmet Overlays NG is unreleased and its VR behavior has been checked only on
-SteamVR's null driver, not on a headset.
+a short detail in brackets. Helmet Overlays NG is unreleased.
 
 ## Implementations
 
@@ -41,8 +40,8 @@ SteamVR's null driver, not on a headset.
 | Reacts to camera state          | Yes (first person, third person, horse, furniture) | No                            | Yes (first person only on flat, option)                  |
 | Per-eye VR placement            | No                                            | Not verified                       | Yes (head-locked plane, per-eye projection)              |
 | Fits the headset's field of view | No                                           | Yes (8:9 and 9:10 templates)       | Yes (plane sized from the eyes' field of view)           |
-| GPU saving option               | No                                            | Not verified                       | Yes (about 8-11% on SE, 16-18% on VR; world pass, one run each) |
-| In-game settings                | Yes (MCM)                                     | Yes (ReShade overlay)              | Yes (SKSE Menu Framework)                                |
+| GPU saving option               | No                                            | Not verified                       | Yes (about 8-11% on SE, 16-18% on VR; world pass) |
+| In-game settings                | Yes (MCM)                                     | Yes (ReShade overlay)              | Yes (ini file, and optional SKSE Menu Framework pages)                                |
 | Coverage report                 | No                                            | No                                 | Yes (per plugin; can ignore wigs and circlets)           |
 | Debug tools                     | Yes (panel, add-equipment hotkey)             | No                                 | Yes (Debug page, helmet preview)                         |
 | Stops the original mod's widget | No                                            | No                                 | Yes (optional)                                           |
@@ -53,11 +52,10 @@ SteamVR's null driver, not on a headset.
 - swf, png, jpg and gif art.
 - Per-armor sound profiles and head-hit feedback.
 - A confirmed low-pass filter: the option exists, but its effect on the audio is unconfirmed.
-- Headset verification of parallax, comfort and plane depth.
 
 ## Known limits
 
 - In VR, the center of the head-locked plane doubles when the eyes converge nearer than the plane depth.
-- The opaque mask is off while the overlay moves (sway, motion, fade).
+- The opaque mask follows sway and motion with a one-frame prediction and is off during the fade and for a frame
+  when the overlay speeds up sharply.
 - A hair-slot armor whose name has a hood or hat word is kept as headgear, even if it is a wig.
-- The mask timings are single runs, and the VR run used the null driver.

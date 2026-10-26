@@ -44,7 +44,8 @@ an unreleased local helper checkout, set `HONG_VRHELPER_API` to its `api` folder
 
 ## Config
 
-`Data/SKSE/Plugins/HelmetOverlaysNG.ini`, or in game under "Helmet Overlays NG" in SKSE Menu Framework.
+Edit `Data/SKSE/Plugins/HelmetOverlaysNG.ini`, or change the same settings in game under "Helmet Overlays NG" with the
+optional SKSE Menu Framework.
 
 ## License
 
