@@ -12,6 +12,7 @@
 
 #include <algorithm>
 #include <cctype>
+#include <cmath>
 #include <cstring>
 #include <shellapi.h>
 #include <string>
@@ -22,6 +23,7 @@ namespace logger = SKSE::log;
 #include "SKSEMenuFramework.h"
 
 #include "Debug.h"
+#include "Muffle.h"
 #include "Settings.h"
 #include "TextMatch.h"
 #include "UI.h"
@@ -51,6 +53,25 @@ namespace HONG::UI
 				*a_value = percent / 100.0f;
 			}
 			return changed;
+		}
+
+		constexpr float kSilenceVolume = 0.001f;  // floor for the dB readout so a zero volume does not print -inf
+
+		// Lets the debug page force a value the game would otherwise compute, to see or hear an effect at an extreme.
+		void OverrideSlider(const char* a_label, Debug::Override& a_override, float a_natural, const char* a_tip)
+		{
+			bool active = a_override.Active();
+			float value = a_override.Value();
+			if (ImGuiMCP::Checkbox((std::string("Force ") + a_label).c_str(), &active)) {
+				value = a_natural;
+			}
+			Tip(a_tip);
+			if (active) {
+				ImGuiMCP::SameLine(0.0f, -1.0f);
+				ImGuiMCP::TextDisabled("(game value %.0f%%)", a_natural * 100.0f);
+				PercentSlider((std::string("##hong_force_") + a_label).c_str(), &value, 0.0f, 1.0f);
+			}
+			a_override.Set(active, value);
 		}
 
 		// The same buttons close every page and act on every setting; reset needs a second click.
@@ -211,7 +232,7 @@ namespace HONG::UI
 				Tip("Stops ScribeOverlays.esp's quests on load so its SWF doesn't draw a second overlay. Takes effect on the next load.");
 			}
 
-			if (ImGuiMCP::CollapsingHeader("Performance (experimental)", 0)) {
+			if (ImGuiMCP::CollapsingHeader("Performance", 0)) {
 				ImGuiMCP::Checkbox("Skip shading behind opaque overlay", &s->opaqueMask);
 				Tip("Skips shading the scene behind the overlay's fully opaque pixels to save GPU time. Applies when the helmet is next equipped.");
 				ImGuiMCP::BeginDisabled(!s->opaqueMask);
@@ -229,6 +250,29 @@ namespace HONG::UI
 
 			ImGuiMCP::TextDisabled("Two independent effects while a helmet is worn. Use either, both or neither.");
 			ImGuiMCP::Separator();
+
+			if (ImGuiMCP::CollapsingHeader("Current helmet", ImGuiMCP::ImGuiTreeNodeFlags_DefaultOpen)) {
+				const auto current = Debug::GetCurrent();
+				if (current.armorId == 0) {
+					ImGuiMCP::TextDisabled("No helmet worn.");
+				} else {
+					const auto& forced = Debug::SoundStrengthOverride();
+					const float strength = forced.Apply(current.strength);
+					const auto effect = Muffle::EffectAt(strength);
+					ImGuiMCP::Text("%s", current.armorName.c_str());
+					ImGuiMCP::Text("Muffle strength: %.0f%%%s", strength * 100.0f, forced.Active() ? "  (forced on the Debug page)" : "");
+					if (s->attenuate) {
+						ImGuiMCP::Text("World sound: %.0f%% volume (%.1f dB)", effect.volume * 100.0f, 20.0f * std::log10(std::max(effect.volume, kSilenceVolume)));
+					} else {
+						ImGuiMCP::TextDisabled("World sound: attenuation off");
+					}
+					if (s->lowPass) {
+						ImGuiMCP::Text("Low-pass: %.0f Hz cutoff", effect.cutoffHz);
+					} else {
+						ImGuiMCP::TextDisabled("Low-pass: off");
+					}
+				}
+			}
 
 			ImGuiMCP::Checkbox("Scale by helmet type", &s->autoStrength);
 			Tip("Closed helms muffle fully; open helmets and hoods muffle less. Uses the armor class (heavy, light, clothing) and how much of the overlay art is see-through. Applies when the helmet is next equipped.");
@@ -250,7 +294,7 @@ namespace HONG::UI
 			}
 
 			if (ImGuiMCP::CollapsingHeader("Low-pass distortion", ImGuiMCP::ImGuiTreeNodeFlags_DefaultOpen)) {
-				ImGuiMCP::Checkbox("Muffle highs (low-pass, experimental)", &s->lowPass);
+				ImGuiMCP::Checkbox("Muffle highs (low-pass)", &s->lowPass);
 				Tip("Rolls off high frequencies like a real helmet, instead of just turning things down.");
 				ImGuiMCP::TextDisabled("Applies to every sound except music, on top of the game's own distance filtering.");
 				ImGuiMCP::BeginDisabled(!s->lowPass);
@@ -340,6 +384,16 @@ namespace HONG::UI
 						}
 					}
 				}
+			}
+
+			if (ImGuiMCP::CollapsingHeader("Force effects", ImGuiMCP::ImGuiTreeNodeFlags_DefaultOpen)) {
+				ImGuiMCP::TextDisabled("Push an effect to an extreme to see or hear it. Not saved; cleared on restart.");
+				OverrideSlider("sound muffle strength", Debug::SoundStrengthOverride(), current.strength,
+					"Replaces the helmet's muffle strength for both sound effects. 100% applies the full volume drop and cutoff from the Sound page.");
+				ImGuiMCP::BeginDisabled(!s->reactiveLight);
+				OverrideSlider("light level", Debug::LightLevelOverride(), current.light >= 0.0f ? current.light : 1.0f,
+					"Replaces the sampled light level (0% is dark, 100% is fully lit). Needs \"Darken in dark places\".");
+				ImGuiMCP::EndDisabled();
 			}
 
 			if (ImGuiMCP::CollapsingHeader("Coverage", ImGuiMCP::ImGuiTreeNodeFlags_DefaultOpen)) {
