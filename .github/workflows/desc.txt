@@ -6,7 +6,7 @@ The overlay changes with the helmet you wear and uses the art from Helmet Overla
 [size=3][color=#D4D4D8][b]Source:[/b] [url=https://github.com/alandtse/HelmetOverlaysNG]github.com/alandtse/HelmetOverlaysNG[/url] (GPL-3.0-or-later with modding exception; see COPYING and EXCEPTIONS.md in the repository)[/color][/size]
 
 [size=4][b]Installation instructions[/b][/size]
-[size=3][color=#D4D4D8]Install with MO2 or Vortex like any other SKSE plugin. This mod ships no art, so install an overlay art pack too (see Requirements). Configure in game with SKSE Menu Framework, or edit [i]Data/SKSE/Plugins/HelmetOverlaysNG.ini[/i] (created on first save).
+[size=3][color=#D4D4D8]Install with MO2 or Vortex like any other SKSE plugin. This mod ships no art, so install at least one overlay art pack too: [url=https://www.nexusmods.com/skyrimspecialedition/mods/35605]Helmet Overlays[/url], [url=https://www.nexusmods.com/skyrimspecialedition/mods/189092]Enhanced Edition[/url] or [url=https://www.nexusmods.com/skyrimspecialedition/mods/93800]Helmet Overlay Addon[/url]. Configure in game with SKSE Menu Framework, or edit [i]Data/SKSE/Plugins/HelmetOverlaysNG.ini[/i] (created on first save).
 
 If the original Helmet Overlays plugin is still enabled, leave "Suppress original" on. It stops the old widget so you don't get two overlays.[/color][/size]
 
@@ -25,7 +25,13 @@ If the original Helmet Overlays plugin is still enabled, leave "Suppress origina
 
 [size=4][b]Requirements[/b][/size]
 [color=#D4D4D8]SE/AE: SKSE64 and Address Library. VR: SKSE VR, VR Address Library and [url=https://github.com/alandtse/imgui-vr-helper]ImGuiVRHelper[/url] 1.10.0 or newer. With an older helper the overlay falls back to the helper's global HUD plane.
-Overlay art, required for anything to show: [url=https://www.nexusmods.com/skyrimspecialedition/mods/35605]Helmet Overlays[/url] and/or [url=https://www.nexusmods.com/skyrimspecialedition/mods/189092]Helmet Overlays Enhanced Edition[/url]. [url=https://www.nexusmods.com/skyrimspecialedition/mods/93800]Helmet Overlay Addon[/url] adds art for more armor mods. The original plugin does not need to be enabled.
+
+[b]Overlay art[/b] (at least one is required, or nothing shows):
+[*][url=https://www.nexusmods.com/skyrimspecialedition/mods/35605]Helmet Overlays[/url]: the original mod and its art.[/*]
+[*][url=https://www.nexusmods.com/skyrimspecialedition/mods/189092]Helmet Overlays Enhanced Edition[/url]: art for more helmets.[/*]
+[*][url=https://www.nexusmods.com/skyrimspecialedition/mods/93800]Helmet Overlay Addon[/url]: art for more armor mods.[/*]
+The original plugin does not need to be enabled. Only its art files are used.
+
 Optional: [url=https://github.com/alandtse/SKSE-Menu-Framework-3]SKSE Menu Framework[/url] for the in-game settings and debug pages.
 
 Report issues on the [url=https://github.com/alandtse/HelmetOverlaysNG/issues]issue tracker[/url]. A HelmetOverlaysNG.log (and the crash log, if there is one) is the most useful thing to include.[/color]
