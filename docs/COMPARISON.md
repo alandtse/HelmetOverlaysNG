@@ -32,7 +32,7 @@ unreleased; its VR behavior has been checked only with SteamVR's null driver, no
 | Camera                        | Reacts to first person, third person, horse and furniture camera states                              | VR only                                                                | First person only on flat (option); always on in VR                                                         |
 | VR placement                  | Not applicable                                                                                       | Layer on the rendered image (inferred: no per-eye parallax)            | Head-locked plane at a set depth, composited per eye; sized from the eyes' field of view; coverage setting  |
 | VR field of view              | Not applicable                                                                                       | Templates for 8:9 and 9:10 headsets                                    | Plane over-fills the view (coverage above 1)                                                                |
-| GPU cost                      | Scaleform widget over the full screen                                                                | Not verified                                                           | Optional mask skips shading behind opaque pixels; about 8-11% less on the world pass on SE, VR not measured |
+| GPU cost                      | Scaleform widget over the full screen                                                                | Not verified                                                           | Optional mask skips shading behind opaque pixels; about 8-11% less on the world pass on SE and about 16-18% less on VR (null driver, one run each) |
 | In-game settings              | MCM                                                                                                  | ReShade overlay (Home key)                                             | SKSE Menu Framework pages: Overlay, Sound, Menus, Debug; options shown only for the running game's runtime  |
 | Coverage report               | None                                                                                                 | None                                                                   | Counts playable helmets with and without art, per plugin; wigs and circlets can be ignored                  |
 | Debugging                     | Debug panel, add-equipment hotkey                                                                    | None                                                                   | Debug page: model path, paths tried, light level, helmet preview                                            |
@@ -46,7 +46,7 @@ unreleased; its VR behavior has been checked only with SteamVR's null driver, no
 - swf, png, jpg and gif art.
 - Per-armor sound profiles and head-hit feedback (designed, not built).
 - Verification on a headset: parallax, comfort and plane depth.
-- A measured VR saving from the opaque mask.
+- A mask saving measured on a headset (the SE and VR numbers come from single runs, VR on the null driver).
 
 ## Known limits
 

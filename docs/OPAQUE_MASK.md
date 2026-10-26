@@ -189,9 +189,12 @@ windows of 1500 calls each:
 
 - **SE (Community Shaders loaded):** 7.41 ms and 7.14 ms with the mask off, 6.60 ms on, about 8-11% less.
   Two off runs differ by about 4%, so treat this as a likely high-single-digit to 10% saving of that pass.
-- **VR (null driver):** no measurable saving. Windows were split by sample count, not by scene, and the
-  visible mask area is smaller (about 12-22% of pixels, against about 34-46% on flat, before the 48 px
-  margin).
+- **VR (null driver, 2160x1200 side-by-side target):** GPU time of the main-pass world batch, one mean per
+  wall-clock second over the same first-person replay, mask off then on. The two runs were aligned by
+  cross-correlating the per-second series (correlation 0.83, 110 s overlap). Mean 2.83 ms off, 2.32 ms on
+  (-18%); over the 84 seconds the mask was armed, 3.60 ms off, 3.04 ms on (-16%). The mask run was faster
+  in 86 of 110 seconds, with a median per-second change of -0.49 ms. Measured with one run per setting
+  on the null driver, not on a headset.
 - **Sway:** the mask is allowed only while the overlay is steady, so head-turn sway switches it off and on
   (466 toggles in one replay, one with sway off) and shrinks the saving. Sway is off by default for this
   reason.
