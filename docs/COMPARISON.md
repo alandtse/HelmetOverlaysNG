@@ -32,7 +32,7 @@ a short detail in brackets. Helmet Overlays NG is unreleased.
 | Size setting                    | Yes (hotkeys are debug-only)                  | Not verified                       | Yes                                                      |
 | Vertical placement setting      | No                                            | Not verified                       | Yes                                                      |
 | Reactive lighting               | Yes                                           | Not verified                       | Yes (on by default, original's values)                   |
-| Scene colour tint               | No                                            | No                                 | Yes (flat only, on by default)                           |
+| Scene color tint               | No                                            | No                                 | Yes (flat only, on by default)                           |
 | Jump, strafe, sprint motion     | Yes                                           | Not verified                       | Yes (flat only)                                          |
 | Head-turn sway                  | No                                            | Not verified                       | Yes (flat only, off by default)                          |
 | Fade, settle or slide on change | Not verified                                  | Not verified                       | Yes                                                      |

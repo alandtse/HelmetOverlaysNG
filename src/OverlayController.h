@@ -21,7 +21,7 @@ namespace HONG
 		ID3D11ShaderResourceView* srv{ nullptr };
 		float alpha{ 0.0f };    // 0..1, opacity setting already applied
 		float tint{ 1.0f };     // 0..1 brightness multiplier (reactive light)
-		Tint::Rgb color;        // per-channel multiplier toward the scene colour, peak 1
+		Tint::Rgb color;        // per-channel multiplier toward the scene color, peak 1
 		float scale{ 1.0f };    // animation scale about center
 		ImVec2 offset{ 0, 0 };  // fraction of display size (slide + sway)
 	};
@@ -58,7 +58,7 @@ namespace HONG
 		};
 		const MaskCandidate& GetMaskCandidate() const { return _mask; }
 
-		// True while the overlay is shown and the screen colour tint (or its debug override) is on.
+		// True while the overlay is shown and the screen color tint (or its debug override) is on.
 		bool WantsScreenColor() const;
 
 		void MarkDirty() { _dirty.store(true, std::memory_order_relaxed); }

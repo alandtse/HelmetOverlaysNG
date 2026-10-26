@@ -53,7 +53,7 @@ namespace HONG::ScreenColor
 		{
 			g_state = {};
 			g_state.failed = true;
-			logger::warn("Screen colour tint disabled: {}.", a_reason);
+			logger::warn("Screen color tint disabled: {}.", a_reason);
 		}
 
 		bool Build(ID3D11Device* a_device, ID3D11Texture2D* a_source)
@@ -61,7 +61,7 @@ namespace HONG::ScreenColor
 			D3D11_TEXTURE2D_DESC desc{};
 			a_source->GetDesc(&desc);
 			if (desc.Format != kSceneFormat || desc.SampleDesc.Count != 1) {
-				Fail("the scene colour target is not a single-sample 16-bit float image");
+				Fail("the scene color target is not a single-sample 16-bit float image");
 				return false;
 			}
 
@@ -103,7 +103,7 @@ namespace HONG::ScreenColor
 					return false;
 				}
 			}
-			logger::info("Screen colour tint sampling {}x{} scene colour ({} eye{}) through a {}x{} image.", desc.Width, desc.Height, g_state.eyes, g_state.eyes == 1 ? "" : "s", g_state.cellsX, g_state.cellsY);
+			logger::info("Screen color tint sampling {}x{} scene color ({} eye{}) through a {}x{} image.", desc.Width, desc.Height, g_state.eyes, g_state.eyes == 1 ? "" : "s", g_state.cellsX, g_state.cellsY);
 			return true;
 		}
 
@@ -144,7 +144,7 @@ namespace HONG::ScreenColor
 				slot.pending = false;
 				g_state.latest = EyeAverage(cells.data());
 				if (!std::exchange(g_state.haveLatest, true)) {
-					logger::info("First scene colour sample: edge ring average {:.3f} {:.3f} {:.3f}.", g_state.latest.r, g_state.latest.g, g_state.latest.b);
+					logger::info("First scene color sample: edge ring average {:.3f} {:.3f} {:.3f}.", g_state.latest.r, g_state.latest.g, g_state.latest.b);
 				}
 			}
 		}

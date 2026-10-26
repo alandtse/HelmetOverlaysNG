@@ -57,7 +57,7 @@ namespace HONG::UI
 
 		constexpr float kSilenceVolume = 0.001f;  // floor for the dB readout so a zero volume does not print -inf
 
-		// A block of a colour; a_exposure scales it before the display curve so HDR scene values stay readable.
+		// A block of a color; a_exposure scales it before the display curve so HDR scene values stay readable.
 		void Swatch(const char* a_label, Tint::Rgb a_color, float a_exposure)
 		{
 			const auto display = [&](float a_channel) {
@@ -191,11 +191,11 @@ namespace HONG::UI
 				ImGuiMCP::SliderFloat("Check interval (s)", &s->lightIntervalSeconds, Range::kLightInterval.min, Range::kLightInterval.max, "%.1f", ImGuiMCP::ImGuiSliderFlags_AlwaysClamp);
 				Tip("How often the light level is read.");
 				ImGuiMCP::EndDisabled();
-				ImGuiMCP::Checkbox("Tint with screen colour", &s->screenTint);
-				Tip("Shifts the art toward the colour of the scene around the screen edges, so firelight turns it orange and lightning purple. Brightness still comes from the light level. The Debug page shows the effect side by side.");
+				ImGuiMCP::Checkbox("Tint with screen color", &s->screenTint);
+				Tip("Shifts the art toward the color of the scene around the screen edges, so firelight turns it orange and lightning purple. Brightness still comes from the light level. With debug tools on, the Debug page shows the effect side by side.");
 				ImGuiMCP::BeginDisabled(!s->screenTint);
 				PercentSlider("Tint strength", &s->screenTintStrength, Range::kUnit);
-				Tip("0% keeps the art's own colour; 100% takes the full hue of the scene.");
+				Tip("0% keeps the art's own color; 100% takes the full hue of the scene.");
 				ImGuiMCP::EndDisabled();
 			}
 
@@ -302,7 +302,7 @@ namespace HONG::UI
 
 			if (ImGuiMCP::CollapsingHeader("Volume attenuation", ImGuiMCP::ImGuiTreeNodeFlags_DefaultOpen)) {
 				ImGuiMCP::Checkbox("Attenuate world sound", &s->attenuate);
-				Tip("Lowers the volume of world sound categories (effects, footsteps). Voice and music are untouched.");
+				Tip("Lowers the volume of world sound effects. Voice and music are untouched.");
 				ImGuiMCP::BeginDisabled(!s->attenuate);
 				PercentSlider("Volume at full helmet", &s->attenuateVolume, Range::kAttenuateVolume);
 				Tip("World sound volume when the helmet is fully worn; 100% leaves it unchanged.");
@@ -404,15 +404,15 @@ namespace HONG::UI
 				}
 			}
 
-			if (ImGuiMCP::CollapsingHeader("Screen colour tint", ImGuiMCP::ImGuiTreeNodeFlags_DefaultOpen)) {
+			if (ImGuiMCP::CollapsingHeader("Screen color tint", ImGuiMCP::ImGuiTreeNodeFlags_DefaultOpen)) {
 				if (!current.sceneSampled) {
-					ImGuiMCP::TextDisabled("No scene colour sampled (no overlay shown, or the tint is off).");
+					ImGuiMCP::TextDisabled("No scene color sampled (no overlay shown, or the tint is off).");
 				} else {
 					const Tint::Rgb light{ current.lightTint, current.lightTint, current.lightTint };
 					const Tint::Rgb tinted{ current.lightTint * current.tint.r, current.lightTint * current.tint.g, current.lightTint * current.tint.b };
-					Swatch("Scene edge colour (sampled)", current.scene, 1.0f);
+					Swatch("Scene edge color (sampled)", current.scene, 1.0f);
 					Swatch("Art multiplier, light level only (default look)", light, 1.0f);
-					Swatch("Art multiplier, with screen colour", tinted, 1.0f);
+					Swatch("Art multiplier, with screen color", tinted, 1.0f);
 					ImGuiMCP::TextDisabled("Multiplier RGB %.2f %.2f %.2f", tinted.r, tinted.g, tinted.b);
 				}
 			}
@@ -422,7 +422,7 @@ namespace HONG::UI
 				OverrideSlider("sound muffle strength", Debug::SoundStrengthOverride(), current.strength,
 					"Replaces the helmet's muffle strength for both sound effects. 100% applies the full volume drop and cutoff from the Sound page.");
 				OverrideSlider("screen tint strength", Debug::TintStrengthOverride(), s->screenTint ? s->screenTintStrength : 0.0f,
-					"Replaces the tint strength. 0% shows the default light-level look, 100% the full hue of the scene colour, even with the tint turned off.");
+					"Replaces the tint strength. 0% shows the default light-level look, 100% the full hue of the scene color, even with the tint turned off.");
 				ImGuiMCP::BeginDisabled(!s->reactiveLight);
 				OverrideSlider("light level", Debug::LightLevelOverride(), current.light >= 0.0f ? current.light : 1.0f,
 					"Replaces the sampled light level (0% is dark, 100% is fully lit). Needs \"Darken in dark places\".");

@@ -26,7 +26,7 @@ See [docs/DESIGN.md](docs/DESIGN.md) for how it works and the open items, and
 - Flat and VR (a head-locked plane through [imgui-vr-helper](https://github.com/alandtse/imgui-vr-helper)).
 - Opacity, scale, vertical position and edge extension, and animated on/off (fade, settle, slide).
 - Reactive lighting: dims the art in dark places, on by default with the original mod's values.
-- Screen colour tint (flat): the art takes on the colour of the scene around the screen edges, such as orange firelight. On by default; the Debug page compares it with the light-level look.
+- Screen color tint (flat): the art takes on the color of the scene around the screen edges, such as orange firelight. On by default; the Debug page compares it with the light-level look.
 - Flat only: jump, strafe and sprint nudges like the original, and optional head-turn sway.
 - Drawn beneath all menus and faded out for the menus you choose.
 - A coverage report: how many helmets in your load order have overlay art, per plugin. Wigs and circlets

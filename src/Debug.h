@@ -70,8 +70,8 @@ namespace HONG::Debug
 		float maskShare{ 0.0f };  // fraction of the overlay in the opaque mask (0 when not built)
 		float light{ -1.0f };     // sampled light level 0..1, -1 when reactive light is off
 		bool sceneSampled{ false };
-		Tint::Rgb scene;      // ring average of the scene colour, linear HDR
-		Tint::Rgb tint;       // colour multiplier applied to the art after easing
+		Tint::Rgb scene;      // ring average of the scene color, linear HDR
+		Tint::Rgb tint;       // color multiplier applied to the art after easing
 		float lightTint{ 1.0f };  // brightness multiplier from the light level alone
 	};
 	Current GetCurrent();

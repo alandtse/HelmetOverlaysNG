@@ -26,7 +26,7 @@ namespace HONG::Tint
 	// Average of the cells on the outer ring of a_region; white for an empty region.
 	Rgb RingAverage(const Rgb* a_cells, std::uint32_t a_stride, Region a_region);
 
-	// Per-channel mean of two colours.
+	// Per-channel mean of two colors.
 	Rgb Mean(Rgb a_first, Rgb a_second);
 
 	// Multiplier that moves white toward the hue of a_average. Its brightest channel stays 1, so the

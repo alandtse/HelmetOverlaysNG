@@ -83,7 +83,7 @@ TEST_CASE("a ring average reads only its own region of the grid", "[tint]")
 	REQUIRE(RingAverage(cells.data(), 8, { 4, 0, 4, 3 }).r == Approx(5.0f));
 }
 
-TEST_CASE("the mean of two colours is per channel", "[tint]")
+TEST_CASE("the mean of two colors is per channel", "[tint]")
 {
 	const auto mean = Mean({ 1.0f, 2.0f, 3.0f }, { 3.0f, 2.0f, 1.0f });
 	REQUIRE(mean.r == Approx(2.0f));

@@ -15,7 +15,7 @@ namespace HONG
 	namespace
 	{
 		constexpr float kRefreshIntervalSeconds = 1.0f;  // safety net if an equip event is missed
-		constexpr float kTintFadeSeconds = 0.3f;         // time for the screen colour tint to follow the scene
+		constexpr float kTintFadeSeconds = 0.3f;         // time for the screen color tint to follow the scene
 		constexpr float kLightLogStep = 0.05f;           // log the light level when it moves this much
 		constexpr float kSettleScale = 0.06f;            // extra scale at progress 0 for kSettle
 		constexpr float kSlideDistance = 0.12f;          // fraction of display height for kSlide
