@@ -174,11 +174,11 @@ kMAIN_COPY when the overlay or the dynamic-resolution ratio changes, as the engi
 
 ## Who owns what
 
-| Component        | Role                                                                                       |
-| ---------------- | ------------------------------------------------------------------------------------------ |
-| HelmetOverlaysNG | Builds the mask texture, decides when it is allowed, hooks the world batch and draws it    |
-| open-shaders     | Nothing required; its thunk on the same call runs after ours and does not touch depth      |
-| imgui-vr-helper  | Supplies the plane parameters (depth, size) it already derives per eye                     |
+| Component        | Role                                                                                    |
+| ---------------- | --------------------------------------------------------------------------------------- |
+| HelmetOverlaysNG | Builds the mask texture, decides when it is allowed, hooks the world batch and draws it |
+| open-shaders     | Nothing required; its thunk on the same call runs after ours and does not touch depth   |
+| imgui-vr-helper  | Supplies the plane parameters (depth, size) it already derives per eye                  |
 
 The draw lives in this plugin so it works with or without open-shaders and needs no exported function.
 

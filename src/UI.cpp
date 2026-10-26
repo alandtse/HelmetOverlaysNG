@@ -257,8 +257,7 @@ namespace HONG::UI
 				Tip("Skips shading the scene behind the overlay's fully opaque pixels to save GPU time. Applies when the helmet is next equipped.");
 				ImGuiMCP::BeginDisabled(!s->opaqueMask);
 				ImGuiMCP::SliderInt("Mask safety margin (px)", &s->maskMarginPx, static_cast<int>(Range::kMaskMargin.min), static_cast<int>(Range::kMaskMargin.max), "%d", ImGuiMCP::ImGuiSliderFlags_AlwaysClamp);
-				Tip(vr ? "How far inside the opaque area the mask stops. VR always keeps at least 48 px so both eyes stay covered. Applies when the helmet is next equipped."
-					   : "How far inside the opaque area the mask stops. Larger is safer against fringes, smaller saves a little more. Applies when the helmet is next equipped.");
+				Tip(vr ? "How far inside the opaque area the mask stops. VR always keeps at least 48 px so both eyes stay covered. Applies when the helmet is next equipped." : "How far inside the opaque area the mask stops. Larger is safer against fringes, smaller saves a little more. Applies when the helmet is next equipped.");
 				ImGuiMCP::EndDisabled();
 			}
 			SaveReloadRow();

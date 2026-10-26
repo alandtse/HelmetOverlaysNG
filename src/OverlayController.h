@@ -3,10 +3,10 @@
 
 #pragma once
 
-#include "OverlayResolver.h"
 #include "Motion.h"
-#include "TintColor.h"
+#include "OverlayResolver.h"
 #include "TextureCache.h"
+#include "TintColor.h"
 
 namespace HONG
 {
@@ -112,7 +112,7 @@ namespace HONG
 		mutable std::mutex _diagLock;
 		Diagnostic _diag;
 		float _wornAmount{ 0.0f };
-		float _lightDarkness{ 0.0f };       // 0 lit .. 1 dark, eased toward _lightTarget
+		float _lightDarkness{ 0.0f };  // 0 lit .. 1 dark, eased toward _lightTarget
 		float _lightTarget{ 0.0f };
 		float _lightClock{ 0.0f };
 		float _lightLogged{ -1.0f };  // last level written to the log
