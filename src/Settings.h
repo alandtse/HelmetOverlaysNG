@@ -22,18 +22,9 @@ namespace HONG
 		kSlide,   // alpha + drop in from above
 	};
 
-	class Settings
+	// Every tunable with its default; ResetToDefaults restores them by assigning a fresh instance.
+	struct SettingValues
 	{
-	public:
-		static Settings* GetSingleton();
-
-		// Reads Data/SKSE/Plugins/HelmetOverlaysNG.ini; missing keys keep defaults.
-		void Load();
-		// Writes the current values back (used by the in-game menu).
-		void Save() const;
-		// In-memory only; Save() to persist.
-		void ResetToDefaults();
-
 		// [General]
 		bool enabled{ true };
 		std::string overlayRoot{ "Interface\\overlays" };
@@ -84,6 +75,19 @@ namespace HONG
 		float autoArtWeight{ 0.65f };  // how much the overlay art outweighs the armor class
 		bool lowPass{ false };         // real low-pass "distortion" (muffled highs), see LowPass.cpp
 		float lowPassHz{ 1800.0f };
+	};
+
+	class Settings : public SettingValues
+	{
+	public:
+		static Settings* GetSingleton();
+
+		// Reads Data/SKSE/Plugins/HelmetOverlaysNG.ini; missing keys keep defaults.
+		void Load();
+		// Writes the current values back (used by the in-game menu).
+		void Save() const;
+		// In-memory only; Save() to persist.
+		void ResetToDefaults();
 
 		// [Menus] - which open menus fade the overlay out (when hideInMenus is on).
 		// Thread-safe: the in-game menu edits these while the HUD hook reads them.

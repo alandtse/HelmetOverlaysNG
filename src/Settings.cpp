@@ -139,40 +139,8 @@ namespace HONG
 			std::scoped_lock lock{ _menuLock };
 			_hiddenMenus = std::move(menus);
 		}
-		enabled = true;
-		overlayRoot = "Interface\\overlays";
-		firstPersonOnly = true;
-		opaqueMask = true;
-		maskMarginPx = 8;
-		hideInMenus = true;
-		suppressOriginal = true;
-		skipWigs = true;
-		skipCirclets = true;
+		static_cast<SettingValues&>(*this) = SettingValues{};
 		debugTools = debug;  // a view preference, not a tuning value
-		opacity = 1.0f;
-		scale = 1.0f;
-		verticalOffset = 0.0f;
-		extendEdges = true;
-		reactiveLight = true;
-		lightStrength = 0.25f;
-		lightFadeSeconds = 1.0f;
-		lightIntervalSeconds = 1.0f;
-		animStyle = AnimStyle::kSettle;
-		fadeInSeconds = 0.35f;
-		fadeOutSeconds = 0.20f;
-		sway = false;
-		swayStrength = 1.0f;
-		motion = true;
-		motionStrength = 1.0f;
-		vrDepth = 0.6f;
-		vrCoverage = 1.15f;
-		attenuate = true;
-		attenuateVolume = 0.6f;
-		attenuateSeconds = 0.5f;
-		autoStrength = true;
-		autoArtWeight = 0.65f;
-		lowPass = false;
-		lowPassHz = 1800.0f;
 	}
 
 	void Settings::Load()
