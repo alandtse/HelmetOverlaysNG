@@ -14,7 +14,7 @@ This replaces the old SWF widget. Only the art files are used, so the old plugin
 [*][color=#D4D4D8][b]Flat and VR:[/b] in VR the overlay sits on its own near plane, slightly over-filled, with normal stereo parallax. Head-turn sway and jump motion are flat only.[/color][/*]
 [*][color=#D4D4D8][b]Menus:[/b] the overlay is drawn under every menu and fades out for the ones you pick (inventory, map, dialogue and so on).[/color][/*]
 [*][color=#D4D4D8][b]Appearance:[/b] opacity, scale and vertical position sliders, optional edge extension so a smaller or shifted overlay leaves no gap, and a fade, settle or slide animation when the helmet goes on or off.[/color][/*]
-[*][color=#D4D4D8][b]Lighting:[/b] the art darkens in dark places, using the original mod's defaults. Fully black parts stay black.[/color][/*]
+[*][color=#D4D4D8][b]Lighting:[/b] the art darkens in dark places, using the original mod's defaults. Fully black parts stay black. On flat, the art also takes on the colour of the scene around the screen edges, such as firelight or lightning. The debug page shows the tinted and untinted look side by side.[/color][/*]
 [*][color=#D4D4D8][b]Motion (flat):[/b] the same short nudges on jump, strafe and sprint as the original, plus optional head-turn sway.[/color][/*]
 [*][color=#D4D4D8][b]Opaque mask (on by default):[/b] the renderer skips the scene behind the overlay's fully opaque pixels. Measured saving is about 8-11% of the world pass on SE and 16-18% on VR. The mask follows sway and motion.[/color][/*]
 [*][color=#D4D4D8][b]Sound:[/b] two separate options, lower world-sound volume while helmeted and a low-pass filter on every non-music sound. Both scale with the helmet: heavy closed helms muffle the most, hoods and open helmets the least.[/color][/*]
