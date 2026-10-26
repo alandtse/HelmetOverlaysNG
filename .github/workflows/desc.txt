@@ -6,9 +6,9 @@ The overlay changes with the helmet you wear and uses the art from [url=https://
 [size=3][color=#D4D4D8][b]Source:[/b] [url=https://github.com/alandtse/HelmetOverlaysNG]github.com/alandtse/HelmetOverlaysNG[/url] (GPL-3.0-or-later with modding exception; see COPYING and EXCEPTIONS.md in the repository)[/color][/size]
 
 [size=4][b]Installation instructions[/b][/size]
-[size=3][color=#D4D4D8]Install with MO2 or Vortex like any other SKSE plugin. This mod ships no art, so install at least one overlay art pack too: [url=https://www.nexusmods.com/skyrimspecialedition/mods/35605]Helmet Overlays[/url], [url=https://www.nexusmods.com/skyrimspecialedition/mods/189092]Enhanced Edition[/url] or [url=https://www.nexusmods.com/skyrimspecialedition/mods/93800]Helmet Overlay Addon[/url]. Configure in game with [url=https://github.com/alandtse/SKSE-Menu-Framework-3]SKSE Menu Framework[/url], or edit [i]Data/SKSE/Plugins/HelmetOverlaysNG.ini[/i] (created on first save).
+[size=3][color=#D4D4D8]Install with MO2 or Vortex like any other SKSE plugin. This mod ships no art, so install the art from at least one of these: [url=https://www.nexusmods.com/skyrimspecialedition/mods/35605]Helmet Overlays[/url], [url=https://www.nexusmods.com/skyrimspecialedition/mods/189092]Enhanced Edition[/url] or [url=https://www.nexusmods.com/skyrimspecialedition/mods/93800]Helmet Overlay Addon[/url]. Configure in game with [url=https://github.com/alandtse/SKSE-Menu-Framework-3]SKSE Menu Framework[/url], or edit [i]Data/SKSE/Plugins/HelmetOverlaysNG.ini[/i] (created on first save).
 
-If the original [url=https://www.nexusmods.com/skyrimspecialedition/mods/35605]Helmet Overlays[/url] plugin is still enabled, leave "Suppress original" on. It stops the old widget so you don't get two overlays.[/color][/size]
+This replaces the old SWF widget. Only the art files are used, so the old plugin should stay off. If it is still enabled, leave "Suppress original" on so you don't get two overlays.[/color][/size]
 
 [size=4][b]Main features[/b][/size]
 
@@ -27,16 +27,16 @@ If the original [url=https://www.nexusmods.com/skyrimspecialedition/mods/35605]H
 [color=#D4D4D8]SE/AE: [url=https://skse.silverlock.org/]SKSE64[/url] and [url=https://www.nexusmods.com/skyrimspecialedition/mods/32444]Address Library[/url]. VR: [url=https://skse.silverlock.org/]SKSE VR[/url], [url=https://www.nexusmods.com/skyrimspecialedition/mods/58101]VR Address Library[/url] and [url=https://github.com/alandtse/imgui-vr-helper]ImGuiVRHelper[/url] 1.10.0 or newer. With an older helper the overlay falls back to the helper's global HUD plane.
 
 [b]Overlay art[/b] (at least one is required, or nothing shows):
-[*][url=https://www.nexusmods.com/skyrimspecialedition/mods/35605]Helmet Overlays[/url]: the original mod and its art.[/*]
+[*][url=https://www.nexusmods.com/skyrimspecialedition/mods/35605]Helmet Overlays[/url]: the SE version of the original mod. Its art is used; the SWF plugin is not.[/*]
 [*][url=https://www.nexusmods.com/skyrimspecialedition/mods/189092]Helmet Overlays Enhanced Edition[/url]: art for more helmets.[/*]
 [*][url=https://www.nexusmods.com/skyrimspecialedition/mods/93800]Helmet Overlay Addon[/url]: art for more armor mods.[/*]
-The original Helmet Overlays plugin does not need to be enabled. Only its art files are used.
+None of these plugins need to be enabled. Only their art files are read.
 
 Optional: [url=https://github.com/alandtse/SKSE-Menu-Framework-3]SKSE Menu Framework[/url] for the in-game settings and debug pages.
 
 Report issues on the [url=https://github.com/alandtse/HelmetOverlaysNG/issues]issue tracker[/url]. A HelmetOverlaysNG.log (and the crash log, if there is one) is the most useful thing to include.[/color]
 
 [size=4][b]Shout outs[/b][/size]
-[color=#D4D4D8]Scrivener07 for [url=https://www.nexusmods.com/skyrimspecialedition/mods/35605]Helmet Overlays[/url], which defined the art format and the model-path convention this mod reads. The [url=https://www.nexusmods.com/skyrimspecialedition/mods/189092]Helmet Overlays Enhanced Edition[/url] author for the broad art coverage. The [url=https://github.com/alandtse/CommonLibVR/tree/ng]CommonLibSSE-NG[/url] maintainers and contributors, whose work makes one DLL for three runtimes possible.[/color]
+[color=#D4D4D8][url=https://www.nexusmods.com/profile/scrivener07?gameId=110]scrivener07[/url] for the original [url=https://www.nexusmods.com/skyrim/mods/69611]Helmet Overlays[/url] on LE, which defined the art format and the model-path convention this mod reads. [url=https://www.nexusmods.com/profile/GSA2011?gameId=1704]GSA2011[/url] for maintaining it and bringing it to SE. The [url=https://www.nexusmods.com/skyrimspecialedition/mods/189092]Helmet Overlays Enhanced Edition[/url] author for the broad art coverage. The [url=https://github.com/alandtse/CommonLibVR/tree/ng]CommonLibSSE-NG[/url] maintainers and contributors, whose work makes one DLL for three runtimes possible.[/color]
 
 Want to support me or help me top off my AI credits? [url=https://buymeacoffee.com/alandtse]Buy Me a Coffee[/url]

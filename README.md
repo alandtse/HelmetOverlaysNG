@@ -9,9 +9,9 @@ exception (see [License](#license)).
 
 It reads the existing overlay art (`Data/Interface/overlays/**.dds`, from [Helmet Overlays](https://www.nexusmods.com/skyrimspecialedition/mods/35605) and
 [Helmet Overlays Enhanced Edition](https://www.nexusmods.com/skyrimspecialedition/mods/189092)) and picks the overlay from the worn helmet's world model path.
-No ESP, no Papyrus, no SkyUI, no Scaleform. This mod ships no art; install at least one overlay art pack:
+No ESP, no Papyrus, no SkyUI, no Scaleform. This mod ships no art; install the art from at least one of these:
 
-- [Helmet Overlays](https://www.nexusmods.com/skyrimspecialedition/mods/35605): the original mod and its art.
+- [Helmet Overlays](https://www.nexusmods.com/skyrimspecialedition/mods/35605): the SE version of the original mod. Its art is used; the SWF plugin is not.
 - [Helmet Overlays Enhanced Edition](https://www.nexusmods.com/skyrimspecialedition/mods/189092): more helmets.
 - [Helmet Overlay Addon](https://www.nexusmods.com/skyrimspecialedition/mods/93800): art for more armor mods.
 
@@ -55,6 +55,14 @@ an unreleased local helper checkout, set `HONG_VRHELPER_API` to its `api` folder
 
 Edit `Data/SKSE/Plugins/HelmetOverlaysNG.ini`, or change the same settings in game under "Helmet Overlays NG" with the
 optional [SKSE Menu Framework](https://github.com/alandtse/SKSE-Menu-Framework-3).
+
+## Credits
+
+- [scrivener07](https://www.nexusmods.com/profile/scrivener07?gameId=110) made the original
+  [Helmet Overlays](https://www.nexusmods.com/skyrim/mods/69611) for LE, which defined the art format and the
+  model-path convention this mod reads.
+- [GSA2011](https://www.nexusmods.com/profile/GSA2011?gameId=1704) maintains the SE version,
+  [Helmet Overlays - Improved 1st Person Experience](https://www.nexusmods.com/skyrimspecialedition/mods/35605).
 
 ## License
 
