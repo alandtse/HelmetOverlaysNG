@@ -5,6 +5,7 @@
 
 #include "LowPass.h"
 #include "Settings.h"
+#include "SoundEffect.h"
 
 namespace HONG::Muffle
 {
@@ -82,8 +83,7 @@ namespace HONG::Muffle
 			logger::info("Sound attenuation on for {} categories (target {:.0f}% of base).", g_categories.size(), settings->attenuateVolume * 100.0f);
 		}
 
-		const float eased = settings->attenuateSeconds > 0.0f ? std::pow(amount, 1.0f + settings->attenuateSeconds) : 1.0f;
-		const float mult = 1.0f + (settings->attenuateVolume - 1.0f) * eased;
+		const float mult = SoundEffect::Volume(amount, settings->attenuateVolume, settings->attenuateSeconds);
 		for (const auto& tracked : g_categories) {
 			tracked.category->SetCategoryVolume(tracked.baseVolume * mult);
 		}
@@ -92,5 +92,18 @@ namespace HONG::Muffle
 			s_lastLogged = mult;
 			logger::info("Attenuation multiplier {:.2f}; first category raw volume {:.2f} (base {:.2f}), effective {:.2f}.", mult, g_categories.front().category->volumeMult, g_categories.front().baseVolume, g_categories.front().category->GetCategoryVolume());
 		}
+	}
+
+	Effect EffectAt(float a_strength)
+	{
+		const auto settings = Settings::GetSingleton();
+		Effect effect;
+		if (settings->attenuate) {
+			effect.volume = SoundEffect::Volume(a_strength, settings->attenuateVolume, settings->attenuateSeconds);
+		}
+		if (settings->lowPass) {
+			effect.cutoffHz = SoundEffect::CutoffHz(a_strength, settings->lowPassHz, LowPass::OutputSampleRate());
+		}
+		return effect;
 	}
 }

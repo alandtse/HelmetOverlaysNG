@@ -16,4 +16,12 @@ namespace HONG::Muffle
 	// The low-pass "distortion" (bLowPass) is a separate option: this also
 	// publishes its target to LowPass, which applies it on the audio thread.
 	void Update(float a_amount);
+
+	// What a helmet with a_strength (OverlayController::MuffleStrength) does to the sound while worn.
+	struct Effect
+	{
+		float volume{ 1.0f };    // multiplier on the attenuated categories; 1 when attenuation is off
+		float cutoffHz{ 0.0f };  // low-pass cutoff; 0 when the low-pass is off
+	};
+	Effect EffectAt(float a_strength);
 }

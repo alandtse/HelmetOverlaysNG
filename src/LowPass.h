@@ -16,4 +16,7 @@ namespace HONG::LowPass
 	// cutoffHz is the cutoff reached at full amount. The audio thread reads these
 	// through atomics only.
 	void SetTarget(bool a_enabled, float a_amount, float a_cutoffHz);
+
+	// Sample rate the engine mixes at, used to turn a cutoff into the filter coefficient.
+	float OutputSampleRate();
 }
