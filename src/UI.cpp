@@ -155,6 +155,11 @@ namespace HONG::UI
 			return out;
 		}
 
+		std::string NexusSearchUrl(const std::string& a_query)
+		{
+			return "https://www.nexusmods.com/skyrimspecialedition/search/?gsearch=" + UrlEncode(a_query) + "&gsearchtype=mods";
+		}
+
 		// Text that opens a URL in the default browser when clicked.
 		void Link(const char* a_label, const char* a_url)
 		{
@@ -423,11 +428,15 @@ namespace HONG::UI
 
 			const auto current = Debug::GetCurrent();
 			if (ImGuiMCP::CollapsingHeader("Current helmet", ImGuiMCP::ImGuiTreeNodeFlags_DefaultOpen)) {
-				if (current.armorId == 0) {
+				if (current.armorId == 0 && !current.previewing) {
 					ImGuiMCP::TextDisabled("No helmet resolved (bare head, or nothing refreshed yet).");
 				} else {
-					ImGuiMCP::Text("%s  [%08X]%s", current.armorName.c_str(), current.armorId, current.previewing ? "  (previewing)" : "");
-					ImGuiMCP::Text("World model: %s", current.model.empty() ? "(none)" : current.model.c_str());
+					if (current.armorId == 0) {
+						ImGuiMCP::Text("Overlay file preview (no armor)");
+					} else {
+						ImGuiMCP::Text("%s  [%08X]%s", current.armorName.c_str(), current.armorId, current.previewing ? "  (previewing)" : "");
+						ImGuiMCP::Text("World model: %s", current.model.empty() ? "(none)" : current.model.c_str());
+					}
 					if (current.found) {
 						ImGuiMCP::Text("Overlay: %s", current.overlayPath.c_str());
 						OverlayFileButtons(current.overlayPath);
@@ -447,7 +456,7 @@ namespace HONG::UI
 						for (const auto& path : current.tried) {
 							ImGuiMCP::BulletText("%s", path.c_str());
 						}
-						const auto search = "https://www.nexusmods.com/skyrimspecialedition/search/?gsearch=" + UrlEncode(current.armorName + " helmet overlay") + "&gsearchtype=mods";
+						const auto search = NexusSearchUrl(current.armorName + " helmet overlay");
 						Link("Search Nexus for art for this helmet", search.c_str());
 						ImGuiMCP::TextDisabled("Art goes at the first path above; a modder can draw it there.");
 					}
@@ -516,7 +525,8 @@ namespace HONG::UI
 
 			if (ImGuiMCP::CollapsingHeader("Preview a helmet", ImGuiMCP::ImGuiTreeNodeFlags_DefaultOpen)) {
 				const auto previewing = Debug::Previewing();
-				if (previewing != 0) {
+				const auto previewingFile = Debug::PreviewingFile();
+				if (previewing != 0 || !previewingFile.empty()) {
 					if (ImGuiMCP::Button("Stop preview (use worn helmet)", { 0, 0 })) {
 						Debug::ClearPreview();
 					}
@@ -528,9 +538,10 @@ namespace HONG::UI
 				FilterField("##hong_debug_helmet_filter", "Type to filter helmets...", filter, sizeof(filter));
 
 				static int artFilter = 0;
-				static const char* const kArtFilters[] = { "All helmets", "Without art", "Colored art", "Black masks", "Not checked yet" };
+				static const char* const kArtFilters[] = { "All helmets", "Without art", "Colored art", "Black masks", "Not checked yet", "Art with no helmet" };
+				constexpr int kOrphanFilter = 5;
 				ImGuiMCP::Combo("Show", &artFilter, kArtFilters, static_cast<int>(std::size(kArtFilters)), -1);
-				Tip("Colored art and Black masks check the art colors the first time they are chosen.");
+				Tip("Colored art and Black masks check the art colors the first time they are chosen. Art with no helmet lists installed overlay files that no helmet in your load order uses, for armor mods you do not have.");
 				const auto shown = static_cast<Debug::ArtFilter>(artFilter);
 				const auto coverage = Debug::GetCoverage();
 				if ((shown == Debug::ArtFilter::kColored || shown == Debug::ArtFilter::kBlack) && coverage.done && !coverage.classifying && coverage.classified == 0) {
@@ -542,22 +553,45 @@ namespace HONG::UI
 
 				constexpr std::size_t kMaxRows = 60;
 				std::size_t totalMatches = 0;
-				const auto helmets = Debug::FilterHelmets(filter, shown, kMaxRows, totalMatches);
-				ImGuiMCP::Text("%zu matching helmets", totalMatches);
-				for (const auto& helmet : helmets) {
-					const char* tag = "";
-					if (helmet.art == 0) {
-						tag = "  (no art)";
-					} else if (helmet.color >= 0.0f) {
-						tag = helmet.color >= ArtMetrics::kColoredShare ? "  (colored)" : "  (black mask)";
+				if (artFilter == kOrphanFilter) {
+					const auto orphans = Debug::FilterOrphans(filter, kMaxRows, totalMatches);
+					ImGuiMCP::Text("%zu overlay files with no helmet in your load order", totalMatches);
+					const Debug::OrphanArt* picked = nullptr;
+					for (const auto& orphan : orphans) {
+						const std::string label = orphan.path + "##orphan";
+						const bool selected = orphan.path == previewingFile;
+						if (ImGuiMCP::Selectable(label.c_str(), selected, 0, { 0, 0 })) {
+							Debug::PreviewFile(orphan.path);
+						}
+						if (selected) {
+							picked = &orphan;
+						}
 					}
-					const std::string label = helmet.name + "  [" + helmet.plugin + "]" + tag + "##" + std::to_string(helmet.id);
-					if (ImGuiMCP::Selectable(label.c_str(), helmet.id == previewing, 0, { 0, 0 })) {
-						Debug::Preview(helmet.id);
+					if (totalMatches > orphans.size()) {
+						ImGuiMCP::TextDisabled("... narrow the filter to see more.");
 					}
-				}
-				if (totalMatches > helmets.size()) {
-					ImGuiMCP::TextDisabled("... narrow the filter to see more.");
+					if (picked) {
+						const auto search = NexusSearchUrl(picked->term + " armor");
+						Link(("Search Nexus for \"" + picked->term + "\"").c_str(), search.c_str());
+					}
+				} else {
+					const auto helmets = Debug::FilterHelmets(filter, shown, kMaxRows, totalMatches);
+					ImGuiMCP::Text("%zu matching helmets", totalMatches);
+					for (const auto& helmet : helmets) {
+						const char* tag = "";
+						if (helmet.art == 0) {
+							tag = "  (no art)";
+						} else if (helmet.color >= 0.0f) {
+							tag = helmet.color >= ArtMetrics::kColoredShare ? "  (colored)" : "  (black mask)";
+						}
+						const std::string label = helmet.name + "  [" + helmet.plugin + "]" + tag + "##" + std::to_string(helmet.id);
+						if (ImGuiMCP::Selectable(label.c_str(), helmet.id == previewing, 0, { 0, 0 })) {
+							Debug::Preview(helmet.id);
+						}
+					}
+					if (totalMatches > helmets.size()) {
+						ImGuiMCP::TextDisabled("... narrow the filter to see more.");
+					}
 				}
 			}
 			SaveReloadRow();

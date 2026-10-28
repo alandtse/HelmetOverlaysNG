@@ -28,6 +28,14 @@ namespace HONG::Debug
 		float color{ -1.0f };   // ArtMetrics::ColoredFraction of the art, -1 until classified
 	};
 
+	// An overlay file on disk that no helmet in the load order resolves to, such as art for an armor mod
+	// that is not installed.
+	struct OrphanArt
+	{
+		std::string path;  // VFS path
+		std::string term;  // armor name to search for
+	};
+
 	enum class ArtFilter
 	{
 		kAll,
@@ -54,6 +62,7 @@ namespace HONG::Debug
 		std::uint32_t missing{ 0 };
 		std::uint32_t noModel{ 0 };            // head/hair armors skipped: no world model
 		std::vector<PluginCoverage> byPlugin;  // most missing first
+		std::uint32_t orphans{ 0 };            // overlay files with no matching helmet
 		bool classifying{ false };
 		std::uint32_t classified{ 0 };  // art files checked for color so far
 		std::uint32_t colored{ 0 };
@@ -94,11 +103,18 @@ namespace HONG::Debug
 	};
 	Current GetCurrent();
 
+	// Overlay files whose path contains `a_filter` (case-insensitive, empty = all) that no helmet uses. At most
+	// `a_limit` are returned; `a_totalMatches` receives the full count. Empty until the coverage scan finishes.
+	std::vector<OrphanArt> FilterOrphans(const std::string& a_filter, std::size_t a_limit, std::size_t& a_totalMatches);
+
 	// Draw this armor's overlay without equipping it; 0 / ClearPreview() goes
 	// back to the worn helmet.
 	void Preview(std::uint32_t a_armorId);
 	void ClearPreview();
 	std::uint32_t Previewing();
+	// Draws an overlay file by VFS path with no armor; ClearPreview() ends it too.
+	void PreviewFile(const std::string& a_path);
+	std::string PreviewingFile();
 
 	// Names of every menu the game has registered, sorted.
 	std::vector<std::string> RegisteredMenus();

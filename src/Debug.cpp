@@ -4,12 +4,15 @@
 #include "Debug.h"
 
 #include "ArtMetrics.h"
+#include "ArtName.h"
 #include "OverlayController.h"
 #include "OverlayResolver.h"
 #include "Settings.h"
 #include "TextMatch.h"
 
+#include <filesystem>
 #include <mutex>
+#include <unordered_set>
 
 namespace HONG::Debug
 {
@@ -67,6 +70,37 @@ namespace HONG::Debug
 		}
 
 		std::size_t g_classifyNext = 0;
+		std::vector<OrphanArt> g_orphans;
+
+		void FindOrphans()
+		{
+			g_orphans.clear();
+			std::unordered_set<std::string> used;
+			for (const auto& entry : g_entries) {
+				if (!entry.overlay.empty()) {
+					used.insert(ArtName::Lower(entry.overlay));
+				}
+			}
+
+			const auto& root = Settings::GetSingleton()->overlayRoot;
+			const auto dir = std::filesystem::path(L"Data") / std::filesystem::path(root);
+			std::error_code ec;
+			for (std::filesystem::recursive_directory_iterator it(dir, ec), end; !ec && it != end; it.increment(ec)) {
+				if (!it->is_regular_file(ec) || ArtName::Lower(it->path().extension().string()) != ".dds") {
+					continue;
+				}
+				const auto relative = std::filesystem::relative(it->path(), dir, ec).string();
+				auto path = root + "\\" + relative;
+				if (!used.contains(ArtName::Lower(path))) {
+					g_orphans.push_back({ std::move(path), ArtName::SearchTerm(relative) });
+				}
+			}
+			std::ranges::sort(g_orphans, [](const OrphanArt& a_lhs, const OrphanArt& a_rhs) {
+				const int byTerm = _stricmp(a_lhs.term.c_str(), a_rhs.term.c_str());
+				return byTerm != 0 ? byTerm < 0 : _stricmp(a_lhs.path.c_str(), a_rhs.path.c_str()) < 0;
+			});
+			g_coverage.orphans = static_cast<std::uint32_t>(g_orphans.size());
+		}
 
 		void ClassifyStep()
 		{
@@ -139,6 +173,7 @@ namespace HONG::Debug
 			coverage.progress = 1.0f;
 			g_coverage = std::move(coverage);
 			g_state = ScanState::kDone;
+			FindOrphans();
 
 			const float percent = g_coverage.eligible ? 100.0f * static_cast<float>(g_coverage.covered) / static_cast<float>(g_coverage.eligible) : 0.0f;
 			logger::info("Overlay coverage: {} of {} playable head/hair armors have art ({:.0f}%); {} without art; {} skipped (no world model).",
@@ -200,6 +235,7 @@ namespace HONG::Debug
 			entry.color = -1.0f;
 		}
 		g_coverage = Coverage{};
+		g_orphans.clear();
 		g_classifyNext = 0;
 		g_next = 0;
 		g_state = ScanState::kIdle;
@@ -249,6 +285,23 @@ namespace HONG::Debug
 		return out;
 	}
 
+	std::vector<OrphanArt> FilterOrphans(const std::string& a_filter, std::size_t a_limit, std::size_t& a_totalMatches)
+	{
+		std::scoped_lock lock{ g_lock };
+		std::vector<OrphanArt> out;
+		a_totalMatches = 0;
+		for (const auto& orphan : g_orphans) {
+			if (!ContainsNoCase(orphan.path, a_filter)) {
+				continue;
+			}
+			if (out.size() < a_limit) {
+				out.push_back(orphan);
+			}
+			++a_totalMatches;
+		}
+		return out;
+	}
+
 	Current GetCurrent()
 	{
 		const auto diag = OverlayController::GetSingleton()->GetDiagnostic();
@@ -280,6 +333,16 @@ namespace HONG::Debug
 	void ClearPreview()
 	{
 		OverlayController::GetSingleton()->SetPreview(0);
+	}
+
+	void PreviewFile(const std::string& a_path)
+	{
+		OverlayController::GetSingleton()->SetPreviewFile(a_path);
+	}
+
+	std::string PreviewingFile()
+	{
+		return OverlayController::GetSingleton()->GetPreviewFile();
 	}
 
 	std::uint32_t Previewing()

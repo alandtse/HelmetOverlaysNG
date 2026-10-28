@@ -69,7 +69,26 @@ namespace HONG
 	void OverlayController::SetPreview(RE::FormID a_armor)
 	{
 		_previewId.store(a_armor, std::memory_order_relaxed);
+		{
+			std::scoped_lock lock{ _diagLock };
+			_previewFile.clear();
+		}
 		MarkDirty();
+	}
+
+	void OverlayController::SetPreviewFile(std::string a_path)
+	{
+		{
+			std::scoped_lock lock{ _diagLock };
+			_previewFile = std::move(a_path);
+		}
+		MarkDirty();
+	}
+
+	std::string OverlayController::GetPreviewFile() const
+	{
+		std::scoped_lock lock{ _diagLock };
+		return _previewFile;
 	}
 
 	OverlayController::Diagnostic OverlayController::GetDiagnostic() const
@@ -128,36 +147,51 @@ namespace HONG
 
 		const auto player = RE::PlayerCharacter::GetSingleton();
 		const auto previewId = _previewId.load(std::memory_order_relaxed);
-		const auto armor = previewId ? RE::TESForm::LookupByID<RE::TESObjectARMO>(previewId) : Resolver::FindWornHeadgear(player);
-		if (armor == _currentArmor) {
+		const auto previewFile = GetPreviewFile();
+		const RE::TESObjectARMO* armor = nullptr;
+		if (previewFile.empty()) {
+			armor = previewId ? RE::TESForm::LookupByID<RE::TESObjectARMO>(previewId) : Resolver::FindWornHeadgear(player);
+		}
+		if (armor == _currentArmor && previewFile == _currentFile) {
 			return;
 		}
 		_currentArmor = armor;
+		_currentFile = previewFile;
 
 		for (auto& layer : _layers) {
 			layer.wanted = false;
 		}
 
-		if (!armor) {
-			return;
-		}
-		const auto base = player->GetActorBase();
-		const bool female = base && base->IsFemale();
-		auto resolution = Resolver::Resolve(armor, female);
-		{
+		Resolver::Resolution resolution;
+		if (!previewFile.empty()) {
+			resolution.path = previewFile;
 			std::scoped_lock lock{ _diagLock };
-			_diag.armorId = armor->GetFormID();
-			_diag.armorName = armor->GetName();
-			_diag.previewing = previewId != 0;
+			_diag.armorId = 0;
+			_diag.armorName.clear();
+			_diag.previewing = true;
 			_diag.resolution = resolution;
-		}
-		if (!resolution.path) {
-			std::string tried;
-			for (const auto& candidate : resolution.tried) {
-				tried += tried.empty() ? candidate : ", " + candidate;
+		} else {
+			if (!armor) {
+				return;
 			}
-			logger::info("No overlay art for '{}' ({:08X}); model '{}'; tried: {}", armor->GetName(), armor->GetFormID(), resolution.model, tried.empty() ? "(no world model)" : tried);
-			return;
+			const auto base = player->GetActorBase();
+			const bool female = base && base->IsFemale();
+			resolution = Resolver::Resolve(armor, female);
+			{
+				std::scoped_lock lock{ _diagLock };
+				_diag.armorId = armor->GetFormID();
+				_diag.armorName = armor->GetName();
+				_diag.previewing = previewId != 0;
+				_diag.resolution = resolution;
+			}
+			if (!resolution.path) {
+				std::string tried;
+				for (const auto& candidate : resolution.tried) {
+					tried += tried.empty() ? candidate : ", " + candidate;
+				}
+				logger::info("No overlay art for '{}' ({:08X}); model '{}'; tried: {}", armor->GetName(), armor->GetFormID(), resolution.model, tried.empty() ? "(no world model)" : tried);
+				return;
+			}
 		}
 		const auto& path = resolution.path;
 		auto srv = TextureCache::Get(*path);
@@ -167,7 +201,7 @@ namespace HONG
 
 		const auto settings = Settings::GetSingleton();
 		const float openness = TextureCache::Openness(*path);
-		const auto profile = Profile::Compute(openness, ClassOf(armor), settings->autoArtWeight);
+		const auto profile = Profile::Compute(openness, armor ? ClassOf(armor) : Profile::ArmorClass::kUnknown, settings->autoArtWeight);
 		_muffleStrength = settings->autoStrength ? profile.strength : 1.0f;
 		{
 			std::scoped_lock lock{ _diagLock };
@@ -175,7 +209,7 @@ namespace HONG
 			_diag.color = TextureCache::ColoredShare(*path);
 			_diag.strength = _muffleStrength;
 		}
-		logger::info("Overlay '{}' for '{}' (see-through {:.0f}%, muffle strength {:.2f})", *path, armor->GetName(), openness * 100.0f, _muffleStrength);
+		logger::info("Overlay '{}' for '{}' (see-through {:.0f}%, muffle strength {:.2f})", *path, armor ? armor->GetName() : "(file preview)", openness * 100.0f, _muffleStrength);
 		auto mask = TextureCache::MaskFor(*path);
 		{
 			std::scoped_lock lock{ _diagLock };

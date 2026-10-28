@@ -66,6 +66,9 @@ namespace HONG
 		// Debug: draw this armor's overlay regardless of what is worn (0 = off, use the
 		// worn helmet). Safe from any thread; applied on the next frame.
 		void SetPreview(RE::FormID a_armor);
+		// Draws one overlay file (a VFS path) with no armor behind it; an empty path goes back to SetPreview's armor.
+		void SetPreviewFile(std::string a_path);
+		std::string GetPreviewFile() const;
 		RE::FormID GetPreview() const { return _previewId.load(std::memory_order_relaxed); }
 
 		// Debug: what the controller last resolved, for the in-game menu. Copied under a lock.
@@ -108,8 +111,10 @@ namespace HONG
 
 		std::vector<Layer> _layers;
 		const RE::TESObjectARMO* _currentArmor{ nullptr };
+		std::string _currentFile;
 		std::atomic<bool> _dirty{ true };
 		std::atomic<RE::FormID> _previewId{ 0 };
+		std::string _previewFile;  // guarded by _diagLock
 		mutable std::mutex _diagLock;
 		Diagnostic _diag;
 		float _wornAmount{ 0.0f };
