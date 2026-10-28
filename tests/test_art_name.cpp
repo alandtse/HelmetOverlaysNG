@@ -36,3 +36,18 @@ TEST_CASE("a file name that is only a suffix is kept", "[art-name]")
 {
 	REQUIRE(SearchTerm("go.dds") == "go");
 }
+
+using HONG::ArtName::StripRoot;
+
+TEST_CASE("the overlay root is cut from the front of a path", "[art-name]")
+{
+	REQUIRE(StripRoot("Interface\\overlays\\Armor\\Iron\\Helmet.dds", "Interface\\overlays") == "Armor\\Iron\\Helmet.dds");
+	REQUIRE(StripRoot("interface\\OVERLAYS\\a.dds", "Interface\\overlays") == "a.dds");
+}
+
+TEST_CASE("a path without the root keeps its full prefix", "[art-name]")
+{
+	REQUIRE(StripRoot("Other\\Armor\\a.dds", "Interface\\overlays") == "Other\\Armor\\a.dds");
+	REQUIRE(StripRoot("Interface\\overlaysX\\a.dds", "Interface\\overlays") == "Interface\\overlaysX\\a.dds");
+	REQUIRE(StripRoot("Interface\\overlays", "Interface\\overlays") == "Interface\\overlays");
+}

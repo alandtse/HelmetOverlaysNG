@@ -24,6 +24,7 @@ namespace logger = SKSE::log;
 #include "SKSEMenuFramework.h"
 
 #include "ArtMetrics.h"
+#include "ArtName.h"
 #include "Debug.h"
 #include "Muffle.h"
 #include "Settings.h"
@@ -583,7 +584,7 @@ namespace HONG::UI
 					const Debug::OrphanArt* picked = nullptr;
 					for (const auto& orphan : orphans) {
 						const bool selected = orphan.path == previewingFile;
-						const std::string label = orphan.path + ArtTag(orphan.color) + "##" + orphan.path;
+						const std::string label = ArtName::StripRoot(orphan.path, s->overlayRoot) + ArtTag(orphan.color) + "##" + orphan.path;
 						if (ArtSelectable(label, selected, orphan.color)) {
 							Debug::PreviewFile(orphan.path);
 						}

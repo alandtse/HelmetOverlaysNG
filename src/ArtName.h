@@ -21,6 +21,15 @@ namespace HONG::ArtName
 		return out;
 	}
 
+	// a_path without a leading a_root and separator when it has one (compared ignoring case), else unchanged.
+	inline std::string StripRoot(std::string_view a_path, std::string_view a_root)
+	{
+		if (a_path.size() > a_root.size() + 1 && a_path[a_root.size()] == '\\' && Lower(a_path.substr(0, a_root.size())) == Lower(a_root)) {
+			return std::string(a_path.substr(a_root.size() + 1));
+		}
+		return std::string(a_path);
+	}
+
 	namespace detail
 	{
 		// Folder names the art packs use for structure rather than for the armor.
