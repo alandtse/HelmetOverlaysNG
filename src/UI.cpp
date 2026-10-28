@@ -156,15 +156,6 @@ namespace HONG::UI
 			return out;
 		}
 
-		// Suffix for a list row from ArtMetrics::ColoredFraction; empty while it is unknown.
-		const char* ArtTag(float a_color)
-		{
-			if (a_color < 0.0f) {
-				return "";
-			}
-			return a_color >= ArtMetrics::kColoredShare ? "  (colored)" : "  (black mask)";
-		}
-
 		// A list row that reads amber when its art has color; black masks and unchecked rows keep the default.
 		bool ArtSelectable(const std::string& a_label, bool a_selected, float a_color)
 		{
@@ -565,7 +556,7 @@ namespace HONG::UI
 				static const char* const kArtFilters[] = { "All helmets", "Without art", "Colored art", "Black masks", "Not checked yet", "Art with no helmet" };
 				constexpr int kOrphanFilter = 5;
 				ImGuiMCP::Combo("Show", &artFilter, kArtFilters, static_cast<int>(std::size(kArtFilters)), -1);
-				Tip("Colored art, Black masks and Art with no helmet check the art colors the first time they are chosen. Art with no helmet lists installed overlay files that no helmet in your load order uses, for armor mods you do not have.");
+				Tip("Rows of colored art are amber. Colored art, Black masks and Art with no helmet check the art colors the first time they are chosen. Art with no helmet lists installed overlay files that no helmet in your load order uses, for armor mods you do not have.");
 				const auto shown = static_cast<Debug::ArtFilter>(artFilter);
 				const auto coverage = Debug::GetCoverage();
 				const bool needsColors = shown == Debug::ArtFilter::kColored || shown == Debug::ArtFilter::kBlack || artFilter == kOrphanFilter;
@@ -584,7 +575,7 @@ namespace HONG::UI
 					const Debug::OrphanArt* picked = nullptr;
 					for (const auto& orphan : orphans) {
 						const bool selected = orphan.path == previewingFile;
-						const std::string label = ArtName::StripRoot(orphan.path, s->overlayRoot) + ArtTag(orphan.color) + "##" + orphan.path;
+						const std::string label = ArtName::StripRoot(orphan.path, s->overlayRoot) + "##" + orphan.path;
 						if (ArtSelectable(label, selected, orphan.color)) {
 							Debug::PreviewFile(orphan.path);
 						}
@@ -603,7 +594,7 @@ namespace HONG::UI
 					const auto helmets = Debug::FilterHelmets(filter, shown, kMaxRows, totalMatches);
 					ImGuiMCP::Text("%zu matching helmets", totalMatches);
 					for (const auto& helmet : helmets) {
-						const char* tag = helmet.art == 0 ? "  (no art)" : ArtTag(helmet.color);
+						const char* tag = helmet.art == 0 ? "  (no art)" : "";
 						const std::string label = helmet.name + "  [" + helmet.plugin + "]" + tag + "##" + std::to_string(helmet.id);
 						if (ArtSelectable(label, helmet.id == previewing, helmet.color)) {
 							Debug::Preview(helmet.id);
