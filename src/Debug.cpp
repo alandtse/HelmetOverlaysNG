@@ -107,21 +107,38 @@ namespace HONG::Debug
 			if (!g_coverage.classifying) {
 				return;
 			}
-			for (std::size_t done = 0; g_classifyNext < g_entries.size() && done < kClassifyBatch; ++g_classifyNext) {
-				auto& entry = g_entries[g_classifyNext];
-				if (entry.art <= 0 || entry.overlay.empty()) {
+			const std::size_t total = g_entries.size() + g_orphans.size();
+			for (std::size_t done = 0; g_classifyNext < total && done < kClassifyBatch; ++g_classifyNext) {
+				const bool isEntry = g_classifyNext < g_entries.size();
+				const std::string* path = nullptr;
+				float* color = nullptr;
+				if (isEntry) {
+					auto& entry = g_entries[g_classifyNext];
+					if (entry.art > 0) {
+						path = &entry.overlay;
+						color = &entry.color;
+					}
+				} else {
+					auto& orphan = g_orphans[g_classifyNext - g_entries.size()];
+					path = &orphan.path;
+					color = &orphan.color;
+				}
+				if (!path || path->empty()) {
 					continue;
 				}
-				const auto bytes = Resolver::ReadFile(entry.overlay);
-				entry.color = ArtMetrics::ColoredFraction(bytes.data(), bytes.size());
-				++g_coverage.classified;
-				if (entry.color >= 0.0f) {
-					++(entry.color >= ArtMetrics::kColoredShare ? g_coverage.colored : g_coverage.blackMasks);
-				}
+				const auto bytes = Resolver::ReadFile(*path);
+				*color = ArtMetrics::ColoredFraction(bytes.data(), bytes.size());
 				++done;
+				if (isEntry) {
+					++g_coverage.classified;
+					if (*color >= 0.0f) {
+						++(*color >= ArtMetrics::kColoredShare ? g_coverage.colored : g_coverage.blackMasks);
+					}
+				}
 			}
-			if (g_classifyNext >= g_entries.size()) {
+			if (g_classifyNext >= total) {
 				g_coverage.classifying = false;
+				g_coverage.checked = true;
 				logger::info("Overlay art checked: {} with color, {} black masks, {} unreadable.", g_coverage.colored, g_coverage.blackMasks, g_coverage.classified - g_coverage.colored - g_coverage.blackMasks);
 			}
 		}
@@ -257,7 +274,11 @@ namespace HONG::Debug
 		for (auto& entry : g_entries) {
 			entry.color = -1.0f;
 		}
+		for (auto& orphan : g_orphans) {
+			orphan.color = -1.0f;
+		}
 		g_coverage.classified = g_coverage.colored = g_coverage.blackMasks = 0;
+		g_coverage.checked = false;
 		g_coverage.classifying = true;
 		g_classifyNext = 0;
 	}

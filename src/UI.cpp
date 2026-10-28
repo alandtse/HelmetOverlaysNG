@@ -564,10 +564,11 @@ namespace HONG::UI
 				static const char* const kArtFilters[] = { "All helmets", "Without art", "Colored art", "Black masks", "Not checked yet", "Art with no helmet" };
 				constexpr int kOrphanFilter = 5;
 				ImGuiMCP::Combo("Show", &artFilter, kArtFilters, static_cast<int>(std::size(kArtFilters)), -1);
-				Tip("Colored art and Black masks check the art colors the first time they are chosen. Art with no helmet lists installed overlay files that no helmet in your load order uses, for armor mods you do not have.");
+				Tip("Colored art, Black masks and Art with no helmet check the art colors the first time they are chosen. Art with no helmet lists installed overlay files that no helmet in your load order uses, for armor mods you do not have.");
 				const auto shown = static_cast<Debug::ArtFilter>(artFilter);
 				const auto coverage = Debug::GetCoverage();
-				if ((shown == Debug::ArtFilter::kColored || shown == Debug::ArtFilter::kBlack) && coverage.done && !coverage.classifying && coverage.classified == 0) {
+				const bool needsColors = shown == Debug::ArtFilter::kColored || shown == Debug::ArtFilter::kBlack || artFilter == kOrphanFilter;
+				if (needsColors && coverage.done && !coverage.classifying && !coverage.checked) {
 					Debug::ClassifyArt();
 				}
 				if (coverage.classifying) {
@@ -581,9 +582,9 @@ namespace HONG::UI
 					ImGuiMCP::Text("%zu overlay files with no helmet in your load order", totalMatches);
 					const Debug::OrphanArt* picked = nullptr;
 					for (const auto& orphan : orphans) {
-						const std::string label = orphan.path + "##orphan";
 						const bool selected = orphan.path == previewingFile;
-						if (ImGuiMCP::Selectable(label.c_str(), selected, 0, { 0, 0 })) {
+						const std::string label = orphan.path + ArtTag(orphan.color) + "##" + orphan.path;
+						if (ArtSelectable(label, selected, orphan.color)) {
 							Debug::PreviewFile(orphan.path);
 						}
 						if (selected) {

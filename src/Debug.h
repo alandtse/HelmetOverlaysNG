@@ -32,8 +32,9 @@ namespace HONG::Debug
 	// that is not installed.
 	struct OrphanArt
 	{
-		std::string path;  // VFS path
-		std::string term;  // armor name to search for
+		std::string path;      // VFS path
+		std::string term;      // armor name to search for
+		float color{ -1.0f };  // ArtMetrics::ColoredFraction, -1 until classified
 	};
 
 	enum class ArtFilter
@@ -64,6 +65,7 @@ namespace HONG::Debug
 		std::vector<PluginCoverage> byPlugin;  // most missing first
 		std::uint32_t orphans{ 0 };            // overlay files with no matching helmet
 		bool classifying{ false };
+		bool checked{ false };          // a color check has run to the end
 		std::uint32_t classified{ 0 };  // art files checked for color so far
 		std::uint32_t colored{ 0 };
 		std::uint32_t blackMasks{ 0 };
