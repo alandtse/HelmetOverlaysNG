@@ -142,6 +142,19 @@ namespace HONG::UI
 			Tip(file.empty() ? "Not a loose file in the Data folder (it is inside an archive or a virtual file system), so there is nothing to open. The path above is where mods put it." : "Open the DDS in your default image program, or show where it sits on disk so you can edit or replace it.");
 		}
 
+		std::string UrlEncode(const std::string& a_text)
+		{
+			std::string out;
+			for (const unsigned char c : a_text) {
+				if (std::isalnum(c) || c == '-' || c == '_' || c == '.' || c == '~') {
+					out += static_cast<char>(c);
+				} else {
+					out += std::format("%{:02X}", c);
+				}
+			}
+			return out;
+		}
+
 		// Text that opens a URL in the default browser when clicked.
 		void Link(const char* a_label, const char* a_url)
 		{
@@ -434,6 +447,9 @@ namespace HONG::UI
 						for (const auto& path : current.tried) {
 							ImGuiMCP::BulletText("%s", path.c_str());
 						}
+						const auto search = "https://www.nexusmods.com/skyrimspecialedition/search/?gsearch=" + UrlEncode(current.armorName + " helmet overlay") + "&gsearchtype=mods";
+						Link("Search Nexus for art for this helmet", search.c_str());
+						ImGuiMCP::TextDisabled("Art goes at the first path above; a modder can draw it there.");
 					}
 				}
 			}
