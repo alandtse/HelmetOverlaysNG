@@ -76,6 +76,7 @@ namespace HONG
 			bool previewing{ false };
 			Resolver::Resolution resolution;
 			float openness{ -1.0f };  // overlay see-through fraction, -1 unknown
+			float color{ -1.0f };     // overlay ArtMetrics::ColoredFraction, -1 unknown
 			float maskShare{ 0.0f };  // fraction of the overlay in the opaque mask
 			float strength{ 1.0f };   // how much this helmet muffles sound
 			float light{ -1.0f };     // last sampled light level 0..1, -1 when reactive light is off

@@ -3,6 +3,7 @@
 
 #include "Debug.h"
 
+#include "ArtMetrics.h"
 #include "OverlayController.h"
 #include "OverlayResolver.h"
 #include "Settings.h"
@@ -15,6 +16,7 @@ namespace HONG::Debug
 	namespace
 	{
 		constexpr std::size_t kScanBatch = 48;
+		constexpr std::size_t kClassifyBatch = 4;  // each reads a whole DDS, about 2 MB
 		constexpr std::size_t kLogWorstPlugins = 5;
 
 		enum class ScanState
@@ -62,6 +64,48 @@ namespace HONG::Debug
 			});
 			g_built = true;
 			return true;
+		}
+
+		std::size_t g_classifyNext = 0;
+
+		void ClassifyStep()
+		{
+			if (!g_coverage.classifying) {
+				return;
+			}
+			for (std::size_t done = 0; g_classifyNext < g_entries.size() && done < kClassifyBatch; ++g_classifyNext) {
+				auto& entry = g_entries[g_classifyNext];
+				if (entry.art <= 0 || entry.overlay.empty()) {
+					continue;
+				}
+				const auto bytes = Resolver::ReadFile(entry.overlay);
+				entry.color = ArtMetrics::ColoredFraction(bytes.data(), bytes.size());
+				++g_coverage.classified;
+				if (entry.color >= 0.0f) {
+					++(entry.color >= ArtMetrics::kColoredShare ? g_coverage.colored : g_coverage.blackMasks);
+				}
+				++done;
+			}
+			if (g_classifyNext >= g_entries.size()) {
+				g_coverage.classifying = false;
+				logger::info("Overlay art checked: {} with color, {} black masks, {} unreadable.", g_coverage.colored, g_coverage.blackMasks, g_coverage.classified - g_coverage.colored - g_coverage.blackMasks);
+			}
+		}
+
+		bool MatchesArt(const HelmetEntry& a_entry, ArtFilter a_art)
+		{
+			switch (a_art) {
+			case ArtFilter::kMissing:
+				return a_entry.art == 0;
+			case ArtFilter::kColored:
+				return a_entry.color >= ArtMetrics::kColoredShare;
+			case ArtFilter::kBlack:
+				return a_entry.color >= 0.0f && a_entry.color < ArtMetrics::kColoredShare;
+			case ArtFilter::kUnchecked:
+				return a_entry.art > 0 && a_entry.color < 0.0f;
+			default:
+				return true;
+			}
 		}
 
 		void FinishScan()
@@ -117,6 +161,7 @@ namespace HONG::Debug
 		std::scoped_lock lock{ g_lock };
 
 		if (g_state == ScanState::kDone) {
+			ClassifyStep();
 			return;
 		}
 		const auto player = RE::PlayerCharacter::GetSingleton();
@@ -136,6 +181,7 @@ namespace HONG::Debug
 			const auto armor = RE::TESForm::LookupByID<RE::TESObjectARMO>(entry.id);
 			const auto resolution = Resolver::Resolve(armor, female);
 			entry.model = resolution.model;
+			entry.overlay = resolution.path.value_or(std::string());
 			entry.art = resolution.model.empty() ? std::int8_t{ -1 } : (resolution.path ? std::int8_t{ 1 } : std::int8_t{ 0 });
 		}
 		g_coverage.progress = g_entries.empty() ? 1.0f : static_cast<float>(g_next) / static_cast<float>(g_entries.size());
@@ -150,8 +196,11 @@ namespace HONG::Debug
 		for (auto& entry : g_entries) {
 			entry.art = -1;
 			entry.model.clear();
+			entry.overlay.clear();
+			entry.color = -1.0f;
 		}
 		g_coverage = Coverage{};
+		g_classifyNext = 0;
 		g_next = 0;
 		g_state = ScanState::kIdle;
 		g_built = false;
@@ -163,7 +212,21 @@ namespace HONG::Debug
 		return g_coverage;
 	}
 
-	std::vector<HelmetEntry> FilterHelmets(const std::string& a_filter, bool a_missingOnly, std::size_t a_limit, std::size_t& a_totalMatches)
+	void ClassifyArt()
+	{
+		std::scoped_lock lock{ g_lock };
+		if (g_state != ScanState::kDone || g_coverage.classifying) {
+			return;
+		}
+		for (auto& entry : g_entries) {
+			entry.color = -1.0f;
+		}
+		g_coverage.classified = g_coverage.colored = g_coverage.blackMasks = 0;
+		g_coverage.classifying = true;
+		g_classifyNext = 0;
+	}
+
+	std::vector<HelmetEntry> FilterHelmets(const std::string& a_filter, ArtFilter a_art, std::size_t a_limit, std::size_t& a_totalMatches)
 	{
 		std::scoped_lock lock{ g_lock };
 		if (!g_built) {
@@ -172,7 +235,7 @@ namespace HONG::Debug
 		std::vector<HelmetEntry> out;
 		a_totalMatches = 0;
 		for (const auto& entry : g_entries) {
-			if (a_missingOnly && entry.art != 0) {
+			if (!MatchesArt(entry, a_art)) {
 				continue;
 			}
 			if (!ContainsNoCase(entry.name, a_filter) && !ContainsNoCase(entry.plugin, a_filter)) {
@@ -198,6 +261,7 @@ namespace HONG::Debug
 		out.overlayPath = diag.resolution.path.value_or(std::string());
 		out.tried = diag.resolution.tried;
 		out.openness = diag.openness;
+		out.color = diag.color;
 		out.strength = diag.strength;
 		out.maskShare = diag.maskShare;
 		out.light = diag.light;

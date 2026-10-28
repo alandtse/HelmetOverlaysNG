@@ -24,6 +24,17 @@ namespace HONG::Debug
 		std::string plugin;
 		std::string model;      // world model path; empty until scanned
 		std::int8_t art{ -1 };  // -1 not scanned or no world model, 0 no overlay art, 1 has art
+		std::string overlay;    // VFS path of the art; empty without art
+		float color{ -1.0f };   // ArtMetrics::ColoredFraction of the art, -1 until classified
+	};
+
+	enum class ArtFilter
+	{
+		kAll,
+		kMissing,   // no overlay art
+		kColored,   // art with real color
+		kBlack,     // art whose RGB is black, shaped by alpha alone
+		kUnchecked  // art not classified yet
 	};
 
 	struct PluginCoverage
@@ -43,6 +54,10 @@ namespace HONG::Debug
 		std::uint32_t missing{ 0 };
 		std::uint32_t noModel{ 0 };            // head/hair armors skipped: no world model
 		std::vector<PluginCoverage> byPlugin;  // most missing first
+		bool classifying{ false };
+		std::uint32_t classified{ 0 };  // art files checked for color so far
+		std::uint32_t colored{ 0 };
+		std::uint32_t blackMasks{ 0 };
 	};
 
 	// Starts on its own once the player is loaded; call every frame from the main thread.
@@ -50,11 +65,13 @@ namespace HONG::Debug
 	// Discards results and scans again (for example after installing art).
 	void RescanCoverage();
 	Coverage GetCoverage();
+	// Reads each helmet's art a few files per frame and records whether it has color or is a black mask.
+	void ClassifyArt();
 
 	// Playable head/hair armors, name and plugin matching `a_filter` (case-insensitive,
-	// empty = all), optionally only those without art. At most `a_limit` are returned;
+	// empty = all), narrowed by `a_art`. At most `a_limit` are returned;
 	// `a_totalMatches` receives the full count.
-	std::vector<HelmetEntry> FilterHelmets(const std::string& a_filter, bool a_missingOnly, std::size_t a_limit, std::size_t& a_totalMatches);
+	std::vector<HelmetEntry> FilterHelmets(const std::string& a_filter, ArtFilter a_art, std::size_t a_limit, std::size_t& a_totalMatches);
 
 	struct Current
 	{
@@ -66,6 +83,7 @@ namespace HONG::Debug
 		bool found{ false };
 		std::vector<std::string> tried;
 		float openness{ -1.0f };  // overlay see-through fraction, -1 unknown
+		float color{ -1.0f };     // ArtMetrics::ColoredFraction of the overlay, -1 unknown
 		float strength{ 1.0f };   // sound muffling scale for this helmet
 		float maskShare{ 0.0f };  // fraction of the overlay in the opaque mask (0 when not built)
 		float light{ -1.0f };     // sampled light level 0..1, -1 when reactive light is off

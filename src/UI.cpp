@@ -22,6 +22,7 @@ namespace logger = SKSE::log;
 
 #include "SKSEMenuFramework.h"
 
+#include "ArtMetrics.h"
 #include "Debug.h"
 #include "Muffle.h"
 #include "Settings.h"
@@ -393,6 +394,9 @@ namespace HONG::UI
 						if (current.openness >= 0.0f) {
 							ImGuiMCP::Text("Overlay see-through: %.0f%%", current.openness * 100.0f);
 						}
+						if (current.color >= 0.0f) {
+							ImGuiMCP::Text("Overlay art: %s (%.0f%% of the visible area has color)", current.color >= ArtMetrics::kColoredShare ? "colored" : "black mask", current.color * 100.0f);
+						}
 						ImGuiMCP::Text("Sound muffle strength: %.2f", current.strength);
 						ImGuiMCP::Text("Opaque mask: %.0f%% of the overlay", current.maskShare * 100.0f);
 						if (current.light >= 0.0f) {
@@ -451,6 +455,20 @@ namespace HONG::UI
 					Debug::RescanCoverage();
 				}
 				Tip("Run again after installing or removing overlay art.");
+				if (coverage.done) {
+					ImGuiMCP::SameLine(0.0f, -1.0f);
+					ImGuiMCP::BeginDisabled(coverage.classifying);
+					if (ImGuiMCP::Button("Check art colors", { 0, 0 })) {
+						Debug::ClassifyArt();
+					}
+					ImGuiMCP::EndDisabled();
+					Tip("Reads each overlay file a few per frame and tells colored art from black masks, whose color comes entirely from the light and screen tint. Then use the filter under Preview a helmet.");
+					if (coverage.classifying) {
+						ImGuiMCP::Text("Checking art... %u of %u", coverage.classified, coverage.covered);
+					} else if (coverage.classified > 0) {
+						ImGuiMCP::Text("%u colored, %u black masks", coverage.colored, coverage.blackMasks);
+					}
+				}
 			}
 
 			if (ImGuiMCP::CollapsingHeader("Preview a helmet", ImGuiMCP::ImGuiTreeNodeFlags_DefaultOpen)) {
@@ -466,15 +484,22 @@ namespace HONG::UI
 				static char filter[64]{};
 				FilterField("##hong_debug_helmet_filter", "Type to filter helmets...", filter, sizeof(filter));
 
-				static bool missingOnly = false;
-				ImGuiMCP::Checkbox("Only helmets without art", &missingOnly);
+				static int artFilter = 0;
+				static const char* const kArtFilters[] = { "All helmets", "Without art", "Colored art", "Black masks", "Not checked yet" };
+				ImGuiMCP::Combo("Show", &artFilter, kArtFilters, static_cast<int>(std::size(kArtFilters)), -1);
+				Tip("Colored art and Black masks need Check art colors in the Coverage section.");
 
 				constexpr std::size_t kMaxRows = 60;
 				std::size_t totalMatches = 0;
-				const auto helmets = Debug::FilterHelmets(filter, missingOnly, kMaxRows, totalMatches);
+				const auto helmets = Debug::FilterHelmets(filter, static_cast<Debug::ArtFilter>(artFilter), kMaxRows, totalMatches);
 				ImGuiMCP::Text("%zu matching helmets", totalMatches);
 				for (const auto& helmet : helmets) {
-					const char* tag = helmet.art > 0 ? "" : (helmet.art == 0 ? "  (no art)" : "");
+					const char* tag = "";
+					if (helmet.art == 0) {
+						tag = "  (no art)";
+					} else if (helmet.color >= 0.0f) {
+						tag = helmet.color >= ArtMetrics::kColoredShare ? "  (colored)" : "  (black mask)";
+					}
 					const std::string label = helmet.name + "  [" + helmet.plugin + "]" + tag + "##" + std::to_string(helmet.id);
 					if (ImGuiMCP::Selectable(label.c_str(), helmet.id == previewing, 0, { 0, 0 })) {
 						Debug::Preview(helmet.id);

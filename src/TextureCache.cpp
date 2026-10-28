@@ -21,11 +21,18 @@ namespace HONG::TextureCache
 			std::string key;
 			Srv srv;  // null = remembered load failure
 			float openness{ -1.0f };
+			float color{ -1.0f };
 			Mask mask;
 		};
 
 		ID3D11Device* g_device = nullptr;
 		std::list<Entry> g_lru;  // front = most recent
+
+		const Entry* Find(const std::string& a_path)
+		{
+			const auto it = std::ranges::find_if(g_lru, [&](const Entry& a_entry) { return _stricmp(a_entry.key.c_str(), a_path.c_str()) == 0; });
+			return it != g_lru.end() ? &*it : nullptr;
+		}
 	}
 
 	namespace
@@ -76,22 +83,20 @@ namespace HONG::TextureCache
 
 	Mask MaskFor(const std::string& a_path)
 	{
-		for (const auto& entry : g_lru) {
-			if (_stricmp(entry.key.c_str(), a_path.c_str()) == 0) {
-				return entry.mask;
-			}
-		}
-		return {};
+		const auto entry = Find(a_path);
+		return entry ? entry->mask : Mask{};
 	}
 
 	float Openness(const std::string& a_path)
 	{
-		for (const auto& entry : g_lru) {
-			if (_stricmp(entry.key.c_str(), a_path.c_str()) == 0) {
-				return entry.openness;
-			}
-		}
-		return -1.0f;
+		const auto entry = Find(a_path);
+		return entry ? entry->openness : -1.0f;
+	}
+
+	float ColoredShare(const std::string& a_path)
+	{
+		const auto entry = Find(a_path);
+		return entry ? entry->color : -1.0f;
 	}
 
 	Srv Get(const std::string& a_path)
@@ -110,6 +115,7 @@ namespace HONG::TextureCache
 		Srv srv;
 		Mask mask;
 		float openness = -1.0f;
+		float color = -1.0f;
 		const auto bytes = Resolver::ReadFile(a_path);
 		if (bytes.empty()) {
 			logger::warn("Could not read overlay {}", a_path);
@@ -121,13 +127,14 @@ namespace HONG::TextureCache
 				srv.Reset();
 			} else {
 				openness = ArtMetrics::SeeThroughFraction(bytes.data(), bytes.size());
+				color = ArtMetrics::ColoredFraction(bytes.data(), bytes.size());
 				if (Settings::GetSingleton()->opaqueMask) {
 					mask = CreateMask(bytes);
 				}
 			}
 		}
 
-		g_lru.push_front({ a_path, srv, openness, std::move(mask) });
+		g_lru.push_front({ a_path, srv, openness, color, std::move(mask) });
 		if (g_lru.size() > kCapacity) {
 			g_lru.pop_back();
 		}

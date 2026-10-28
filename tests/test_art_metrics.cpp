@@ -92,3 +92,68 @@ TEST_CASE("unsupported or malformed input returns -1", "[art]")
 	const auto zeroSize = MakeDds(0, 4, "DXT5", Dxt5Block(0, 0, 0));
 	REQUIRE(SeeThroughFraction(zeroSize.data(), zeroSize.size()) == Approx(-1.0f));
 }
+
+namespace
+{
+	std::vector<std::uint8_t> WithColor(std::vector<std::uint8_t> a_block, std::uint16_t a_color0, std::uint16_t a_color1)
+	{
+		a_block[8] = static_cast<std::uint8_t>(a_color0 & 0xFF);
+		a_block[9] = static_cast<std::uint8_t>(a_color0 >> 8);
+		a_block[10] = static_cast<std::uint8_t>(a_color1 & 0xFF);
+		a_block[11] = static_cast<std::uint8_t>(a_color1 >> 8);
+		return a_block;
+	}
+}
+
+using HONG::ArtMetrics::ColoredFraction;
+
+TEST_CASE("a visible block with black color endpoints is not colored", "[art]")
+{
+	const auto file = MakeDds(4, 4, "DXT5", Dxt5Block(255, 255, 0));
+	REQUIRE(ColoredFraction(file.data(), file.size()) == Approx(0.0f));
+}
+
+TEST_CASE("a visible block with a color endpoint is colored", "[art]")
+{
+	const auto red = MakeDds(4, 4, "DXT5", WithColor(Dxt5Block(255, 255, 0), 0xF800, 0));
+	REQUIRE(ColoredFraction(red.data(), red.size()) == Approx(1.0f));
+	const auto second = MakeDds(4, 4, "DXT5", WithColor(Dxt5Block(255, 255, 0), 0, 0x001F));
+	REQUIRE(ColoredFraction(second.data(), second.size()) == Approx(1.0f));
+}
+
+TEST_CASE("a near-black endpoint stays below the black level", "[art]")
+{
+	const auto file = MakeDds(4, 4, "DXT5", WithColor(Dxt5Block(255, 255, 0), 0x0841, 0));  // 1/31, 2/63, 1/31
+	REQUIRE(ColoredFraction(file.data(), file.size()) == Approx(0.0f));
+}
+
+TEST_CASE("fully clear blocks do not count toward the colored share", "[art]")
+{
+	auto blocks = WithColor(Dxt5Block(0, 0, 0), 0xFFFF, 0xFFFF);
+	const auto visible = Dxt5Block(255, 255, 0);
+	blocks.insert(blocks.end(), visible.begin(), visible.end());
+	const auto file = MakeDds(8, 4, "DXT5", blocks);
+	REQUIRE(ColoredFraction(file.data(), file.size()) == Approx(0.0f));
+}
+
+TEST_CASE("the colored share averages over visible blocks only", "[art]")
+{
+	auto blocks = WithColor(Dxt5Block(255, 255, 0), 0xF800, 0);
+	const auto black = Dxt5Block(255, 255, 0);
+	blocks.insert(blocks.end(), black.begin(), black.end());
+	const auto file = MakeDds(8, 4, "DXT5", blocks);
+	REQUIRE(ColoredFraction(file.data(), file.size()) == Approx(0.5f));
+}
+
+TEST_CASE("a file with nothing visible has no color", "[art]")
+{
+	const auto file = MakeDds(4, 4, "DXT5", WithColor(Dxt5Block(0, 0, 0), 0xFFFF, 0xFFFF));
+	REQUIRE(ColoredFraction(file.data(), file.size()) == Approx(0.0f));
+}
+
+TEST_CASE("color of unsupported or malformed input is -1", "[art]")
+{
+	REQUIRE(ColoredFraction(nullptr, 0) == Approx(-1.0f));
+	const auto dxt1 = MakeDds(4, 4, "DXT1", std::vector<std::uint8_t>(16, 0));
+	REQUIRE(ColoredFraction(dxt1.data(), dxt1.size()) == Approx(-1.0f));
+}

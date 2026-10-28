@@ -12,6 +12,7 @@ namespace HONG::ArtMetrics
 	{
 		constexpr std::size_t kHeaderSize = 128;
 		constexpr std::size_t kBlockSize = 16;
+		constexpr std::size_t kColorOffset = 8;
 		constexpr std::size_t kPixelsPerBlock = 16;
 		constexpr std::size_t kHeightOffset = 12;
 		constexpr std::size_t kWidthOffset = 16;
@@ -144,6 +145,16 @@ namespace HONG::ArtMetrics
 			return opaque;
 		}
 
+		// An RGB565 color endpoint with any channel above kBlackLevel once widened to 8 bits.
+		bool IsColorEndpoint(const std::uint8_t* a_endpoint)
+		{
+			const auto packed = static_cast<std::uint32_t>(a_endpoint[0]) | (static_cast<std::uint32_t>(a_endpoint[1]) << 8);
+			const std::uint32_t red = ((packed >> 11) & 0x1F) * 255 / 31;
+			const std::uint32_t green = ((packed >> 5) & 0x3F) * 255 / 63;
+			const std::uint32_t blue = (packed & 0x1F) * 255 / 31;
+			return std::max({ red, green, blue }) > kBlackLevel;
+		}
+
 		// Erodes a binary grid by a_radius in each direction; cells outside the grid count as clear.
 		std::vector<std::uint8_t> Erode(const std::vector<std::uint8_t>& a_grid, std::uint32_t a_width, std::uint32_t a_height, std::uint32_t a_radius)
 		{
@@ -196,6 +207,28 @@ namespace HONG::ArtMetrics
 			clear += layout.fourCC == kDxt5 ? CountClearDxt5(alpha) : CountClearDxt3(alpha);
 		}
 		return static_cast<float>(clear) / static_cast<float>(blocks * kPixelsPerBlock);
+	}
+
+	float ColoredFraction(const std::uint8_t* a_data, std::size_t a_size)
+	{
+		Layout layout;
+		if (!ParseLayout(a_data, a_size, layout)) {
+			return -1.0f;
+		}
+
+		const std::size_t blocks = static_cast<std::size_t>(layout.blocksWide) * layout.blocksHigh;
+		std::size_t visible = 0;
+		std::size_t colored = 0;
+		for (std::size_t block = 0; block < blocks; ++block) {
+			const std::uint8_t* data = a_data + kHeaderSize + block * kBlockSize;
+			const std::size_t clear = layout.fourCC == kDxt5 ? CountClearDxt5(data) : CountClearDxt3(data);
+			if (clear == kPixelsPerBlock) {
+				continue;
+			}
+			++visible;
+			colored += IsColorEndpoint(data + kColorOffset) || IsColorEndpoint(data + kColorOffset + 2);
+		}
+		return visible ? static_cast<float>(colored) / static_cast<float>(visible) : 0.0f;
 	}
 
 	bool BuildOpaqueMask(const std::uint8_t* a_data, std::size_t a_size, std::uint32_t a_marginBlocks, OpaqueMask& a_out)

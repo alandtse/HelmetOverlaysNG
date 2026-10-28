@@ -29,4 +29,7 @@ namespace HONG::TextureCache
 	// See-through fraction (0..1) of a path already passed to Get, or -1 if unknown
 	// (not loaded, or not a DXT3/DXT5 file).
 	float Openness(const std::string& a_path);
+
+	// ArtMetrics::ColoredFraction of a path already passed to Get, or -1 if unknown.
+	float ColoredShare(const std::string& a_path);
 }

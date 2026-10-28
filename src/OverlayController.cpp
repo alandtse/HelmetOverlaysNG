@@ -172,6 +172,7 @@ namespace HONG
 		{
 			std::scoped_lock lock{ _diagLock };
 			_diag.openness = openness;
+			_diag.color = TextureCache::ColoredShare(*path);
 			_diag.strength = _muffleStrength;
 		}
 		logger::info("Overlay '{}' for '{}' (see-through {:.0f}%, muffle strength {:.2f})", *path, armor->GetName(), openness * 100.0f, _muffleStrength);

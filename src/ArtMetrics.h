@@ -17,6 +17,17 @@ namespace HONG::ArtMetrics
 	// (other formats, a truncated or malformed file).
 	float SeeThroughFraction(const std::uint8_t* a_data, std::size_t a_size);
 
+	// RGB brighter than this on any channel counts as color; below it a pixel reads as black.
+	inline constexpr std::uint8_t kBlackLevel = 24;
+
+	// At or above this ColoredFraction the art has real color; below it the file is a black mask.
+	inline constexpr float kColoredShare = 0.05f;
+
+	// Fraction (0..1) of the blocks with any visible pixel whose two DXT color endpoints are not black,
+	// so a file whose RGB is all black and only the alpha shapes the overlay reads 0. Looks at endpoints
+	// only, no pixel decode. Returns -1 for anything else (other formats, a truncated or malformed file).
+	float ColoredFraction(const std::uint8_t* a_data, std::size_t a_size);
+
 	// One texel per 4x4 DDS block: 255 where every pixel of the block has alpha 255 and so does every
 	// block within the margin, 0 elsewhere. The image border counts as not opaque, so a margin also trims
 	// the edge. width and height are the block grid (480x270 for a 1920x1080 overlay).
