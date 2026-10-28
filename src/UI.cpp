@@ -14,6 +14,7 @@
 #include <cctype>
 #include <cmath>
 #include <cstring>
+#include <filesystem>
 #include <shellapi.h>
 #include <string>
 #include <vector>
@@ -114,6 +115,31 @@ namespace HONG::UI
 				resetArmed = false;
 			}
 			ImGuiMCP::TextDisabled("These buttons cover every page. Changes apply immediately; Save writes them to the INI.");
+		}
+
+		// The overlay's file under the game's Data folder; empty when it is not a loose file there (inside an
+		// archive, or in a virtual file system the shell cannot see).
+		std::filesystem::path LooseOverlayFile(const std::string& a_vfsPath)
+		{
+			std::error_code ec;
+			auto file = std::filesystem::absolute(std::filesystem::path(L"Data") / std::filesystem::path(a_vfsPath), ec);
+			return !ec && std::filesystem::is_regular_file(file, ec) ? file : std::filesystem::path();
+		}
+
+		void OverlayFileButtons(const std::string& a_vfsPath)
+		{
+			const auto file = LooseOverlayFile(a_vfsPath);
+			ImGuiMCP::BeginDisabled(file.empty());
+			if (ImGuiMCP::Button("Open file", { 0, 0 })) {
+				ShellExecuteW(nullptr, L"open", file.c_str(), nullptr, nullptr, SW_SHOWNORMAL);
+			}
+			ImGuiMCP::SameLine(0.0f, -1.0f);
+			if (ImGuiMCP::Button("Show in folder", { 0, 0 })) {
+				const auto args = L"/select,\"" + file.wstring() + L"\"";
+				ShellExecuteW(nullptr, L"open", L"explorer.exe", args.c_str(), nullptr, SW_SHOWNORMAL);
+			}
+			ImGuiMCP::EndDisabled();
+			Tip(file.empty() ? "Not a loose file in the Data folder (it is inside an archive or a virtual file system), so there is nothing to open. The path above is where mods put it." : "Open the DDS in your default image program, or show where it sits on disk so you can edit or replace it.");
 		}
 
 		// Text that opens a URL in the default browser when clicked.
@@ -391,6 +417,7 @@ namespace HONG::UI
 					ImGuiMCP::Text("World model: %s", current.model.empty() ? "(none)" : current.model.c_str());
 					if (current.found) {
 						ImGuiMCP::Text("Overlay: %s", current.overlayPath.c_str());
+						OverlayFileButtons(current.overlayPath);
 						if (current.openness >= 0.0f) {
 							ImGuiMCP::Text("Overlay see-through: %.0f%%", current.openness * 100.0f);
 						}
