@@ -487,11 +487,19 @@ namespace HONG::UI
 				static int artFilter = 0;
 				static const char* const kArtFilters[] = { "All helmets", "Without art", "Colored art", "Black masks", "Not checked yet" };
 				ImGuiMCP::Combo("Show", &artFilter, kArtFilters, static_cast<int>(std::size(kArtFilters)), -1);
-				Tip("Colored art and Black masks need Check art colors in the Coverage section.");
+				Tip("Colored art and Black masks check the art colors the first time they are chosen.");
+				const auto shown = static_cast<Debug::ArtFilter>(artFilter);
+				const auto coverage = Debug::GetCoverage();
+				if ((shown == Debug::ArtFilter::kColored || shown == Debug::ArtFilter::kBlack) && coverage.done && !coverage.classifying && coverage.classified == 0) {
+					Debug::ClassifyArt();
+				}
+				if (coverage.classifying) {
+					ImGuiMCP::TextDisabled("Checking art colors... %u of %u (matches fill in as it goes)", coverage.classified, coverage.covered);
+				}
 
 				constexpr std::size_t kMaxRows = 60;
 				std::size_t totalMatches = 0;
-				const auto helmets = Debug::FilterHelmets(filter, static_cast<Debug::ArtFilter>(artFilter), kMaxRows, totalMatches);
+				const auto helmets = Debug::FilterHelmets(filter, shown, kMaxRows, totalMatches);
 				ImGuiMCP::Text("%zu matching helmets", totalMatches);
 				for (const auto& helmet : helmets) {
 					const char* tag = "";
