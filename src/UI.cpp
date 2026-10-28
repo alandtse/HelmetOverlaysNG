@@ -155,6 +155,29 @@ namespace HONG::UI
 			return out;
 		}
 
+		// Suffix for a list row from ArtMetrics::ColoredFraction; empty while it is unknown.
+		const char* ArtTag(float a_color)
+		{
+			if (a_color < 0.0f) {
+				return "";
+			}
+			return a_color >= ArtMetrics::kColoredShare ? "  (colored)" : "  (black mask)";
+		}
+
+		// A list row that reads amber when its art has color; black masks and unchecked rows keep the default.
+		bool ArtSelectable(const std::string& a_label, bool a_selected, float a_color)
+		{
+			const bool colored = a_color >= ArtMetrics::kColoredShare;
+			if (colored) {
+				ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_Text, ImGuiMCP::ImVec4(0.90f, 0.62f, 0.0f, 1.0f));
+			}
+			const bool clicked = ImGuiMCP::Selectable(a_label.c_str(), a_selected, 0, { 0, 0 });
+			if (colored) {
+				ImGuiMCP::PopStyleColor(1);
+			}
+			return clicked;
+		}
+
 		std::string NexusSearchUrl(const std::string& a_query)
 		{
 			return "https://www.nexusmods.com/skyrimspecialedition/search/?gsearch=" + UrlEncode(a_query) + "&gsearchtype=mods";
@@ -578,14 +601,9 @@ namespace HONG::UI
 					const auto helmets = Debug::FilterHelmets(filter, shown, kMaxRows, totalMatches);
 					ImGuiMCP::Text("%zu matching helmets", totalMatches);
 					for (const auto& helmet : helmets) {
-						const char* tag = "";
-						if (helmet.art == 0) {
-							tag = "  (no art)";
-						} else if (helmet.color >= 0.0f) {
-							tag = helmet.color >= ArtMetrics::kColoredShare ? "  (colored)" : "  (black mask)";
-						}
+						const char* tag = helmet.art == 0 ? "  (no art)" : ArtTag(helmet.color);
 						const std::string label = helmet.name + "  [" + helmet.plugin + "]" + tag + "##" + std::to_string(helmet.id);
-						if (ImGuiMCP::Selectable(label.c_str(), helmet.id == previewing, 0, { 0, 0 })) {
+						if (ArtSelectable(label, helmet.id == previewing, helmet.color)) {
 							Debug::Preview(helmet.id);
 						}
 					}
