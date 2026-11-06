@@ -1,0 +1,57 @@
+{
+  "deployedAt": "2026-10-31T15:33:13-07:00",
+  "backup": "E:/tmp/hong-alpha255-se-20261031-153313",
+  "gameLaunched": false,
+  "commit": "31354a1b87bf6fcc1d96f9d1aa764e54da3dc487",
+  "commitSubject": "Only mask opacity that draws at alpha 255",
+  "branch": "main",
+  "change": "Mask gate requires the DRAWN alpha byte to be 255 (OverlayAlpha::IsFullyOpaque) instead of opacity >= 0.999f. Which opacities may mask changed; the drawn byte did not.",
+  "dllSHA256": "705CB423B1A9C4FD8028F85FD766AD443353BB72BFFCD94A1510E67DC3C437B6",
+  "pdbSHA256": "37AD2C4B70632326D47D7FC4C5C1D71A0D9D9BEBF4479BC07351C127F7B4ABC8",
+  "dllByteIdenticalToTreeBuild": true,
+  "pdbByteIdenticalToTreeBuild": true,
+  "dllNormalisedSHA256": "e78ca5a4ae3f482f199a3dd137c64bd992cda014c74f23f00b56d4e96b3d1f13",
+  "normalisedMatchTree": true,
+  "freshness": "headers touched before build; 934 assertions / 88 cases green; separate [mask] run confirmed the new cases compiled (618 assertions, 22 cases)",
+  "pdbLink": {
+    "rsdsGUID": "ea53f9647f477c498276f0e423526ac3",
+    "dllAge": 28,
+    "method": "SECONDARY sanity check only - GUID is per-project and a PDB holds multiple info streams, so (GUID,age) is not a unique build identity; byte identity above is the primary check"
+  },
+  "mutationProof": "restoring the old >= 0.999f comparison fails the suite (tests/test_overlay_alpha.cpp:28); rounding instead of truncating also fails (:20)",
+  "whatThisDoesNotProve": "Not cross-machine reproducible: no scratch-worktree rebuild of this commit was run, so this attests that ONE machine built these bytes from this revision, not that any machine would.",
+  "whyThisExists": "A hash records the bytes shipped, not that they came from the intended source.",
+  "symbolsExpectPresent": {
+    "OverlayAlpha": 5,
+    "IsFullyOpaque": 1,
+    "MaskInset": 7,
+    "BrowsePage": 40,
+    "SelectPage": 24
+  },
+  "symbolsContainer": "PDB. These are C++ symbol names and live in the .pdb, NOT the .dll - probing the DLL returns 0 for all of them and that 0 is not evidence the record is false. Counts must match EXACTLY, not >=.",
+  "backupHolds": "PRE-deployment files, captured before the copy. backup/HelmetOverlaysNG.dll is deliberately NOT equal to dllSHA256 and appears in no hash field; a mismatch there means the backup worked, not that the install was tampered with.",
+  "backupFileHashes": {
+    "HelmetOverlaysNG.dll": "3B12F1B2B66A4E26B72BE0F497A80D84247C1EB52DE4109BEFCB005305FD7781",
+    "HelmetOverlaysNG.pdb": "1DA2B67BD573121843DAE04B12B47617E590518F656616E7A59181C44907F13A",
+    "HelmetOverlaysNG.ini": "E1FC3C8E6E830B7B3EF23AC08B1651909963A20DFA83D08D3C175B3C2D2E28F9"
+  },
+  "backupDiffersFromDeployedAsExpected": true,
+  "schemaVersion": 2,
+  "treeBuildDLLSHA256": null,
+  "treeBuildPDBSHA256": null,
+  "treeBuildFieldsProvenance": "NOT RECORDED at deploy time. The deployed artefact was verified byte-identical to the tree build then, but that tree-build hash was not written down separately, and the tree has since moved to 3cef032. Null means \"not captured\", NOT \"failed\" - reconstructing it now would be a fabricated field. The byte identity claim stands; the independent hash does not exist.",
+  "treeBuildComparable": false,
+  "deploymentArtifactPreservation": "No deployed/ copy in this directory. Survives only because the NEXT record's backup/ holds these bytes.",
+  "normalisedDiffersFromPreviousDeploy": true,
+  "normalisedSource": "Computed from the preserved DEPLOYED bytes, not from the backup in this directory.",
+  "mutationProofProvenance": "Recorded at deploy time as: restoring the old >= 0.999f comparison fails the suite (tests/test_overlay_alpha.cpp:28); rounding instead of truncating also fails (:20) Provenance added during a later audit; the proof text itself is unchanged.",
+  "treeBuildDLLSHA256Provenance": "NOT RECORDED at deploy time: this record predates the practice of capturing the tree-build hash before deploying. Null means not captured, NOT a failed comparison.",
+  "treeBuildPDBSHA256Provenance": "NOT RECORDED at deploy time, and never captured by any record in this chain: the tree-build PDB hash was asked for by the schema but the deploy script never wrote it from this deploy onward. Null means the field was never observed, not that a comparison failed.",
+  "postHocAnnotations": [
+    {
+      "at": "2026-10-31T22:53:05+00:00",
+      "added": ["treeBuildDLLSHA256Provenance", "treeBuildPDBSHA256Provenance"],
+      "note": "Added 2026-10-31T22:53:05+00:00 by HONG after the record was written, when a checker finally read the records. No measurement was invented: this string explains an existing null, and the null and every hash in the record are unchanged."
+    }
+  ]
+}

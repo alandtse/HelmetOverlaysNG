@@ -1,0 +1,82 @@
+{
+  "deployedAt": "2026-10-31T15:26:51-07:00",
+  "backup": "E:/tmp/hong-reformat-se-20261031-152651",
+  "gameLaunched": false,
+  "note": "Deployed after pre-commit reformatted the tree; source delta vs prior install is layout-only by inspection but NOT asserted as behaviourally identical.",
+  "dllSHA256": "3B12F1B2B66A4E26B72BE0F497A80D84247C1EB52DE4109BEFCB005305FD7781",
+  "pdbSHA256": "1DA2B67BD573121843DAE04B12B47617E590518F656616E7A59181C44907F13A",
+  "treeBuildDLLSHA256": "3B12F1B2B66A4E26B72BE0F497A80D84247C1EB52DE4109BEFCB005305FD7781",
+  "treeBuildPDBSHA256": "1DA2B67BD573121843DAE04B12B47617E590518F656616E7A59181C44907F13A",
+  "dllByteIdenticalToTreeBuild": true,
+  "pdbByteIdenticalToTreeBuild": true,
+  "dllNormalisedSHA256": "3aa3d8f916e7293ecc9715998aead8b5eaf0fda15c4fc617ec7637033ca36b23",
+  "treeBuildNormalisedSHA256": "0934f621a1ce1a610899640c99bb184c617b8cf06e3ec37b387104acda21f3c9",
+  "normalisedMatchTree": true,
+  "freshness": "tree fully recompiled (touch src/*.cpp src/*.h) before this build; same normalised hash reproduced by two consecutive rebuilds and one forced touch-all rebuild",
+  "pdbLink": {
+    "rsdsGUID": "ea53f9647f477c498276f0e423526ac3",
+    "dllAge": 26,
+    "pdbInfoStreams": [
+      {
+        "guid": "ea53f9647f477c498276f0e423526ac3",
+        "age": 26,
+        "signature": "0x6ae58ae2"
+      },
+      {
+        "guid": "ea53f9647f477c498276f0e423526ac3",
+        "age": 26,
+        "signature": "0x6ae58ae2"
+      },
+      {
+        "guid": "ea53f9647f477c498276f0e423526ac3",
+        "age": 24,
+        "signature": "0x6ae58ae2"
+      }
+    ],
+    "guidAndAgeMatch": true,
+    "method": "DLL CV_INFO_PDB70: GUID(16) then age(4). PDB 7.0 info stream: Version(4) Signature(4) Age(4) GUID(16) - age BEFORE GUID. Same fields, opposite order, so the correct offset depends on which file you are reading."
+  },
+  "pdbLinkLimitations": "GUID alone is NOT a per-build identity: this project has shipped two distinct GUIDs (ee8448a8... older, ea53f964... current), and a PDB carries MULTIPLE info streams (this one has ages 26, 26, 24), so (GUID, age) is not unique across history either. Byte identity to the tree build is the decisive check; the link check only rules out an unrelated PDB.",
+  "symbolsExpectPresent": {
+    "MaskInset": 6,
+    "Along": 11,
+    "ArtFitFor": 1,
+    "BrowsePage": 40,
+    "SelectPage": 24,
+    "NoteMaskSettings": 4
+  },
+  "whatThisDoesNotProve": "Superseded by sourceAttestation: the tree is now committed (commit above) and the deployed bytes are byte-identical to a build of it, so bytes ARE tied to a revision. Still not proven: that a rebuild of this commit elsewhere reproduces these bytes (no cross-machine reproducible-build check was run). And the record makes no behavioural claim about the pre-commit layout-only delta.",
+  "whyThisExists": "A hash records the bytes shipped, not that they came from the intended source. Symbol presence, PDB link and byte identity to a provably-fresh build are evidence a hash cannot give on its own.",
+  "sourceAttestation": {
+    "commit": "05a0adf0598c2c03f29db214c1e82aa45b62756b",
+    "branch": "main",
+    "treeCleanAtBuild": true,
+    "treeCleanNote": "only untracked .pi/ (agent scratch dir, gitignored by omission, not part of the build)",
+    "method": "Built from a clean tree at this commit; deployed DLL and PDB are BYTE-IDENTICAL to that build output. This is what upgrades the record from artifact-attested to source-attested."
+  },
+  "symbolsContainer": "PDB. These are C++ symbol names and live in the .pdb, NOT the .dll - probing the DLL returns 0 for all of them and that 0 is not evidence the record is false. Counts must match EXACTLY, not >=.",
+  "backupHolds": "PRE-deployment files, captured before the copy. Any DLL in this directory is deliberately NOT equal to dllSHA256; a mismatch there means the backup worked, not that the install was tampered with. This directory holds the PREVIOUS deploy's artefact (74C8BC20...), which predates any attestation record, so it is documented here rather than attested by a record of its own.",
+  "schemaVersion": 2,
+  "commit": "05a0adf0598c2c03f29db214c1e82aa45b62756b",
+  "commitProvenance": "Added in place on 2026-10-31 after the fact; originally recorded under sourceAttestation.commit. Same value, promoted to top level so every record carries it in the same place.",
+  "backupFileHashes": {
+    "HelmetOverlaysNG.dll": "74C8BC204B7D5A078DD4E73DAB8EF37F3773F16BD7860B58261E02C3C62D96BC",
+    "HelmetOverlaysNG.pdb": "C1E87A4A5649D05FA7A467F5E78161001844757C40E7E65356DD491D1EDD42FC",
+    "HelmetOverlaysNG.ini": "absent"
+  },
+  "backupDiffersFromDeployedAsExpected": true,
+  "treeBuildFieldsProvenance": "Observed at deploy time: treeBuildDLLSHA256 and treeBuildPDBSHA256 were captured from the live tree build and the deployed artefact was byte-identical to them. Re-confirmed afterwards at commit 05a0adf with a clean working tree.",
+  "treeBuildComparable": true,
+  "commitSubject": "VR occlusion handover, flat mask correctness, and list pagination",
+  "branch": "main",
+  "change": "VR occlusion handover, flat mask correctness, and list pagination",
+  "changeProvenance": "Derived from the commit subject, not written at deploy time.",
+  "mutationProof": null,
+  "mutationProofProvenance": "Layout-only reformat plus the flat mask correctness work; the DLL change is formatting and the VR handover. No mutation testing was done for this deploy.",
+  "backupFileProvenance": "HelmetOverlaysNG.ini hash was recorded at deploy time but the file was NOT kept in this directory, so that one hash cannot be re-checked here. Recorded-but-unverifiable, stated rather than left to look verifiable.",
+  "deploymentArtifactPreservation": "No deployed/ copy in this directory. Survives only because the NEXT record's backup/ holds these bytes; that is true of every non-newest deploy.",
+  "normalisedDiffersFromPreviousDeploy": null,
+  "normalisedDiffersFromPreviousDeployProvenance": "First record in the chain - no previous deploy to compare. Null means \"not applicable\", not \"not measured\".",
+  "normalisedSource": "Computed from the preserved DEPLOYED bytes, not from the backup in this directory.",
+  "postHocAnnotations": []
+}

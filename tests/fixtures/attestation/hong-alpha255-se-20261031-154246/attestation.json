@@ -1,0 +1,54 @@
+{
+  "schemaVersion": 2,
+  "deployedAt": "2026-10-31T15:52:00-07:00",
+  "backup": "E:/tmp\\hong-alpha255-se-20261031-154246",
+  "gameLaunched": false,
+  "commit": "08c0884ba6aeee877d74e9f37b0a8dc4bbeee7f7",
+  "commitSubject": "Make the mask permit a type, not a bool",
+  "branch": "main",
+  "change": "Mask permit is now a type only PermitMask can construct; call site cannot substitute its own comparison. Behaviour unchanged.",
+  "dllSHA256": "84D5EDB22E6D49703A7662FD774817069C006340D8A0558B1CA083F39FCD75BF",
+  "pdbSHA256": "37E9EF9F2D561F68E4C83CCFD4D76213531F43B497C17D2DDECC22074843CF33",
+  "treeBuildDLLSHA256": "84D5EDB22E6D49703A7662FD774817069C006340D8A0558B1CA083F39FCD75BF",
+  "treeBuildPDBSHA256": "37E9EF9F2D561F68E4C83CCFD4D76213531F43B497C17D2DDECC22074843CF33",
+  "treeBuildFieldsProvenance": "Observed at deploy time from the tree build, which the deployed artefact was byte-identical to.",
+  "dllByteIdenticalToTreeBuild": true,
+  "pdbByteIdenticalToTreeBuild": true,
+  "dllNormalisedSHA256": "cb09a5455b947e5603907c7cee1a397f23ba6da9f84dfa8d9941b3cae18363a4",
+  "normalisedMatchTree": true,
+  "normalisedDiffersFromPreviousDeploy": true,
+  "freshness": "plugin target rebuilt separately after the tests (xmake run builds only the test target); 945 assertions / 91 cases green",
+  "pdbLink": {
+    "rsdsGUID": "ea53f9647f477c498276f0e423526ac3",
+    "dllAge": 32,
+    "method": "SECONDARY sanity check only - GUID is per-project and a PDB holds multiple info streams; byte identity is primary"
+  },
+  "symbolsExpectPresent": {
+    "MaskPermit": 6,
+    "PermitMask": 1,
+    "IsFullyOpaque": 1,
+    "OverlayAlpha": 10,
+    "BrowsePage": 40
+  },
+  "symbolsContainer": "PDB. C++ symbol names live in the .pdb, NOT the .dll - probing the DLL returns 0 for all of them and that 0 is not evidence the record is false. Counts must match EXACTLY, not >=.",
+  "mutationProof": "float comparison back inside PermitMask fails test_overlay_alpha.cpp:56 and :68; forged-permit case pins that a default MaskPermit is never allowed.",
+  "whatThisDoesNotProve": "Not cross-machine reproducible: no scratch-worktree rebuild of this commit was run, so this attests that ONE machine built these bytes from this revision, not that any machine would.",
+  "whyThisExists": "A hash records the bytes shipped, not that they came from the intended source.",
+  "backupFileHashes": {
+    "HelmetOverlaysNG.dll": "715AE1C1034CA15D7302F1DC571E5B51CD52EC75405C0D6D250143B30561CC6B",
+    "HelmetOverlaysNG.pdb": "72F75F47C5FE9891E89492D879A5308841E2FE84A105894C3E24624A3238D64E",
+    "HelmetOverlaysNG.ini": "E1FC3C8E6E830B7B3EF23AC08B1651909963A20DFA83D08D3C175B3C2D2E28F9"
+  },
+  "backupDiffersFromDeployedAsExpected": true,
+  "backupHolds": "PRE-deployment files. backup DLL is deliberately NOT equal to dllSHA256; a mismatch means the backup worked.",
+  "deployedCopiesPreserved": {
+    "directory": "deployed/",
+    "dllSHA256": "84D5EDB22E6D49703A7662FD774817069C006340D8A0558B1CA083F39FCD75BF",
+    "pdbSHA256": "37E9EF9F2D561F68E4C83CCFD4D76213531F43B497C17D2DDECC22074843CF33",
+    "matchesRecord": true
+  },
+  "whyDeployedCopyExists": "Every EARLIER deploy survives the install being overwritten, because a later record's backup/ holds it. The newest deploy had no such record, so its bytes existed only in the live install - one Vortex/MO2 overwrite or reinstall from a hash alone. This directory is that copy. Copy the live DLL/PDB here at each deploy; never move this directory.",
+  "normalisedSource": "Computed from the preserved DEPLOYED bytes, not from the backup in this directory.",
+  "mutationProofProvenance": "Recorded at deploy time as: float comparison back inside PermitMask fails test_overlay_alpha.cpp:56 and :68; forged-permit case pins that a default MaskPermit is never allowed. Provenance added during a later audit; the proof text itself is unchanged.",
+  "postHocAnnotations": []
+}

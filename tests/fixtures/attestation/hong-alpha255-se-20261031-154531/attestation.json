@@ -1,0 +1,60 @@
+{
+  "schemaVersion": 2,
+  "deployedAt": "2026-10-31T16:12:00-07:00",
+  "backup": "E:/tmp\\hong-alpha255-se-20261031-154531",
+  "gameLaunched": false,
+  "commit": "9f87d1c3925e8e7d4a748cc6185520a9d1c7409e",
+  "commitSubject": "Drive opacity in the byte it is drawn with",
+  "branch": "main",
+  "change": "Opacity slider driven in drawn bytes; readout derived from the byte. UI only, no renderer change.",
+  "dllSHA256": "996353085C939D3FC9253662EC871F9137DCE76849BEBDA629B6A0623C30876C",
+  "pdbSHA256": "A49E8210756FBF0F795589A519D0DB3128CCB549C11E9A1DB6A7C788F2EC9B18",
+  "treeBuildDLLSHA256": "996353085C939D3FC9253662EC871F9137DCE76849BEBDA629B6A0623C30876C",
+  "treeBuildFieldsProvenance": "Observed at deploy time from the tree build.",
+  "dllByteIdenticalToTreeBuild": true,
+  "pdbByteIdenticalToTreeBuild": true,
+  "dllNormalisedSHA256": "aaf2bc0942261f7c00aa5aa363e16e890133e9b2198ef5f8bf017685b8d32aa1",
+  "normalisedSource": "Computed from the preserved DEPLOYED bytes.",
+  "normalisedDiffersFromPreviousDeploy": true,
+  "freshness": "plugin target rebuilt separately after the tests; 2383 assertions / 94 cases green",
+  "pdbLink": {
+    "rsdsGUID": "ea53f9647f477c498276f0e423526ac3",
+    "dllAge": 34,
+    "method": "SECONDARY sanity check only; byte identity is primary"
+  },
+  "symbolsExpectPresent": {
+    "MaskPermit": 6,
+    "PermitMask": 1,
+    "OpacitySlider": 7,
+    "OverlayAlpha": 14,
+    "BrowsePage": 40
+  },
+  "symbolsContainer": "PDB. C++ symbol names live in the .pdb, NOT the .dll - probing the DLL returns 0 for all of them and that 0 is not evidence the record is false. Counts must match EXACTLY, not >=.",
+  "mutationProof": "Putting the float comparison back inside PermitMask fails test_overlay_alpha.cpp:56 and :68. The new all-256-bytes case fails if Byte stops being truncating.",
+  "mutationProofProvenance": "The slider widget itself is NOT reachable from the headless suite: restoring \"%.0f%%\" in the SliderInt format still passes. The guard is on the byte property, not on the widget.",
+  "whatThisDoesNotProve": "Not cross-machine reproducible: no scratch-worktree rebuild of this commit was run. Also the new tests cannot see the ImGui widget, only the arithmetic it relies on.",
+  "whyThisExists": "A hash records the bytes shipped, not that they came from the intended source.",
+  "backupFileHashes": {
+    "HelmetOverlaysNG.dll": "84D5EDB22E6D49703A7662FD774817069C006340D8A0558B1CA083F39FCD75BF",
+    "HelmetOverlaysNG.pdb": "37E9EF9F2D561F68E4C83CCFD4D76213531F43B497C17D2DDECC22074843CF33",
+    "HelmetOverlaysNG.ini": "E1FC3C8E6E830B7B3EF23AC08B1651909963A20DFA83D08D3C175B3C2D2E28F9"
+  },
+  "backupDiffersFromDeployedAsExpected": true,
+  "backupHolds": "PRE-deployment files. backup DLL is deliberately NOT equal to dllSHA256; a mismatch means the backup worked.",
+  "deployedCopiesPreserved": {
+    "directory": "deployed/",
+    "dllSHA256": "996353085C939D3FC9253662EC871F9137DCE76849BEBDA629B6A0623C30876C",
+    "pdbSHA256": "A49E8210756FBF0F795589A519D0DB3128CCB549C11E9A1DB6A7C788F2EC9B18",
+    "matchesRecord": true
+  },
+  "whyDeployedCopyExists": "Every earlier deploy survives an install overwrite because a later backup/ holds it. The newest had no such record, so its bytes lived only in the live install. Copy live DLL/PDB to deployed/ at each deploy; never move that directory.",
+  "treeBuildPDBSHA256": null,
+  "treeBuildPDBSHA256Provenance": "LOST at this deploy: the deploy script stopped writing this field here. Not observed as a tree-build value, and the preserved deployed PDB at deployed/HelmetOverlaysNG.pdb (A49E8210...) is the DEPLOYED artefact, not the tree build, so it does not answer this field. Null means lost from the schema, not a failed comparison.",
+  "postHocAnnotations": [
+    {
+      "at": "2026-10-31T22:53:05+00:00",
+      "added": ["treeBuildPDBSHA256", "treeBuildPDBSHA256Provenance"],
+      "note": "Added 2026-10-31T22:53:05+00:00 by HONG after the record was written, when a checker finally read the records. No measurement was invented: this string explains an existing null, and the null and every hash in the record are unchanged."
+    }
+  ]
+}

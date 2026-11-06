@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 2,
+  "deployedAt": "2026-10-31T16:34:00-07:00",
+  "backup": "E:/tmp\\hong-alpha255-se-20261031-155010",
+  "gameLaunched": false,
+  "commit": "9d2622a05bf80fdd2a5be466443375233696bd15",
+  "commitSubject": "Compile and reflect the mask shader instead of only reading it",
+  "branch": "main",
+  "change": "Mask shaders and cbuffer moved to src/MaskShaders.h; tests compile and reflect them; shipped-artefact checker added. Rendering behaviour unchanged.",
+  "dllSHA256": "D8AB6570EBE1D94FA9048754EF60CE405EB1DD8D4BB8AF212E14F8D6EBB2E8F8",
+  "pdbSHA256": "D6F79F34032542483CBCD59036113751CD298603596460978EAB8B6252A516F0",
+  "treeBuildDLLSHA256": "D8AB6570EBE1D94FA9048754EF60CE405EB1DD8D4BB8AF212E14F8D6EBB2E8F8",
+  "treeBuildFieldsProvenance": "Observed at deploy time from the tree build.",
+  "dllByteIdenticalToTreeBuild": true,
+  "pdbByteIdenticalToTreeBuild": true,
+  "dllNormalisedSHA256": "75121c431a1c6bec81fe1593f76d3cc64f34fcc03cc008955038d7c508d6d794",
+  "normalisedSource": "Computed from the preserved DEPLOYED bytes, not from the backup in this directory.",
+  "normalisedDiffersFromPreviousDeploy": true,
+  "freshness": "plugin rebuilt after the tests; 2455 assertions / 99 cases green; pre-commit run on the changed files",
+  "pdbLink": {
+    "rsdsGUID": "ea53f9647f477c498276f0e423526ac3",
+    "dllAge": 37,
+    "method": "SECONDARY sanity check only; byte identity is primary"
+  },
+  "symbolsExpectPresent": {
+    "MaskPermit": 6,
+    "PermitMask": 1,
+    "OpacitySlider": 7,
+    "MaskShaders": 2,
+    "Constants": 70,
+    "ID3D11ShaderReflection": 0
+  },
+  "symbolsContainer": "PDB. C++ symbol names live in the .pdb, NOT the .dll - probing the DLL returns 0 for all of them and that 0 is not evidence the record is false. Counts must match EXACTLY, not >=.",
+  "mutationProof": "Adding float2 reservedPad to the HLSL cbuffer fails cbDesc.Size in test_mask_shaders.cpp:98 while every text assertion still passes. sampled <= 0.5, maskUV <=/>=, max instead of min, and return 1.0 each fail the text case. Reordering the struct fails the offsetof comparison.",
+  "mutationProofProvenance": "Recorded at deploy time. The reflection test is the one that mattered: text assertions were blind to a cbuffer that grew.",
+  "whatThisDoesNotProve": "Not cross-machine reproducible: no scratch-worktree rebuild of this commit was run. The reflection test proves the compiled HLSL matches the struct; the artefact checker proves the DLL contains the literals; neither proves the runtime backend compiled them at run time on this machine.",
+  "whyThisExists": "A hash records the bytes shipped, not that they came from the intended source.",
+  "backupFileHashes": {
+    "HelmetOverlaysNG.dll": "996353085C939D3FC9253662EC871F9137DCE76849BEBDA629B6A0623C30876C",
+    "HelmetOverlaysNG.pdb": "A49E8210756FBF0F795589A519D0DB3128CCB549C11E9A1DB6A7C788F2EC9B18",
+    "HelmetOverlaysNG.ini": "E1FC3C8E6E830B7B3EF23AC08B1651909963A20DFA83D08D3C175B3C2D2E28F9"
+  },
+  "backupDiffersFromDeployedAsExpected": true,
+  "backupHolds": "PRE-deployment files. backup DLL is deliberately NOT equal to dllSHA256; a mismatch means the backup worked.",
+  "deployedCopiesPreserved": {
+    "directory": "deployed/",
+    "dllSHA256": "D8AB6570EBE1D94FA9048754EF60CE405EB1DD8D4BB8AF212E14F8D6EBB2E8F8",
+    "pdbSHA256": "D6F79F34032542483CBCD59036113751CD298603596460978EAB8B6252A516F0",
+    "matchesRecord": true
+  },
+  "whyDeployedCopyExists": "Every earlier deploy survives an install overwrite because a later backup/ holds it. The newest had no such record, so its bytes lived only in the live install. The deploy script now copies the installed DLL/PDB to deployed/ and fails if the copy does not match; this record is the first made by that version.",
+  "shippedShaderCheck": "tools/check_shipped_shaders.py run against the deployed DLL before recording: both kVertexShader and kPixelShader literals found verbatim.",
+  "treeBuildPDBSHA256": null,
+  "treeBuildPDBSHA256Provenance": "LOST at this deploy: still absent, and not recoverable. The tree build for 9d2622a was not preserved separately from the deployed artefact, and rebuilding it now would carry a different link stamp rather than being this build. Null means lost, not failed.",
+  "postHocAnnotations": [
+    {
+      "at": "2026-10-31T22:53:05+00:00",
+      "added": ["treeBuildPDBSHA256", "treeBuildPDBSHA256Provenance"],
+      "note": "Added 2026-10-31T22:53:05+00:00 by HONG after the record was written, when a checker finally read the records. No measurement was invented: this string explains an existing null, and the null and every hash in the record are unchanged."
+    }
+  ]
+}

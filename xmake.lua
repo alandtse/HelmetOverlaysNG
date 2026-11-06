@@ -152,7 +152,7 @@ target("HelmetOverlaysNG-Tests")
 set_kind("binary")
 set_default(false)
 set_group("tests")
-add_packages("catch2")
+add_packages("catch2", "nlohmann_json")
 add_includedirs("src")
 add_files(
     "tests/**.cpp",
@@ -162,3 +162,5 @@ add_files(
     "src/SoundEffect.cpp",
     "src/TintColor.cpp"
 )
+add_syslinks("d3dcompiler", "d3d11")
+add_defines('HONG_SOURCE_DIR="' .. os.projectdir():gsub("\\", "/") .. '"')

@@ -11,3 +11,10 @@ build/
 src/Version.h
 .gstack/
 *.code-workspace
+# Written by tools/check_artifact_fresh.py --record: it describes THIS machine's last
+# build, so committing it would ship one developer's build state as fact.
+freshness.json
+
+__pycache__/
+*.pyc
+.pi/

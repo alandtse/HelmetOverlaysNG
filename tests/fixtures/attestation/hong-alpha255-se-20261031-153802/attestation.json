@@ -1,0 +1,49 @@
+{
+  "deployedAt": "2026-10-31T15:38:00-07:00",
+  "backup": "E:/tmp\\hong-alpha255-se-20261031-153802",
+  "gameLaunched": false,
+  "commit": "3cef03222ef2eaaaff0b40b63063944095a50d60",
+  "commitSubject": "Extract the mask publish gate so a test can pin it",
+  "branch": "main",
+  "change": "Extracted MayPublishMask so the publish decision is testable. Behaviour identical to 31354a1.",
+  "dllSHA256": "715AE1C1034CA15D7302F1DC571E5B51CD52EC75405C0D6D250143B30561CC6B",
+  "pdbSHA256": "72F75F47C5FE9891E89492D879A5308841E2FE84A105894C3E24624A3238D64E",
+  "dllByteIdenticalToTreeBuild": true,
+  "pdbByteIdenticalToTreeBuild": true,
+  "dllNormalisedSHA256": "1a365da58457b9a29b25b339c6a2552645817955c65ad4df4cefd747737164d9",
+  "normalisedMatchTree": true,
+  "normalisedDiffersFromPreviousDeploy": true,
+  "freshness": "plugin target rebuilt separately from the test target (the earlier DLL predated the source change because xmake run builds only the test target); 942 assertions / 90 cases green",
+  "pdbLink": {
+    "rsdsGUID": "ea53f9647f477c498276f0e423526ac3",
+    "dllAge": 29,
+    "method": "SECONDARY sanity check only - GUID is per-project and a PDB holds multiple info streams; byte identity above is primary"
+  },
+  "symbolsExpectPresent": {
+    "MayPublishMask": 1,
+    "IsFullyOpaque": 1,
+    "OverlayAlpha": 5,
+    "MaskInset": 6,
+    "BrowsePage": 40
+  },
+  "symbolsContainer": "PDB. These are C++ symbol names and live in the .pdb, NOT the .dll - probing the DLL returns 0 for all of them and that 0 is not evidence the record is false. Counts must match EXACTLY, not >=.",
+  "mutationProof": "reverting the gate to `opacity >= 0.999f` fails test_overlay_alpha.cpp:56; dropping the draw-count condition fails :67. Both verified before deploy.",
+  "whatThisDoesNotProve": "Not cross-machine reproducible: no scratch-worktree rebuild of this commit was run, so this attests that ONE machine built these bytes from this revision, not that any machine would.",
+  "whyThisExists": "A hash records the bytes shipped, not that they came from the intended source.",
+  "backupHolds": "PRE-deployment files. backup/HelmetOverlaysNG.dll is deliberately NOT equal to dllSHA256; a mismatch there means the backup worked.",
+  "backupFileHashes": {
+    "HelmetOverlaysNG.dll": "705CB423B1A9C4FD8028F85FD766AD443353BB72BFFCD94A1510E67DC3C437B6",
+    "HelmetOverlaysNG.pdb": "37AD2C4B70632326D47D7FC4C5C1D71A0D9D9BEBF4479BC07351C127F7B4ABC8",
+    "HelmetOverlaysNG.ini": "E1FC3C8E6E830B7B3EF23AC08B1651909963A20DFA83D08D3C175B3C2D2E28F9"
+  },
+  "backupDiffersFromDeployedAsExpected": true,
+  "schemaVersion": 2,
+  "treeBuildDLLSHA256": "715AE1C1034CA15D7302F1DC571E5B51CD52EC75405C0D6D250143B30561CC6B",
+  "treeBuildPDBSHA256": "72F75F47C5FE9891E89492D879A5308841E2FE84A105894C3E24624A3238D64E",
+  "treeBuildFieldsProvenance": "Observed at deploy time: the tree build was byte-identical to the deployed artefact. Re-confirmed after the fact against the live tree at commit 3cef032 with a clean working tree.",
+  "treeBuildComparable": true,
+  "deploymentArtifactPreservation": "deployed/ present and verified at creation.",
+  "normalisedSource": "Computed from the preserved DEPLOYED bytes, not from the backup in this directory.",
+  "mutationProofProvenance": "Recorded at deploy time as: reverting the gate to `opacity >= 0.999f` fails test_overlay_alpha.cpp:56; dropping the draw-count condition fails :67. Both verified before deploy. Provenance added during a later audit; the proof text itself is unchanged.",
+  "postHocAnnotations": []
+}
