@@ -8,11 +8,12 @@
 
 namespace HONG::OverlayMask
 {
+	// Flat-screen only. VR occlusion belongs to ImGui VR Helper.
 	// Hooks the start of the world main batch render so the depth write below runs first.
 	// Call at kPostPostLoad, after SKSE::AllocTrampoline.
 	void Install();
 
 	// Sets the mask for the next world render. Main thread, after the overlay has been updated;
-	// a_fit is how much of the display the art covers; a_vrCoverage is the VR plane coverage of each eye.
-	void Publish(const OverlayController::MaskCandidate& a_candidate, ArtFit::Fraction a_fit, float a_vrCoverage);
+	// a_fit is how much of the flat-screen display the art covers.
+	void Publish(const OverlayController::MaskCandidate& a_candidate, ArtFit::Fraction a_fit);
 }

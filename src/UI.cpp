@@ -21,11 +21,13 @@
 
 namespace logger = SKSE::log;
 
+#include "OverlayAlpha.h"
 #include "SKSEMenuFramework.h"
 
 #include "ArtMetrics.h"
 #include "ArtName.h"
 #include "Debug.h"
+#include "MaskPublish.h"
 #include "Muffle.h"
 #include "Settings.h"
 #include "TextMatch.h"
@@ -40,6 +42,23 @@ namespace HONG::UI
 		{
 			ImGuiMCP::InputTextWithHint(a_id, a_hint, a_buffer, a_size, 0, nullptr, nullptr);
 		}
+		void BrowseNavigation(std::size_t& a_page, std::size_t a_pages)
+		{
+			ImGuiMCP::BeginDisabled(a_page == 0);
+			if (ImGuiMCP::Button("Previous##hong_preview", { 0, 0 })) {
+				--a_page;
+			}
+			ImGuiMCP::EndDisabled();
+			ImGuiMCP::SameLine(0.0f, -1.0f);
+			ImGuiMCP::Text("Page %zu of %zu", a_page + 1, a_pages);
+			ImGuiMCP::SameLine(0.0f, -1.0f);
+			ImGuiMCP::BeginDisabled(a_page + 1 >= a_pages);
+			if (ImGuiMCP::Button("Next##hong_preview", { 0, 0 })) {
+				++a_page;
+			}
+			ImGuiMCP::EndDisabled();
+		}
+
 		void Tip(const char* a_text)
 		{
 			if (ImGuiMCP::IsItemHovered(ImGuiMCP::ImGuiHoveredFlags_AllowWhenDisabled)) {
@@ -54,6 +73,30 @@ namespace HONG::UI
 			const bool changed = ImGuiMCP::SliderFloat(a_label, &percent, a_range.min * 100.0f, a_range.max * 100.0f, "%.0f%%", ImGuiMCP::ImGuiSliderFlags_AlwaysClamp);
 			if (changed) {
 				*a_value = percent / 100.0f;
+			}
+			return changed;
+		}
+
+		// Opacity, labelled in the byte the renderer draws: a percent slider can sit at 254 while printing 100%, and the
+		// opaque mask keys off the drawn byte.
+		bool OpacitySlider(const char* a_label, float* a_value)
+		{
+			int drawn = static_cast<int>(OverlayAlpha::Byte(*a_value));
+			bool changed = false;
+			const std::string id = std::string("##hong_opacity_") + a_label;
+			ImGuiMCP::TextUnformatted(a_label);
+			ImGuiMCP::SameLine();
+			if (ImGuiMCP::SliderInt(id.c_str(), &drawn, 0, 255, "", ImGuiMCP::ImGuiSliderFlags_AlwaysClamp)) {
+				*a_value = static_cast<float>(drawn) / 255.0f;
+				changed = true;
+			}
+			// The readout is derived from the byte, never from the input float.
+			const int shown = static_cast<int>(OverlayAlpha::Byte(*a_value));
+			ImGuiMCP::SameLine();
+			if (shown == 255) {
+				ImGuiMCP::TextUnformatted("100%");
+			} else {
+				ImGuiMCP::Text("%.1f%%", static_cast<float>(shown) / 255.0f * 100.0f);
 			}
 			return changed;
 		}
@@ -232,8 +275,8 @@ namespace HONG::UI
 			}
 
 			if (ImGuiMCP::CollapsingHeader("Appearance", ImGuiMCP::ImGuiTreeNodeFlags_DefaultOpen)) {
-				PercentSlider("Opacity", &s->opacity, Range::kOpacity);
-				Tip("Overall strength of the overlay art (the original MCM's \"Alpha\").");
+				OpacitySlider("Opacity", &s->opacity);
+				Tip("Overall strength of the overlay art.");
 				ImGuiMCP::SliderFloat("Scale", &s->scale, Range::kScale.min, Range::kScale.max, "%.2f", ImGuiMCP::ImGuiSliderFlags_AlwaysClamp);
 				Tip("Uniform scale about the screen center. 1.0 covers the screen with the 16:9 art; larger crops the edges.");
 				PercentSlider("Vertical position (% of height)", &s->verticalOffset, Range::kVerticalOffset);
@@ -280,28 +323,28 @@ namespace HONG::UI
 					Tip("Multiplier on how far the overlay lags; 1.0 is the default amount.");
 					ImGuiMCP::EndDisabled();
 					ImGuiMCP::Checkbox("Jump, strafe and sprint motion", &s->motion);
-					Tip("Short nudges of the overlay when you jump, strafe or start sprinting, as in the original mod. The opaque mask follows them.");
+					Tip("Short nudges of the overlay when you jump, strafe or start sprinting.");
 					ImGuiMCP::BeginDisabled(!s->motion);
 					ImGuiMCP::SliderFloat("Motion strength", &s->motionStrength, Range::kMotionStrength.min, Range::kMotionStrength.max, "%.2f", ImGuiMCP::ImGuiSliderFlags_AlwaysClamp);
-					Tip("Multiplier on the size of the nudges; 1.0 matches the original mod.");
+					Tip("Multiplier on the size of the nudges; 1.0 is the default amount.");
 					ImGuiMCP::EndDisabled();
 				}
 			}
 
 			if (vr && ImGuiMCP::CollapsingHeader("VR", ImGuiMCP::ImGuiTreeNodeFlags_DefaultOpen)) {
 				ImGuiMCP::SliderFloat("Plane depth (m)", &s->vrDepth, Range::kVrDepth.min, Range::kVrDepth.max, "%.2f", ImGuiMCP::ImGuiSliderFlags_AlwaysClamp);
-				Tip("Distance of the head-locked visor plane. Most lenses can't focus nearer than ~0.5 m.");
-				ImGuiMCP::SliderFloat("Coverage", &s->vrCoverage, Range::kVrCoverage.min, Range::kVrCoverage.max, "%.2f", ImGuiMCP::ImGuiSliderFlags_AlwaysClamp);
-				Tip("Fraction of each eye's view the plane fills; above 1 over-fills so no edge gap shows.");
+				Tip("Distance of the head-locked visor plane, in metres. Lower brings it closer; 0 uses the closest supported depth.");
+				ImGuiMCP::SliderFloat("Plane overfill", &s->vrCoverage, Range::kVrCoverage.min, Range::kVrCoverage.max, "%.2f", ImGuiMCP::ImGuiSliderFlags_AlwaysClamp);
+				Tip("How far the visor plane reaches past your view. 1.00 ends at the edge; higher pushes the frame off screen so no gap shows. The art is scaled to match, so this does not enlarge the eye openings.");
 				PercentSlider("Art stretch", &s->vrStretch, Range::kUnit);
-				Tip("0% keeps the art's own proportions, as on a flat screen, and fills the rest of the view with the art's edge. 100% stretches the art to fill the whole view.");
+				Tip("How large the art is in your view. 0% keeps its proportions; 100% stretches it to fill the plane, which makes the openings wider and flatter.");
 			}
 
 			if (ImGuiMCP::CollapsingHeader("Armor filtering", 0)) {
 				ImGuiMCP::Checkbox("Ignore wigs", &s->skipWigs);
-				Tip("Wigs and hairstyles that use only the hair slot never have helmet art. They are left out of the coverage scan and never get an overlay. Rescan on the Debug page to refresh the counts.");
+				Tip("Wigs and hairstyles that use only the hair slot never have helmet art. They are left out of the coverage scan and never get an overlay.");
 				ImGuiMCP::Checkbox("Ignore circlets", &s->skipCirclets);
-				Tip("Circlets do not cover the view. They are left out of the coverage scan and never get an overlay. Rescan on the Debug page to refresh the counts.");
+				Tip("Circlets do not cover the view. They are left out of the coverage scan and never get an overlay.");
 			}
 
 			if (ImGuiMCP::CollapsingHeader("Overlay art sources", 0)) {
@@ -310,16 +353,16 @@ namespace HONG::UI
 			}
 
 			if (ImGuiMCP::CollapsingHeader("Compatibility", 0)) {
-				ImGuiMCP::Checkbox("Suppress original Helmet Overlays widget", &s->suppressOriginal);
-				Tip("Stops ScribeOverlays.esp's quests on load so its SWF doesn't draw a second overlay. Takes effect on the next load.");
+				ImGuiMCP::Checkbox("Suppress the other Helmet Overlays widget", &s->suppressOriginal);
+				Tip("Stops the ScribeOverlays.esp widget on load so a second overlay does not draw. Keep its ESP and art installed. Takes effect on the next load.");
 			}
 
-			if (ImGuiMCP::CollapsingHeader("Performance", 0)) {
+			if (!vr && ImGuiMCP::CollapsingHeader("Performance", 0)) {
 				ImGuiMCP::Checkbox("Skip shading behind opaque overlay", &s->opaqueMask);
-				Tip("Skips shading the scene behind the overlay's fully opaque pixels to save GPU time. Applies when the helmet is next equipped.");
+				Tip("Skips shading the scene behind fully opaque overlay pixels. Takes effect immediately; the overlay may flicker once while its art reloads.");
 				ImGuiMCP::BeginDisabled(!s->opaqueMask);
 				ImGuiMCP::SliderInt("Mask safety margin (px)", &s->maskMarginPx, static_cast<int>(Range::kMaskMargin.min), static_cast<int>(Range::kMaskMargin.max), "%d", ImGuiMCP::ImGuiSliderFlags_AlwaysClamp);
-				Tip(vr ? "How far inside the opaque area the mask stops. VR always keeps at least 48 px so both eyes stay covered. Applies when the helmet is next equipped." : "How far inside the opaque area the mask stops. Larger is safer against fringes, smaller saves a little more. Applies when the helmet is next equipped.");
+				Tip("How far inside the opaque area the mask stops, in art pixels. The shader adds a fixed 3 px screen inset on top of this, so the edge stays safe at any scale; raise this only if you still see a fringe.");
 				ImGuiMCP::EndDisabled();
 			}
 			SaveReloadRow();
@@ -462,7 +505,11 @@ namespace HONG::UI
 							ImGuiMCP::Text("Overlay art: %s (%.0f%% of the visible area has color)", current.color >= ArtMetrics::kColoredShare ? "colored" : "black mask", current.color * 100.0f);
 						}
 						ImGuiMCP::Text("Sound muffle strength: %.2f", current.strength);
-						ImGuiMCP::Text("Opaque mask: %.0f%% of the overlay", current.maskShare * 100.0f);
+						if (!REL::Module::IsVR()) {
+							// The percentage describes the mask that was built, not the stamp that ran, so both facts are shown.
+							const auto stamp = MaskPublish::CurrentRefusal();
+							ImGuiMCP::Text("Opaque mask: %.1f%% of the overlay (%s)", current.maskShare * 100.0f, MaskPublish::Summary(stamp).data());
+						}
 						if (current.light >= 0.0f) {
 							ImGuiMCP::Text("Light level: %.0f%%", current.light * 100.0f);
 						}
@@ -567,11 +614,27 @@ namespace HONG::UI
 					ImGuiMCP::TextDisabled("Checking art colors... %u of %u (matches fill in as it goes)", coverage.classified, coverage.covered);
 				}
 
-				constexpr std::size_t kMaxRows = 60;
-				std::size_t totalMatches = 0;
+				static bool unique = true;
+				ImGuiMCP::Checkbox("Unique overlay previews", &unique);
+				Tip("Groups helmets using the same overlay. Without art, groups identical attachments and world models. Turn off to browse every armor record. Coverage statistics still count all records.");
+				static std::size_t page = 0;
+				static std::string previousFilter;
+				static int previousArt = 0;
+				static bool previousUnique = true;
+				if (previousFilter != filter || previousArt != artFilter || previousUnique != unique) {
+					page = 0;
+					previousFilter = filter;
+					previousArt = artFilter;
+					previousUnique = unique;
+				}
+				constexpr std::size_t kPageSize = 60;
+				std::size_t pages = 1;
 				if (artFilter == kOrphanFilter) {
-					const auto orphans = Debug::FilterOrphans(filter, kMaxRows, totalMatches);
-					ImGuiMCP::Text("%zu overlay files with no helmet in your load order", totalMatches);
+					const auto result = Debug::FilterOrphans(filter, page, kPageSize);
+					page = result.page;
+					pages = result.pages;
+					const auto& orphans = result.items;
+					ImGuiMCP::Text("%zu overlay files with no helmet in your load order", result.total);
 					const Debug::OrphanArt* picked = nullptr;
 					for (const auto& orphan : orphans) {
 						const bool selected = orphan.path == previewingFile;
@@ -583,27 +646,26 @@ namespace HONG::UI
 							picked = &orphan;
 						}
 					}
-					if (totalMatches > orphans.size()) {
-						ImGuiMCP::TextDisabled("... narrow the filter to see more.");
-					}
 					if (picked) {
 						const auto search = NexusSearchUrl(picked->term + " armor");
 						Link(("Search Nexus for \"" + picked->term + "\"").c_str(), search.c_str());
 					}
 				} else {
-					const auto helmets = Debug::FilterHelmets(filter, shown, kMaxRows, totalMatches);
-					ImGuiMCP::Text("%zu matching helmets", totalMatches);
+					const auto result = Debug::FilterHelmets(filter, shown, page, kPageSize, unique);
+					page = result.page;
+					pages = result.pages;
+					const auto& helmets = result.items;
+					ImGuiMCP::Text("%zu matching %s", result.total, unique ? "unique previews" : "helmet records");
 					for (const auto& helmet : helmets) {
 						const char* tag = helmet.art == 0 ? "  (no art)" : "";
-						const std::string label = helmet.name + "  [" + helmet.plugin + "]" + tag + "##" + std::to_string(helmet.id);
+						const auto record = unique ? std::string{} : std::format("  [{:08X}]", helmet.id);
+						const std::string label = helmet.name + "  [" + helmet.plugin + "]" + record + tag + "##" + std::to_string(helmet.id);
 						if (ArtSelectable(label, helmet.id == previewing, helmet.color)) {
 							Debug::Preview(helmet.id);
 						}
 					}
-					if (totalMatches > helmets.size()) {
-						ImGuiMCP::TextDisabled("... narrow the filter to see more.");
-					}
 				}
+				BrowseNavigation(page, pages);
 			}
 			SaveReloadRow();
 		}

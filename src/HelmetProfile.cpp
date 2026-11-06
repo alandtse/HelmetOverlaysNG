@@ -15,14 +15,22 @@ namespace HONG::Profile
 
 		float ArmorFactor(ArmorClass a_class)
 		{
+			// Named cases, no default, so a new armour class fails to build instead of inheriting the light-armour
+			// factor. kUnknown is a real answer: an unrecognised armour type is treated as light.
+#pragma warning(push)
+#pragma warning(error: 4062)
 			switch (a_class) {
 			case ArmorClass::kHeavy:
 				return kHeavyFactor;
 			case ArmorClass::kClothing:
 				return kClothingFactor;
-			default:
+			case ArmorClass::kLight:
+				return kLightFactor;
+			case ArmorClass::kUnknown:
 				return kLightFactor;
 			}
+#pragma warning(pop)
+			return kLightFactor;
 		}
 	}
 

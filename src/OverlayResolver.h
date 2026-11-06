@@ -20,11 +20,9 @@ namespace HONG::Resolver
 	// mod's Papyrus monitor watches), or null when bare-headed.
 	RE::TESObjectARMO* FindWornHeadgear(RE::Actor* a_actor);
 
-	// Maps an armor to its overlay DDS path under Settings::overlayRoot, using
-	// the same convention as Helmet Overlays / Enhanced Edition: the armor's
-	// world model path (e.g. "Armor\Iron\Male\HelmetGND.nif") with .nif ->
-	// .dds. Tries the player's sex first, then the other. Records every
-	// candidate so a missing overlay can be diagnosed (and drawn by a modder).
+	// Maps an armor to its overlay DDS path under Settings::overlayRoot, following the Helmet Overlays / Enhanced
+	// Edition convention: the armor's world model path with .nif -> .dds, player's sex first. Records every
+	// candidate so a missing overlay can be diagnosed.
 	Resolution Resolve(const RE::TESObjectARMO* a_armor, bool a_female);
 
 	// Convenience: Resolve(...).path.

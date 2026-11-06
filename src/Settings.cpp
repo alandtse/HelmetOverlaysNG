@@ -2,6 +2,7 @@
 // Copyright (c) 2026 HelmetOverlaysNG contributors. See COPYING and EXCEPTIONS.md.
 
 #include "Settings.h"
+#include "AnimStyleCase.h"
 
 #include <SimpleIni.h>
 #include <algorithm>
@@ -27,7 +28,7 @@ namespace HONG
 		float GetFloat(const CSimpleIniA& a_ini, const char* a_section, const char* a_key, float a_default, Bounds a_range)
 		{
 			const auto value = static_cast<float>(a_ini.GetDoubleValue(a_section, a_key, a_default));
-			const auto clamped = std::isfinite(value) ? std::clamp(value, a_range.min, a_range.max) : a_default;
+			const auto clamped = Sanitise(value, a_default, a_range);
 			if (clamped != value) {
 				logger::warn("{} {} = {} is outside [{}, {}]; using {}.", a_section, a_key, value, a_range.min, a_range.max, clamped);
 			}
@@ -36,14 +37,8 @@ namespace HONG
 
 		const char* StyleName(AnimStyle a_style)
 		{
-			switch (a_style) {
-			case AnimStyle::kFade:
-				return "Fade";
-			case AnimStyle::kSlide:
-				return "Slide";
-			default:
-				return "Settle";
-			}
+			// Shared with the renderer's switch so the two cannot disagree about which styles exist.
+			return AnimStyleCase::Name(a_style).data();
 		}
 
 		AnimStyle ParseStyle(const std::string& a_value, AnimStyle a_default)

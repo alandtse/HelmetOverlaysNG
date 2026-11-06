@@ -3,61 +3,24 @@
 
 #include "OverlayMask.h"
 
+#include "MaskInset.h"
+#include "MaskPublish.h"
+#include "MaskShaders.h"
+
 #include <d3dcompiler.h>
 
 namespace HONG::OverlayMask
 {
 	namespace
 	{
-		constexpr char kVertexShader[] = R"(
-float4 main(uint id : SV_VertexID) : SV_Position
-{
-	float2 uv = float2((id << 1) & 2, id & 2);
-	return float4(uv * float2(2.0, -2.0) + float2(-1.0, 1.0), 0.0, 1.0);
-})";
-
-		// Maps the pixel to the overlay art and writes the near depth wherever the art is fully opaque.
-		constexpr char kPixelShader[] = R"(
-Texture2D<float> MaskTex : register(t0);
-SamplerState PointSampler : register(s0);
-
-cbuffer MaskCB : register(b0)
-{
-	float2 ViewSize;
-	float2 Center;
-	float2 Size;
-	float2 ViewOrigin;
-	float NearDepth;
-	float3 Padding;
-};
-
-float main(float4 position : SV_Position) : SV_Depth
-{
-	float2 maskUV = ((position.xy - ViewOrigin) / ViewSize - Center) / Size + 0.5;
-	if (any(maskUV < 0.0) || any(maskUV > 1.0))
-		discard;
-	if (MaskTex.SampleLevel(PointSampler, maskUV, 0) < 0.5)
-		discard;
-	return NearDepth;
-})";
-
-		struct Constants
-		{
-			float viewSize[2];
-			float center[2];
-			float size[2];
-			float origin[2];
-			float nearDepth;
-			float padding[3];
-		};
-
 		struct Pending
 		{
 			ComPtr<ID3D11ShaderResourceView> mask;
 			float center[2]{};
 			float size[2]{};
+			std::uint32_t maskWidth{};
+			std::uint32_t maskHeight{};
 			bool active{ false };
-			bool vr{ false };
 		};
 
 		struct Pipeline
@@ -67,12 +30,12 @@ float main(float4 position : SV_Position) : SV_Depth
 			ComPtr<ID3D11Buffer> constants;
 			ComPtr<ID3D11SamplerState> sampler;
 			ComPtr<ID3D11DepthStencilState> depthWrite;
-			ComPtr<ID3D11DepthStencilState> depthStencilWrite;
 			ComPtr<ID3D11RasterizerState> rasterizer;
 			ComPtr<ID3D11BlendState> noColor;
 		};
 
 		Pending g_pending;
+		std::atomic<std::uint64_t> g_stampedAt{ 0 };  // GetTickCount64 of the last accepted Publish, 0 when cleared
 		Pipeline g_pipeline;
 		bool g_pipelineFailed{ false };
 
@@ -89,8 +52,8 @@ float main(float4 position : SV_Position) : SV_Depth
 
 		bool CreatePipeline(ID3D11Device* a_device)
 		{
-			const auto vs = Compile(kVertexShader, "vs_5_0");
-			const auto ps = Compile(kPixelShader, "ps_5_0");
+			const auto vs = Compile(Shaders::kVertexShader, "vs_5_0");
+			const auto ps = Compile(Shaders::kPixelShader, "ps_5_0");
 			if (!vs || !ps) {
 				return false;
 			}
@@ -100,7 +63,7 @@ float main(float4 position : SV_Position) : SV_Depth
 			}
 
 			D3D11_BUFFER_DESC bufferDesc{};
-			bufferDesc.ByteWidth = sizeof(Constants);
+			bufferDesc.ByteWidth = sizeof(Shaders::Constants);
 			bufferDesc.Usage = D3D11_USAGE_DYNAMIC;
 			bufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
 			bufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
@@ -115,14 +78,6 @@ float main(float4 position : SV_Position) : SV_Depth
 			depthDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
 			depthDesc.DepthFunc = D3D11_COMPARISON_ALWAYS;
 
-			// VR passes skip pixels the hidden-area mesh marked with stencil 0xFF; flat has no such consumer.
-			D3D11_DEPTH_STENCIL_DESC stencilDesc = depthDesc;
-			stencilDesc.StencilEnable = TRUE;
-			stencilDesc.StencilReadMask = 0xFF;
-			stencilDesc.StencilWriteMask = 0xFF;
-			stencilDesc.FrontFace = { D3D11_STENCIL_OP_REPLACE, D3D11_STENCIL_OP_REPLACE, D3D11_STENCIL_OP_REPLACE, D3D11_COMPARISON_ALWAYS };
-			stencilDesc.BackFace = stencilDesc.FrontFace;
-
 			D3D11_RASTERIZER_DESC rasterDesc{};
 			rasterDesc.FillMode = D3D11_FILL_SOLID;
 			rasterDesc.CullMode = D3D11_CULL_NONE;
@@ -133,7 +88,6 @@ float main(float4 position : SV_Position) : SV_Depth
 			return SUCCEEDED(a_device->CreateBuffer(&bufferDesc, nullptr, g_pipeline.constants.GetAddressOf())) &&
 			       SUCCEEDED(a_device->CreateSamplerState(&samplerDesc, g_pipeline.sampler.GetAddressOf())) &&
 			       SUCCEEDED(a_device->CreateDepthStencilState(&depthDesc, g_pipeline.depthWrite.GetAddressOf())) &&
-			       SUCCEEDED(a_device->CreateDepthStencilState(&stencilDesc, g_pipeline.depthStencilWrite.GetAddressOf())) &&
 			       SUCCEEDED(a_device->CreateRasterizerState(&rasterDesc, g_pipeline.rasterizer.GetAddressOf())) &&
 			       SUCCEEDED(a_device->CreateBlendState(&blendDesc, g_pipeline.noColor.GetAddressOf()));
 		}
@@ -203,11 +157,11 @@ float main(float4 position : SV_Position) : SV_Depth
 		};
 
 		// The engine records which depth target the pass renders to before the D3D binding catches up, so the
-		// bound view cannot be trusted at this point (VR still has a shadow map bound).
+		// bound view cannot be trusted at this point.
 		bool RendersToMainDepth()
 		{
 			const auto shadowState = RE::BSGraphics::RendererShadowState::GetSingleton();
-			const auto index = REL::Module::IsVR() ? shadowState->GetVRRuntimeData().depthStencil : shadowState->GetRuntimeData().depthStencil;
+			const auto index = shadowState->GetRuntimeData().depthStencil;
 			return index == static_cast<std::uint32_t>(RE::RENDER_TARGETS_DEPTHSTENCIL::kMAIN);
 		}
 
@@ -216,9 +170,7 @@ float main(float4 position : SV_Position) : SV_Depth
 		bool ProjectionReversed()
 		{
 			const auto shadowState = RE::BSGraphics::RendererShadowState::GetSingleton();
-			const RE::BSGraphics::ViewData* view = REL::Module::IsVR() ?
-			                                           reinterpret_cast<const RE::BSGraphics::ViewData*>(std::addressof(shadowState->GetVRRuntimeData().cameraData)) :
-			                                           reinterpret_cast<const RE::BSGraphics::ViewData*>(std::addressof(shadowState->GetRuntimeData().cameraData));
+			const auto* view = reinterpret_cast<const RE::BSGraphics::ViewData*>(std::addressof(shadowState->GetRuntimeData().cameraData));
 			const auto* m = reinterpret_cast<const float*>(std::addressof(view->projMat));
 			if (std::abs(m[15]) > 1e-4f) {
 				return false;
@@ -244,8 +196,20 @@ float main(float4 position : SV_Position) : SV_Depth
 
 		void Draw()
 		{
+			// VR occlusion is the helper's; this renderer is flat only.
+			if (REL::Module::IsVR()) {
+				return;
+			}
 			if (!g_pending.active || g_pipelineFailed) {
 				Note("idle");
+				return;
+			}
+			if (OverlayController::GetSingleton()->HiddenMenuOpen()) {
+				Note("hidden menu open, not drawn");
+				return;
+			}
+			if (!MaskPublish::StampFresh(g_stampedAt.load(std::memory_order_relaxed), GetTickCount64())) {
+				Note("stale, not drawn");
 				return;
 			}
 			const auto renderer = RE::BSGraphics::Renderer::GetSingleton();
@@ -270,35 +234,18 @@ float main(float4 position : SV_Position) : SV_Depth
 				return;  // a shadow map, reflection or cubemap pass
 			}
 			ScopedState restore(context);
-			std::vector<D3D11_VIEWPORT> views;
-			if (g_pending.vr) {
-				// One side-by-side target: the same mask is drawn into each eye half.
-				ComPtr<ID3D11Resource> resource;
-				depthView->GetResource(resource.GetAddressOf());
-				ComPtr<ID3D11Texture2D> texture;
-				D3D11_TEXTURE2D_DESC desc{};
-				if (!resource || FAILED(resource.As(&texture))) {
-					return;
-				}
-				texture->GetDesc(&desc);
-				const auto state = RE::BSGraphics::State::GetSingleton();
-				const auto& stateData = state->GetRuntimeData();
-				const float eyeWidth = static_cast<float>(desc.Width) * 0.5f;
-				const float width = eyeWidth * stateData.dynamicResolutionWidthRatio;
-				const float height = static_cast<float>(desc.Height) * stateData.dynamicResolutionHeightRatio;
-				static bool logged = false;
-				if (!logged) {
-					logged = true;
-					logger::info("Overlay mask VR target {}x{}, screen {}x{}, DRS {:.3f}x{:.3f}", desc.Width, desc.Height, state->screenWidth, state->screenHeight,
-						stateData.dynamicResolutionWidthRatio, stateData.dynamicResolutionHeightRatio);
-				}
-				views = { { 0.0f, 0.0f, width, height, 0.0f, 1.0f }, { eyeWidth, 0.0f, width, height, 0.0f, 1.0f } };
-			} else {
-				const auto state = RE::BSGraphics::State::GetSingleton();
-				const auto& stateData = state->GetRuntimeData();
-				views = { { 0.0f, 0.0f, static_cast<float>(state->screenWidth) * stateData.dynamicResolutionWidthRatio, static_cast<float>(state->screenHeight) * stateData.dynamicResolutionHeightRatio, 0.0f, 1.0f } };
+			const auto state = RE::BSGraphics::State::GetSingleton();
+			const auto& stateData = state->GetRuntimeData();
+			const D3D11_VIEWPORT viewport{ 0.0f, 0.0f, static_cast<float>(state->screenWidth) * stateData.dynamicResolutionWidthRatio,
+				static_cast<float>(state->screenHeight) * stateData.dynamicResolutionHeightRatio, 0.0f, 1.0f };
+			if (viewport.Width < 1.0f || viewport.Height < 1.0f) {
+				return;
 			}
-			if (views[0].Width < 1.0f || views[0].Height < 1.0f) {
+
+			// Decide returns nothing rather than a zero step, so the draw below cannot run with a collapsed erosion.
+			const auto inset = MaskInset::Decide(viewport.Width, viewport.Height, g_pending.size[0], g_pending.size[1], g_pending.maskWidth, g_pending.maskHeight);
+			if (!inset) {
+				Note("no inset derivable");
 				return;
 			}
 
@@ -308,7 +255,7 @@ float main(float4 position : SV_Position) : SV_Depth
 			const FLOAT blendFactor[4]{};
 
 			context->OMSetRenderTargets(0, nullptr, depthView);
-			context->OMSetDepthStencilState(g_pending.vr ? g_pipeline.depthStencilWrite.Get() : g_pipeline.depthWrite.Get(), 0xFF);
+			context->OMSetDepthStencilState(g_pipeline.depthWrite.Get(), 0);
 			context->OMSetBlendState(g_pipeline.noColor.Get(), blendFactor, D3D11_DEFAULT_SAMPLE_MASK);
 			context->RSSetState(g_pipeline.rasterizer.Get());
 			context->IASetInputLayout(nullptr);
@@ -321,24 +268,23 @@ float main(float4 position : SV_Position) : SV_Depth
 
 			const bool reversed = ProjectionReversed();
 			const float nearDepth = reversed ? 1.0f : 0.0f;
-			Note(std::format("drawing{}, {} depth", g_pending.vr ? " (VR)" : "", reversed ? "reversed" : "standard"));
-			for (const auto& viewport : views) {
-				D3D11_MAPPED_SUBRESOURCE mapped{};
-				if (FAILED(context->Map(g_pipeline.constants.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped))) {
-					return;
-				}
-				*static_cast<Constants*>(mapped.pData) = Constants{
-					{ viewport.Width, viewport.Height },
-					{ g_pending.center[0], g_pending.center[1] },
-					{ g_pending.size[0], g_pending.size[1] },
-					{ viewport.TopLeftX, viewport.TopLeftY },
-					nearDepth,
-					{}
-				};
-				context->Unmap(g_pipeline.constants.Get(), 0);
-				context->RSSetViewports(1, &viewport);
-				context->Draw(3, 0);
+			Note(std::format("drawing, {} depth", reversed ? "reversed" : "standard"));
+			D3D11_MAPPED_SUBRESOURCE mapped{};
+			if (FAILED(context->Map(g_pipeline.constants.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped))) {
+				return;
 			}
+			*static_cast<Shaders::Constants*>(mapped.pData) = Shaders::Constants{
+				{ viewport.Width, viewport.Height },
+				{ g_pending.center[0], g_pending.center[1] },
+				{ g_pending.size[0], g_pending.size[1] },
+				{ viewport.TopLeftX, viewport.TopLeftY },
+				nearDepth,
+				{ inset->x(), inset->y() },
+				0.0f
+			};
+			context->Unmap(g_pipeline.constants.Get(), 0);
+			context->RSSetViewports(1, &viewport);
+			context->Draw(3, 0);
 		}
 
 		struct RenderWorldStart
@@ -354,30 +300,58 @@ float main(float4 position : SV_Position) : SV_Depth
 
 	void Install()
 	{
+		if (REL::Module::IsVR()) {
+			logger::info("HONG VR depth/stencil culling disabled; occlusion is helper-owned when supported. No world-mask hook installed.");
+			return;
+		}
 		REL::Relocation<std::uintptr_t> target{ RELOCATION_ID(99938, 106583), OFFSET(0x8E, 0x84) };  // BSShaderAccumulator::FinishAccumulatingCommonPasses
 		stl::write_thunk_call<RenderWorldStart>(target.address());
 		logger::info("Overlay mask hook installed.");
 	}
 
-	void Publish(const OverlayController::MaskCandidate& a_candidate, ArtFit::Fraction a_fit, float a_vrCoverage)
+	void Publish(const OverlayController::MaskCandidate& a_candidate, ArtFit::Fraction a_fit)
 	{
-		g_pending.active = a_candidate.allowed && a_fit.x > 0.0f && a_fit.y > 0.0f;
+		if (REL::Module::IsVR()) {
+			g_pending.active = false;
+			g_pending.mask.Reset();
+			g_stampedAt.store(0, std::memory_order_relaxed);
+			return;
+		}
+
+		// The stamp decision lives in MaskPublish::Why (this file is not in the test build). The on-screen size is
+		// only known after the fit is applied, so the axes are computed here. Designated initialisers: an appended
+		// Publishable field would otherwise default silently.
+		const MaskPublish::Publishable decision{
+			.permitted = a_candidate.permit.Allowed(),
+			.hasMask = a_candidate.mask.srv != nullptr,
+			.maskSized = a_candidate.mask.width > 0 && a_candidate.mask.height > 0,
+			.fitX = a_fit.x,
+			.fitY = a_fit.y,
+			.onScreenX = a_fit.x * a_candidate.scale,
+			.onScreenY = a_fit.y * a_candidate.scale,
+		};
+
+		const auto reason = MaskPublish::Why(decision);
+		MaskPublish::RecordRefusal(reason);
+		g_pending.active = reason == MaskPublish::Refusal::None;
 		if (!g_pending.active) {
 			g_pending.mask.Reset();
+			g_stampedAt.store(0, std::memory_order_relaxed);
+			// Logged only for faults; idle refusals would log every frame. The reason is named because a bad fit and an
+			// unbuilt mask print identical fit and scale.
+			if (MaskPublish::WorthLogging(reason)) {
+				logger::warn("{}", MaskPublish::Message(reason, a_fit.x, a_fit.y, a_candidate.scale));
+			}
 			return;
 		}
+
 		g_pending.mask = a_candidate.mask.srv;
-		g_pending.vr = REL::Module::IsVR();
-		if (g_pending.vr) {
-			// The head-locked plane covers each eye field of view, scaled by the coverage.
-			g_pending.center[0] = g_pending.center[1] = 0.5f;
-			g_pending.size[0] = a_fit.x * a_vrCoverage;
-			g_pending.size[1] = a_fit.y * a_vrCoverage;
-			return;
-		}
+		g_pending.maskWidth = a_candidate.mask.width;
+		g_pending.maskHeight = a_candidate.mask.height;
 		g_pending.center[0] = 0.5f + a_candidate.offset.x;
 		g_pending.center[1] = 0.5f + a_candidate.offset.y;
-		g_pending.size[0] = a_fit.x * a_candidate.scale;
-		g_pending.size[1] = a_fit.y * a_candidate.scale;
+		g_pending.size[0] = decision.onScreenX;
+		g_pending.size[1] = decision.onScreenY;
+		g_stampedAt.store(GetTickCount64(), std::memory_order_relaxed);
 	}
 }

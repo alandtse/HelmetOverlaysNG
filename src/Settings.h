@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <algorithm>
+#include <cmath>
 #include <cstdint>
 #include <functional>
 #include <mutex>
@@ -15,6 +17,8 @@
 
 namespace HONG
 {
+	inline constexpr float kDefaultLowPassHz = 2930.0f;
+
 	enum class AnimStyle : std::uint8_t
 	{
 		kFade,    // alpha only
@@ -28,6 +32,13 @@ namespace HONG
 		float min;
 		float max;
 	};
+
+	/// Sanitises a tunable read from disk: non-finite input falls back to the DEFAULT (an infinite panel is not a
+	/// large one), a finite value outside the range is clamped. Extracted because src/Settings.cpp is not in the test build.
+	inline float Sanitise(float a_value, float a_default, Bounds a_range)
+	{
+		return std::isfinite(a_value) ? std::clamp(a_value, a_range.min, a_range.max) : a_default;
+	}
 	namespace Range
 	{
 		inline constexpr Bounds kUnit{ 0.0f, 1.0f };
@@ -40,7 +51,7 @@ namespace HONG
 		inline constexpr Bounds kFade{ 0.0f, 2.0f };
 		inline constexpr Bounds kSwayStrength{ 0.0f, 4.0f };
 		inline constexpr Bounds kMotionStrength{ 0.0f, 2.0f };
-		inline constexpr Bounds kVrDepth{ 0.3f, 3.0f };
+		inline constexpr Bounds kVrDepth{ 0.0f, 3.0f };  // renderer maps values below 0.01 m to 0.01 m
 		inline constexpr Bounds kVrCoverage{ 0.5f, 1.6f };
 		inline constexpr Bounds kMaskMargin{ 4.0f, 32.0f };
 		inline constexpr Bounds kAutoArtWeight{ 0.0f, 1.0f };
@@ -67,7 +78,7 @@ namespace HONG
 		bool skipWigs{ true };
 		bool skipCirclets{ true };
 		// Shows the debug page in the in-game menu (live armor/path info + manual helmet preview).
-		bool debugTools{ false };
+		bool debugTools{ true };
 
 		// [Appearance]
 		float opacity{ 1.0f };
@@ -93,8 +104,8 @@ namespace HONG
 		float swayStrength{ 1.0f };
 
 		// [VR]
-		float vrDepth{ 0.6f };      // meters; head-locked visor plane
-		float vrCoverage{ 1.15f };  // > 1 over-fills each eye's FOV
+		float vrDepth{ 0.1f };      // meters; closer than the camera near plane, so occlusion clamps to it
+		float vrCoverage{ 1.25f };  // > 1 over-fills each eye's FOV
 		float vrStretch{ 0.5f };    // 0 keeps the art's proportions in the view, 1 stretches it to fill
 
 		// [Sound] - two independent effects; either, both or neither can be on.
@@ -103,8 +114,8 @@ namespace HONG
 		float attenuateSeconds{ 0.5f };
 		bool autoStrength{ true };     // scale both effects by helmet type (armor class and overlay art)
 		float autoArtWeight{ 0.65f };  // how much the overlay art outweighs the armor class
-		bool lowPass{ false };         // real low-pass "distortion" (muffled highs), see LowPass.cpp
-		float lowPassHz{ 1800.0f };
+		bool lowPass{ true };          // real low-pass "distortion" (muffled highs), see LowPass.cpp
+		float lowPassHz{ kDefaultLowPassHz };
 	};
 
 	class Settings : public SettingValues

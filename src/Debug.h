@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include "BrowsePage.h"
 #include "DebugOverride.h"
 #include "TintColor.h"
 
@@ -22,10 +23,11 @@ namespace HONG::Debug
 		std::uint32_t id{ 0 };
 		std::string name;
 		std::string plugin;
-		std::string model;      // world model path; empty until scanned
-		std::int8_t art{ -1 };  // -1 not scanned or no world model, 0 no overlay art, 1 has art
-		std::string overlay;    // VFS path of the art; empty without art
-		float color{ -1.0f };   // ArtMetrics::ColoredFraction of the art, -1 until classified
+		std::string model;       // world model path; empty until scanned
+		std::int8_t art{ -1 };   // -1 not scanned or no world model, 0 no overlay art, 1 has art
+		std::string overlay;     // VFS path of the art; empty without art
+		float color{ -1.0f };    // ArtMetrics::ColoredFraction of the art, -1 until classified
+		std::string appearance;  // sorted attachments and both world models; fallback grouping key
 	};
 
 	// An overlay file on disk that no helmet in the load order resolves to, such as art for an armor mod
@@ -79,10 +81,8 @@ namespace HONG::Debug
 	// Reads each helmet's art a few files per frame and records whether it has color or is a black mask.
 	void ClassifyArt();
 
-	// Playable head/hair armors, name and plugin matching `a_filter` (case-insensitive,
-	// empty = all), narrowed by `a_art`. At most `a_limit` are returned;
-	// `a_totalMatches` receives the full count.
-	std::vector<HelmetEntry> FilterHelmets(const std::string& a_filter, ArtFilter a_art, std::size_t a_limit, std::size_t& a_totalMatches);
+	// Matching records, optionally grouped by overlay (or appearance when no art exists), then paginated.
+	BrowsePage<HelmetEntry> FilterHelmets(const std::string& a_filter, ArtFilter a_art, std::size_t a_page, std::size_t a_pageSize, bool a_unique);
 
 	struct Current
 	{
@@ -105,9 +105,8 @@ namespace HONG::Debug
 	};
 	Current GetCurrent();
 
-	// Overlay files whose path contains `a_filter` (case-insensitive, empty = all) that no helmet uses. At most
-	// `a_limit` are returned; `a_totalMatches` receives the full count. Empty until the coverage scan finishes.
-	std::vector<OrphanArt> FilterOrphans(const std::string& a_filter, std::size_t a_limit, std::size_t& a_totalMatches);
+	// Matching unused overlay files, paginated. Empty until the coverage scan finishes.
+	BrowsePage<OrphanArt> FilterOrphans(const std::string& a_filter, std::size_t a_page, std::size_t a_pageSize);
 
 	// Draw this armor's overlay without equipping it; 0 / ClearPreview() goes
 	// back to the worn helmet.

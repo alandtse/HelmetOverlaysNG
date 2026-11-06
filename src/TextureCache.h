@@ -15,6 +15,11 @@ namespace HONG::TextureCache
 	// (failures are remembered so a bad file is not re-read every equip).
 	Srv Get(const std::string& a_path);
 
+	// Drops the cache when the mask settings differ from the ones the cached entries were built with,
+	// so a mask turned on (or a margin changed) takes effect without a restart. Returns true when it
+	// cleared, which means art already in a layer was built for different settings and must be refreshed.
+	bool NoteMaskSettings(bool a_enabled, int a_marginPx);
+
 	// The overlay's fully opaque region as an R8 texture (255 = opaque), built on load when the opaque
 	// mask setting is on. srv is null when it was not built or the file is not DXT3/DXT5.
 	struct Mask

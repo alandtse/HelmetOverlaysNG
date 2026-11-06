@@ -3,9 +3,11 @@
 
 #include "OverlayController.h"
 
+#include "AnimStyleCase.h"
 #include "Debug.h"
 #include "HelmetProfile.h"
 #include "LightLevel.h"
+#include "OverlayAlpha.h"
 #include "OverlayResolver.h"
 #include "ScreenColor.h"
 #include "Settings.h"
@@ -38,8 +40,10 @@ namespace HONG
 			}
 		}
 
-		constexpr float kMaskMinOpacity = 0.999f;
+		// The mask may only run when the art is drawn at alpha 255; test the byte actually drawn (OverlayAlpha::Byte).
 		constexpr float kMaskMaxAccel = 0.002f;  // display fraction per frame of change in speed, below the 8 px default margin
+		// The mask is predicted one frame ahead; if the art stops dead the error exceeds the art's bleed margin, so cap it inside that margin.
+		constexpr float kMaskMaxPrediction = 0.002f;  // display fraction, about 2-3 px
 
 		float SmoothStep(float a_t)
 		{
@@ -128,16 +132,17 @@ namespace HONG
 				return false;
 			}
 		}
-		if (settings->hideInMenus) {
-			const auto ui = RE::UI::GetSingleton();
-			if (!ui) {
-				return false;
-			}
-			if (settings->AnyHiddenMenu([ui](const std::string& a_menu) { return ui->IsMenuOpen(a_menu); })) {
-				return false;
-			}
+		return !HiddenMenuOpen();
+	}
+
+	bool OverlayController::HiddenMenuOpen() const
+	{
+		const auto settings = Settings::GetSingleton();
+		if (!settings->hideInMenus) {
+			return false;
 		}
-		return true;
+		const auto ui = RE::UI::GetSingleton();
+		return !ui || settings->AnyHiddenMenu([ui](const std::string& a_menu) { return ui->IsMenuOpen(a_menu); });
 	}
 
 	void OverlayController::Refresh()
@@ -215,7 +220,7 @@ namespace HONG
 			std::scoped_lock lock{ _diagLock };
 			_diag.maskShare = mask.share;
 		}
-		_layers.push_back({ std::move(srv), armor, 0.0f, true, std::move(mask) });
+		_layers.push_back({ std::move(srv), armor, *path, 0.0f, true, std::move(mask) });
 	}
 
 	void OverlayController::UpdateSway(float a_dt)
@@ -320,6 +325,22 @@ namespace HONG
 		const auto settings = Settings::GetSingleton();
 
 		_timeSinceRefresh += a_dt;
+		// A mask setting change invalidates the cached art, so drop the current layer and let the refresh
+		// rebuild it now rather than on the next equip.
+		if (TextureCache::NoteMaskSettings(settings->opaqueMask, settings->maskMarginPx)) {
+			// Reload the art in place: the mask lives in the cache entry, so the layer's copy is stale and the
+			// cache is empty. Re-Get rebuilds it with the new settings and keeps the layer's fade untouched.
+			for (auto& layer : _layers) {
+				if (layer.wanted) {
+					TextureCache::Get(layer.path);
+					layer.mask = TextureCache::MaskFor(layer.path);
+					if (layer.mask.srv) {
+						std::scoped_lock lock{ _diagLock };
+						_diag.maskShare = layer.mask.share;
+					}
+				}
+			}
+		}
 		if (_dirty.load(std::memory_order_relaxed) || _timeSinceRefresh >= kRefreshIntervalSeconds) {
 			Refresh();
 		}
@@ -356,29 +377,28 @@ namespace HONG
 			const auto motion = _motion.Current();
 			out.offset = { _sway.x + motion.x, _sway.y + motion.y + settings->verticalOffset };
 			out.scale = settings->scale;
-			switch (settings->animStyle) {
-			case AnimStyle::kSettle:
+			// The style decisions live in AnimStyleCase so an unhandled style fails to build.
+			if (AnimStyleCase::Settles(settings->animStyle)) {
 				out.scale = settings->scale * (1.0f + (1.0f - eased) * kSettleScale);
-				break;
-			case AnimStyle::kSlide:
+			}
+			if (AnimStyleCase::SlidesDown(settings->animStyle)) {
 				out.offset.y -= (1.0f - eased) * kSlideDistance;
-				break;
-			default:
-				break;
 			}
 			a_out.push_back(out);
 		}
 
 		_mask = {};
-		const bool vrPlacementMoved = REL::Module::IsVR() && (settings->scale != 1.0f || settings->verticalOffset != 0.0f);
-		if (settings->opaqueMask && !vrPlacementMoved && gated && settings->opacity >= kMaskMinOpacity && _layers.size() == 1 && a_out.size() == 1) {
+		// Only the flat-screen renderer consumes this next-frame depth-mask prediction.
+		const auto permit = OverlayAlpha::PermitMask(!REL::Module::IsVR(), settings->opaqueMask, gated, settings->opacity, _layers.size(), a_out.size());
+		if (permit.Allowed()) {
 			const auto& layer = _layers.front();
 			const auto& drawn = a_out.front();
 			// The mask is used by the next frame's world render, so it follows the overlay one frame ahead.
-			const ImVec2 velocity{ drawn.offset.x - _lastMaskOffset.x, drawn.offset.y - _lastMaskOffset.y };
+			const ImVec2 velocity{ std::clamp(drawn.offset.x - _lastMaskOffset.x, -kMaskMaxPrediction, kMaskMaxPrediction),
+				std::clamp(drawn.offset.y - _lastMaskOffset.y, -kMaskMaxPrediction, kMaskMaxPrediction) };
 			const bool smooth = std::abs(velocity.x - _lastMaskVelocity.x) <= kMaskMaxAccel && std::abs(velocity.y - _lastMaskVelocity.y) <= kMaskMaxAccel;
 			if (layer.wanted && layer.progress >= 1.0f && layer.mask.srv && smooth) {
-				_mask = { layer.mask, { drawn.offset.x + velocity.x, drawn.offset.y + velocity.y }, drawn.scale, true };
+				_mask = { layer.mask, { drawn.offset.x + velocity.x, drawn.offset.y + velocity.y }, drawn.scale, permit };
 			}
 			_lastMaskVelocity = velocity;
 		} else {

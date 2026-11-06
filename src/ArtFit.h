@@ -4,6 +4,7 @@
 #pragma once
 
 #include <algorithm>
+#include <cmath>
 
 namespace HONG::ArtFit
 {
@@ -28,5 +29,18 @@ namespace HONG::ArtFit
 		const float containX = std::min(1.0f, a_artAspect / a_displayAspect);
 		const float containY = std::min(1.0f, a_displayAspect / a_artAspect);
 		return { containX + (1.0f - containX) * stretch, containY + (1.0f - containY) * stretch };
+	}
+
+	// VR: the helper sizes its plane from the eye's field of view times the coverage, so the art shrinks by the
+	// same coverage to keep the painted eye openings at their flat-screen size.
+	inline Fraction ArtFitFor(float a_coverage)
+	{
+		// Library-boundary guard, unreachable from the plugin: an infinite coverage would give 1.0f / inf == 0, a zero
+		// fit, i.e. invisible art reported as drawn, and no downstream check rejects it.
+		if (!std::isfinite(a_coverage) || a_coverage <= 0.0f) {
+			return {};
+		}
+		const float inverse = 1.0f / a_coverage;
+		return { inverse, inverse };
 	}
 }

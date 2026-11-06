@@ -8,6 +8,7 @@
 #include "EyeView.h"
 #include "ImGuiVRHelperClientSDK.h"
 #include "Muffle.h"
+#include "OverlayAlpha.h"
 #include "OverlayController.h"
 #include "OverlayMask.h"
 #include "ScreenColor.h"
@@ -30,9 +31,8 @@ namespace HONG::Renderer
 		float g_appliedVrDepth{ 0.0f };
 		float g_appliedVrCoverage{ 0.0f };
 
-		// Stretches the art's outermost pixel rows and columns over the part of the display the art does not reach.
-		// The helper clamps to these ranges and reads a value of 0 or less as "use the global plane".
-		constexpr float kVrDepthMin = 0.2f;
+		// The helper accepts 0.01 m upwards; map slider zero there because it reads <= 0 as "use the global plane".
+		constexpr float kVrDepthMin = 0.01f;
 		constexpr float kVrDepthMax = 5.0f;
 		constexpr float kVrCoverageMin = 0.2f;
 		constexpr float kVrCoverageMax = 1.6f;
@@ -83,12 +83,18 @@ namespace HONG::Renderer
 			}
 		}
 
-		// How much of the display the art covers: cropped to fill on a flat screen, fitted into the eye view in VR.
+		// How much of the display the art covers: cropped to fill on a flat screen, fitted into the eye view in VR
+		// and then divided by the plane's coverage so the painted eye openings keep their flat-screen size.
 		ArtFit::Fraction CurrentFit(ImVec2 a_display)
 		{
 			constexpr float kArtAspect = kArtWidth / kArtHeight;
 			const float displayAspect = a_display.x / a_display.y;
-			return REL::Module::IsVR() ? ArtFit::Fit(displayAspect, kArtAspect, Settings::GetSingleton()->vrStretch) : ArtFit::Cover(displayAspect, kArtAspect);
+			if (!REL::Module::IsVR()) {
+				return ArtFit::Cover(displayAspect, kArtAspect);
+			}
+			const auto fit = ArtFit::Fit(displayAspect, kArtAspect, Settings::GetSingleton()->vrStretch);
+			const auto plane = g_appliedVrCoverage > 0.0f ? ArtFit::ArtFitFor(g_appliedVrCoverage) : ArtFit::Fraction{};
+			return { fit.x * plane.x, fit.y * plane.y };
 		}
 
 		void DrawLayers(ImVec2 a_display)
@@ -99,7 +105,7 @@ namespace HONG::Renderer
 			for (const auto& layer : g_layers) {
 				const ImVec2 size{ base.x * layer.scale, base.y * layer.scale };
 				const ImVec2 center{ a_display.x * (0.5f + layer.offset.x), a_display.y * (0.5f + layer.offset.y) };
-				const auto alpha = static_cast<std::uint8_t>(std::clamp(layer.alpha, 0.0f, 1.0f) * 255.0f);
+				const auto alpha = OverlayAlpha::Byte(layer.alpha);
 				const auto channel = [&](float a_color) { return static_cast<std::uint8_t>(std::clamp(layer.tint * a_color, 0.0f, 1.0f) * 255.0f); };
 				const ImVec2 min(center.x - size.x * 0.5f, center.y - size.y * 0.5f);
 				const ImVec2 max(center.x + size.x * 0.5f, center.y + size.y * 0.5f);
@@ -184,8 +190,6 @@ namespace HONG::Renderer
 					display.x = display.y * EyeView::Aspect();
 				}
 
-				OverlayMask::Publish(OverlayController::GetSingleton()->GetMaskCandidate(), CurrentFit(display), Settings::GetSingleton()->vrCoverage);
-
 				if (REL::Module::IsVR()) {
 					if (!g_vrHud.IsConnected()) {
 						return;
@@ -197,6 +201,7 @@ namespace HONG::Renderer
 						DrawLayers(display);
 					});
 				} else {
+					OverlayMask::Publish(OverlayController::GetSingleton()->GetMaskCandidate(), CurrentFit(display));
 					if (g_layers.empty()) {
 						return;
 					}

@@ -3,6 +3,7 @@
 
 #include "Debug.h"
 
+#include "ArtFilterMatch.h"
 #include "ArtMetrics.h"
 #include "ArtName.h"
 #include "OverlayController.h"
@@ -36,6 +37,13 @@ namespace HONG::Debug
 		std::size_t g_next = 0;
 		Coverage g_coverage;
 
+		std::string NormalizePath(std::string_view a_path)
+		{
+			auto path = ArtName::Lower(a_path);
+			std::ranges::replace(path, '/', '\\');
+			return path;
+		}
+
 		bool BuildEntries()
 		{
 			const auto handler = RE::TESDataHandler::GetSingleton();
@@ -61,9 +69,30 @@ namespace HONG::Debug
 				}
 				const auto file = armor->GetFile(0);
 				g_entries.push_back({ armor->GetFormID(), name, file ? std::string(file->GetFilename()) : std::string() });
+				auto& entry = g_entries.back();
+				// Like Open Shaders' crowd browser, ignore attachment ordering, not identity.
+				std::vector<RE::FormID> addons;
+				for (const auto addon : armor->armorAddons) {
+					if (addon) {
+						addons.push_back(addon->GetFormID());
+					}
+				}
+				std::ranges::sort(addons);
+				for (const auto id : addons) {
+					entry.appearance += std::format("{:08X},", id);
+				}
+				for (const auto& model : armor->worldModels) {
+					const auto path = model.GetModel();
+					entry.appearance += "|" + NormalizePath(path ? path : "");
+				}
+				// No appearance evidence: do not conflate unrelated model-less records.
+				if (addons.empty() && entry.appearance == "||") {
+					entry.appearance += std::to_string(entry.id);
+				}
 			}
 			std::ranges::sort(g_entries, [](const HelmetEntry& a_lhs, const HelmetEntry& a_rhs) {
-				return _stricmp(a_lhs.name.c_str(), a_rhs.name.c_str()) < 0;
+				const auto byName = _stricmp(a_lhs.name.c_str(), a_rhs.name.c_str());
+				return byName != 0 ? byName < 0 : a_lhs.id < a_rhs.id;
 			});
 			g_built = true;
 			return true;
@@ -145,18 +174,8 @@ namespace HONG::Debug
 
 		bool MatchesArt(const HelmetEntry& a_entry, ArtFilter a_art)
 		{
-			switch (a_art) {
-			case ArtFilter::kMissing:
-				return a_entry.art == 0;
-			case ArtFilter::kColored:
-				return a_entry.color >= ArtMetrics::kColoredShare;
-			case ArtFilter::kBlack:
-				return a_entry.color >= 0.0f && a_entry.color < ArtMetrics::kColoredShare;
-			case ArtFilter::kUnchecked:
-				return a_entry.art > 0 && a_entry.color < 0.0f;
-			default:
-				return true;
-			}
+			// The decision lives in ArtFilterMatch::Matches so the test build, which omits this file, can reach it.
+			return ArtFilterMatch::Matches(a_entry.art, a_entry.color, a_art);
 		}
 
 		void FinishScan()
@@ -283,44 +302,19 @@ namespace HONG::Debug
 		g_classifyNext = 0;
 	}
 
-	std::vector<HelmetEntry> FilterHelmets(const std::string& a_filter, ArtFilter a_art, std::size_t a_limit, std::size_t& a_totalMatches)
+	BrowsePage<HelmetEntry> FilterHelmets(const std::string& a_filter, ArtFilter a_art, std::size_t a_page, std::size_t a_pageSize, bool a_unique)
 	{
 		std::scoped_lock lock{ g_lock };
 		if (!g_built) {
 			BuildEntries();
 		}
-		std::vector<HelmetEntry> out;
-		a_totalMatches = 0;
-		for (const auto& entry : g_entries) {
-			if (!MatchesArt(entry, a_art)) {
-				continue;
-			}
-			if (!ContainsNoCase(entry.name, a_filter) && !ContainsNoCase(entry.plugin, a_filter)) {
-				continue;
-			}
-			if (out.size() < a_limit) {
-				out.push_back(entry);
-			}
-			++a_totalMatches;
-		}
-		return out;
+		return SelectPage(g_entries, a_page, a_pageSize, [&](const HelmetEntry& entry) { return MatchesArt(entry, a_art) && (ContainsNoCase(entry.name, a_filter) || ContainsNoCase(entry.plugin, a_filter)); }, [](const HelmetEntry& entry) { return entry.overlay.empty() ? "appearance:" + entry.appearance : "overlay:" + NormalizePath(entry.overlay); }, a_unique);
 	}
 
-	std::vector<OrphanArt> FilterOrphans(const std::string& a_filter, std::size_t a_limit, std::size_t& a_totalMatches)
+	BrowsePage<OrphanArt> FilterOrphans(const std::string& a_filter, std::size_t a_page, std::size_t a_pageSize)
 	{
 		std::scoped_lock lock{ g_lock };
-		std::vector<OrphanArt> out;
-		a_totalMatches = 0;
-		for (const auto& orphan : g_orphans) {
-			if (!ContainsNoCase(orphan.path, a_filter)) {
-				continue;
-			}
-			if (out.size() < a_limit) {
-				out.push_back(orphan);
-			}
-			++a_totalMatches;
-		}
-		return out;
+		return SelectPage(g_orphans, a_page, a_pageSize, [&](const OrphanArt& entry) { return ContainsNoCase(entry.path, a_filter); }, [](const OrphanArt& entry) { return entry.path; });
 	}
 
 	Current GetCurrent()

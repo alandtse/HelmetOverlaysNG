@@ -4,6 +4,7 @@
 #pragma once
 
 #include "Motion.h"
+#include "OverlayAlpha.h"
 #include "OverlayResolver.h"
 #include "TextureCache.h"
 #include "TintColor.h"
@@ -54,9 +55,15 @@ namespace HONG
 			TextureCache::Mask mask;
 			ImVec2 offset{ 0, 0 };
 			float scale{ 1.0f };
-			bool allowed{ false };
+			// Only OverlayAlpha::PermitMask can produce a permission, so this cannot be set true by a
+			// comparison written at the call site. See src/OverlayAlpha.h.
+			OverlayAlpha::MaskPermit permit;
 		};
 		const MaskCandidate& GetMaskCandidate() const { return _mask; }
+
+		// True while a menu the overlay hides for is open. The world render asks this itself: the published mask
+		// is a frame old, and the frame a menu opens on is the one the engine then leaves on screen behind it.
+		bool HiddenMenuOpen() const;
 
 		// True while the overlay is shown and the screen color tint (or its debug override) is on.
 		bool WantsScreenColor() const;
@@ -97,6 +104,7 @@ namespace HONG
 		{
 			TextureCache::Srv srv;
 			const RE::TESObjectARMO* armor{ nullptr };
+			std::string path;  // needed to rebuild the art when a mask setting changes
 			float progress{ 0.0f };
 			bool wanted{ true };
 			TextureCache::Mask mask;

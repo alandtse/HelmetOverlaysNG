@@ -8,13 +8,9 @@ namespace HONG::Muffle
 	// Resolve the sound categories to attenuate. Call at kDataLoaded.
 	void Init();
 
-	// a_amount is OverlayController::WornAmount() (0 = bare head, 1 = fully
-	// helmeted). Volume attenuation (bAttenuate): ramps the configured category
-	// volumes toward fAttenuateVolume and restores them exactly when it
-	// returns to 0. Call once per frame.
-	//
-	// The low-pass "distortion" (bLowPass) is a separate option: this also
-	// publishes its target to LowPass, which applies it on the audio thread.
+	// a_amount is OverlayController::WornAmount() (0 = bare head, 1 = fully helmeted). Ramps the configured
+	// category volumes toward fAttenuateVolume (bAttenuate) and restores them exactly at 0; also publishes the
+	// bLowPass target to LowPass. Call once per frame.
 	void Update(float a_amount);
 
 	// What a helmet with a_strength (OverlayController::MuffleStrength) does to the sound while worn.

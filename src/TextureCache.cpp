@@ -28,6 +28,11 @@ namespace HONG::TextureCache
 		ID3D11Device* g_device = nullptr;
 		std::list<Entry> g_lru;  // front = most recent
 
+		// The mask settings the cached entries were built with; a change clears the cache.
+		bool g_maskBuilt{ false };
+		int g_maskMargin{ 0 };
+		bool g_maskSettingsKnown{ false };
+
 		const Entry* Find(const std::string& a_path)
 		{
 			const auto it = std::ranges::find_if(g_lru, [&](const Entry& a_entry) { return _stricmp(a_entry.key.c_str(), a_path.c_str()) == 0; });
@@ -38,14 +43,12 @@ namespace HONG::TextureCache
 	namespace
 	{
 		constexpr std::uint32_t kMaskBlockPixels = 4;
-		constexpr std::uint32_t kVrMinMarginPixels = 48;
 
 		Mask CreateMask(const std::vector<std::uint8_t>& a_bytes)
 		{
 			Mask mask;
 			ArtMetrics::OpaqueMask built;
-			// The head-locked plane shifts a few percent of the eye width between the eyes, and one mask serves both.
-			const auto marginPx = std::max<std::uint32_t>(Settings::GetSingleton()->maskMarginPx, REL::Module::IsVR() ? kVrMinMarginPixels : 0);
+			const auto marginPx = Settings::GetSingleton()->maskMarginPx;
 			const auto marginBlocks = (marginPx + kMaskBlockPixels - 1) / kMaskBlockPixels;
 			if (!ArtMetrics::BuildOpaqueMask(a_bytes.data(), a_bytes.size(), marginBlocks, built)) {
 				return mask;
@@ -79,6 +82,25 @@ namespace HONG::TextureCache
 	void SetDevice(ID3D11Device* a_device)
 	{
 		g_device = a_device;
+		g_maskSettingsKnown = false;  // a new device owns the old textures
+		g_lru.clear();
+	}
+
+	bool NoteMaskSettings(bool a_enabled, int a_marginPx)
+	{
+		if (g_maskSettingsKnown && a_enabled == g_maskBuilt && a_marginPx == g_maskMargin) {
+			return false;
+		}
+		// The mask lives inside the same cache entry as the texture, so the only way to rebuild it is to
+		// drop the entry. Art in use keeps its SRV (already held by the layer) and reloads on the next refresh.
+		const bool changed = g_maskSettingsKnown;
+		g_maskSettingsKnown = true;
+		g_maskBuilt = a_enabled;
+		g_maskMargin = a_marginPx;
+		if (changed) {
+			g_lru.clear();
+		}
+		return changed;
 	}
 
 	Mask MaskFor(const std::string& a_path)
@@ -128,7 +150,8 @@ namespace HONG::TextureCache
 			} else {
 				openness = ArtMetrics::SeeThroughFraction(bytes.data(), bytes.size());
 				color = ArtMetrics::ColoredFraction(bytes.data(), bytes.size());
-				if (Settings::GetSingleton()->opaqueMask) {
+				// VR opacity/occlusion execution is owned by the helper, not this flat-screen mask.
+				if (!REL::Module::IsVR() && Settings::GetSingleton()->opaqueMask) {
 					mask = CreateMask(bytes);
 				}
 			}

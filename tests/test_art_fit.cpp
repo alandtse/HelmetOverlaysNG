@@ -4,6 +4,8 @@
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
 
+#include <limits>
+
 #include "ArtFit.h"
 
 using Catch::Approx;
@@ -67,4 +69,26 @@ TEST_CASE("fit clamps the stretch", "[artfit]")
 {
 	REQUIRE(Fit(0.94f, kArt, -1.0f).y == Approx(Fit(0.94f, kArt, 0.0f).y));
 	REQUIRE(Fit(0.94f, kArt, 4.0f).y == Approx(1.0f));
+}
+
+TEST_CASE("art fit undoes the plane's coverage so the eye openings stay flat-screen sized", "[artfit]")
+{
+	// Coverage 1.0 is the identity: the plane already matches the view.
+	const auto unity = ArtFitFor(1.0f);
+	REQUIRE(unity.x == Approx(1.0f));
+	REQUIRE(unity.y == Approx(1.0f));
+	for (const float coverage : { 0.5f, 0.8f, 1.0f, 1.25f, 1.6f }) {
+		const auto fit = ArtFitFor(coverage);
+		REQUIRE(fit.x == Approx(1.0f / coverage));
+		REQUIRE(fit.y == Approx(1.0f / coverage));
+	}
+}
+
+TEST_CASE("art fit is 1:1 when the plane is not in use or a value is unusable", "[artfit]")
+{
+	for (const float bad : { 0.0f, -1.0f, std::numeric_limits<float>::quiet_NaN(), std::numeric_limits<float>::infinity() }) {
+		const auto fit = ArtFitFor(bad);
+		REQUIRE(fit.x == Approx(1.0f));
+		REQUIRE(fit.y == Approx(1.0f));
+	}
 }

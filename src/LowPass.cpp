@@ -3,6 +3,7 @@
 
 #include "LowPass.h"
 
+#include "Settings.h"
 #include "SoundEffect.h"
 #include "VoiceTracker.h"
 
@@ -12,7 +13,7 @@ namespace HONG::LowPass
 	{
 		std::atomic<bool> g_enabled{ false };
 		std::atomic<float> g_amount{ 0.0f };
-		std::atomic<float> g_cutoffHz{ 1800.0f };
+		std::atomic<float> g_cutoffHz{ kDefaultLowPassHz };
 
 		VoiceTracker g_voices;
 
