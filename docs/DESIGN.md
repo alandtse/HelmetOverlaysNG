@@ -39,9 +39,19 @@ a menu; the controller also fades it out for the menus selected in the settings.
 ## VR
 
 The overlay is a HUD-mode client of imgui-vr-helper. Interface 006 (`SetHudPlane`) gives it its own
-head-locked plane (default 0.6 m, coverage 1.15 so the edges over-fill the view) instead of the helper's
+head-locked plane (default 0.1 m, overfill 1.25 so the edges over-fill the view) instead of the helper's
 global HUD plane. The helper composites it into each eye's target with that eye's projection, so the
 plane carries normal stereo parallax. Sway is disabled in VR.
+
+The helper sizes its plane from the eye's field of view times the overfill, so the art is divided by the
+same overfill (`ArtFit::ArtFitFor`, `src/Renderer.cpp`). Raising the overfill then only pushes the frame
+further past the edges; it does not enlarge the painted eye openings. Art stretch resizes the art inside
+the plane without touching it.
+
+This plugin writes no depth in VR. Culling the world behind the visor is a separate problem that has no
+working answer yet: writing depth from outside the renderer fixes nothing, because screen-space effects
+have already sampled that depth by the time the overlay draws. Doing it properly needs a coverage mask the
+renderer's own shading passes read. See [OPAQUE_MASK.md](OPAQUE_MASK.md).
 
 ## Sound
 
@@ -85,17 +95,18 @@ share a translation unit with `imgui.h`.
 
 ## Original mod coexistence
 
-`bSuppressOriginal` stops the quests of `ScribeOverlays.esp` on each save load and new game. In VR, with
-the ESP enabled, a save load logged "Suppressed 2 quest(s)" and `ScribeHelmet_Quest` reported not running;
-with the option off the same quest reported running. The original's widget never showed in VR captures
-either way, so the visual effect is untested; flat has not been run against an active ESP. The hook does
-not fire for a console `coc` start.
+`bSuppressOriginal` stops the quests of `ScribeOverlays.esp` on each save load and new game, so its widget
+cannot draw a second overlay. The ESP stays in the load order for its art.
 
 ## Open items
 
-1. Opaque-region mask (on by default): skip shading where the overlay is fully opaque, flat
-   and VR, through a depth write this plugin issues in its own world-batch hook. SE saves about 8-11% and
-   VR about 16-18% of the world pass. See [OPAQUE_MASK.md](OPAQUE_MASK.md).
+1. Opaque-region mask (on by default): skip shading where the overlay is fully opaque, through a depth
+   write this plugin issues in its own world-batch hook on flat screens. Verified in a GPU capture to write
+   the near plane where the visor is opaque and to make the world draws behind it fail the depth test. SE
+   saved about 8-11% of the world
+   pass in a scene where that pass costs 7.4 ms; an ordinary interior's pass is about 1 ms, so the same
+   percentage is under 0.1 ms of the frame. See [OPAQUE_MASK.md](OPAQUE_MASK.md), including a measured null
+   result; there is no VR equivalent.
 2. Per-armor sound profiles: derive defaults from armor type, weight, material keywords and slot
    coverage, with an optional override file.
 3. Head-hit feedback: `HitData::damageLimb == kHead` on the player, played as a material-appropriate

@@ -25,15 +25,15 @@ See [docs/DESIGN.md](docs/DESIGN.md) for how it works and the open items, and
 - Switches the overlay automatically with the worn helmet (head and hair slots).
 - Flat and VR (a head-locked plane through [imgui-vr-helper](https://github.com/alandtse/imgui-vr-helper)).
 - Opacity, scale, vertical position and edge extension, and animated on/off (fade, settle, slide).
-- Reactive lighting: dims the art in dark places, on by default with the original mod's values.
-- Screen color tint (flat): the art takes on the color of the scene around the screen edges, such as orange firelight. On by default; the Debug page compares it with the light-level look.
-- Flat only: jump, strafe and sprint nudges like the original, and optional head-turn sway.
+- Reactive lighting: dims the art in dark places, on by default.
+- Screen color tint: the art takes on the color of the scene around the screen edges, such as orange firelight. On by default; the Debug page compares it with the light-level look.
+- Flat only: jump, strafe and sprint nudges, and optional head-turn sway.
 - Drawn beneath all menus and faded out for the menus you choose.
 - A coverage report: how many helmets in your load order have overlay art, per plugin. Wigs and circlets
   can be ignored.
-- An opaque-pixel mask, on by default and unique to this mod: it skips shading the scene behind the overlay's fully opaque pixels, saving about 8-11% of the world pass on SE and 16-18% on VR.
+- An opaque-pixel mask (flat only): skips shading the scene behind the overlay's fully opaque pixels. Verified as working in a GPU capture; worth about 8-11% of the world pass on SE where that pass costs several ms, and in a typical interior the pass is about 1 ms, so it is under 0.1 ms of the frame. VR has no equivalent yet — see [OPAQUE_MASK.md](docs/OPAQUE_MASK.md).
 - Sound muffling scaled by helmet type, from the armor class and how closed the overlay art is.
-- Optional world-sound attenuation and a low-pass filter, as separate settings.
+- World-sound attenuation and a low-pass filter, on by default, as separate settings.
 - In-game settings and a debug page through [SKSE Menu Framework](https://github.com/alandtse/SKSE-Menu-Framework-3) (optional).
 - Can stop the original `ScribeOverlays.esp` widget from drawing a second overlay.
 
@@ -48,9 +48,9 @@ xmake build
 Set `SkyrimVRPath`, `SkyrimVRPluginTargets`, or `SkyrimPluginTargets` to deploy after a build. Close the
 game before building if it loaded a build older than the PDB path fix, or the linker cannot write the PDB.
 
-The overlay uses imgui-vr-helper interface 006 (per-client HUD plane), pinned to the v1.10.0 release. At
-runtime, VR needs that helper version; an older helper falls back to its global HUD plane. To build against
-an unreleased local helper checkout, set `HONG_VRHELPER_API` to its `api` folder.
+The overlay uses imgui-vr-helper interface 006 (per-client HUD plane). At runtime VR needs a helper
+that supports it; an older helper falls back to its global HUD plane. To build against an unreleased
+local helper checkout, set `HONG_VRHELPER_API` to its `api` folder.
 
 ## Config
 
