@@ -85,6 +85,7 @@ namespace HONG
 		float scale{ 1.0f };
 		float verticalOffset{ 0.0f };  // display height fraction, positive moves the art down
 		bool extendEdges{ true };      // stretch the art's edge pixels over any gap the scale or offset opens
+		bool hudOnTop{ true };         // flat only: draw the HUD over the art instead of the art over the HUD
 
 		// [Light] darken the art in dark places
 		bool reactiveLight{ true };

@@ -36,6 +36,10 @@ Hook points: the `BSGraphics::InitD3D` call site (`RELOCATION_ID(75595, 77226)`)
 and `HUDMenu::PostDisplay` (vfunc 6). HUDMenu draws beneath every other menu, so the overlay cannot cover
 a menu; the controller also fades it out for the menus selected in the settings.
 
+On flat, the first `PostDisplay` patches the HUD movie's `GFxMovieView::Display` (vfunc 0x26, filtered to the
+HUD's own movie) and the frame then runs from there, before the HUD draws, so the compass, bars and crosshair
+render on top of the overlay (`bHudOnTop`, default on; off draws from `PostDisplay` and the art covers the HUD). VR keeps the `PostDisplay` path, where the helper composites the plane.
+
 ## VR
 
 The overlay is a HUD-mode client of imgui-vr-helper. Interface 006 (`SetHudPlane`) gives it its own

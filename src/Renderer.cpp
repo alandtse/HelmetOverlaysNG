@@ -167,6 +167,84 @@ namespace HONG::Renderer
 			static inline REL::Relocation<decltype(thunk)> func;
 		};
 
+		void RunFrame()
+		{
+			const float dt = FrameDelta();
+			OverlayController::GetSingleton()->Update(dt, g_layers);
+			ScreenColor::Update(dt, OverlayController::GetSingleton()->WantsScreenColor());
+			Debug::Tick();
+			Muffle::Update(OverlayController::GetSingleton()->WornAmount() * Debug::SoundStrengthOverride().Apply(OverlayController::GetSingleton()->MuffleStrength()));
+
+			static const auto screenSize = RE::BSGraphics::Renderer::GetScreenSize();
+			ImVec2 display{ static_cast<float>(screenSize.width), static_cast<float>(screenSize.height) };
+			if (REL::Module::IsVR()) {
+				// The helper maps this canvas onto each eye's field of view, so give it the view's shape.
+				display.x = display.y * EyeView::Aspect();
+			}
+
+			if (REL::Module::IsVR()) {
+				if (!g_vrHud.IsConnected()) {
+					return;
+				}
+				ApplyVrPlane();
+				// Draws with no layers too, so the panel clears its last frame.
+				g_vrHud.RenderHud(g_d3dDevice, g_d3dContext, display, [display]() {
+					GImGui->NavWindowingTarget = nullptr;
+					DrawLayers(display);
+				});
+			} else {
+				OverlayMask::Publish(OverlayController::GetSingleton()->GetMaskCandidate(), CurrentFit(display));
+				if (g_layers.empty()) {
+					return;
+				}
+				ImGui_ImplDX11_NewFrame();
+				ImGui_ImplWin32_NewFrame();
+				ImGui::GetIO().DisplaySize = display;
+				ImGui::NewFrame();
+				DrawLayers(display);
+				ImGui::EndFrame();
+				ImGui::Render();
+				ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
+			}
+		}
+
+		// The vtable is shared by every Scaleform movie, so the thunk must filter on the HUD's own.
+		std::atomic<RE::GFxMovieView*> g_hudMovie{ nullptr };
+		std::atomic<bool> g_displayHooked{ false };
+		std::atomic<bool> g_ranBeforeHud{ false };
+
+		struct HudMovieDisplay
+		{
+			static void thunk(RE::GFxMovieView* a_movie)
+			{
+				if (a_movie && a_movie == g_hudMovie.load(std::memory_order_relaxed) && g_initialized.load() && Settings::GetSingleton()->hudOnTop) {
+					g_ranBeforeHud.store(true, std::memory_order_relaxed);
+					RunFrame();
+				}
+				func(a_movie);
+			}
+			static inline REL::Relocation<decltype(thunk)> func;
+			static inline std::size_t idx{ 0x26 };
+		};
+
+		void HookHudMovie()
+		{
+			if (REL::Module::IsVR() || g_displayHooked.load()) {
+				return;
+			}
+			const auto ui = RE::UI::GetSingleton();
+			const auto hud = ui ? ui->GetMenu<RE::HUDMenu>() : nullptr;
+			const auto movie = hud ? hud->uiMovie.get() : nullptr;
+			if (!movie) {
+				return;
+			}
+			REL::Relocation<std::uintptr_t> vtbl{ *reinterpret_cast<std::uintptr_t*>(movie) };
+			HudMovieDisplay::func = vtbl.write_vfunc(HudMovieDisplay::idx, HudMovieDisplay::thunk);
+			g_hudMovie.store(movie);
+			g_displayHooked.store(true);
+			logger::info("Overlay draws beneath the HUD.");
+		}
+
 		struct PostDisplay
 		{
 			static void thunk(RE::IMenu* a_menu)
@@ -176,44 +254,11 @@ namespace HONG::Renderer
 				if (!g_initialized.load()) {
 					return;
 				}
-
-				const float dt = FrameDelta();
-				OverlayController::GetSingleton()->Update(dt, g_layers);
-				ScreenColor::Update(dt, OverlayController::GetSingleton()->WantsScreenColor());
-				Debug::Tick();
-				Muffle::Update(OverlayController::GetSingleton()->WornAmount() * Debug::SoundStrengthOverride().Apply(OverlayController::GetSingleton()->MuffleStrength()));
-
-				static const auto screenSize = RE::BSGraphics::Renderer::GetScreenSize();
-				ImVec2 display{ static_cast<float>(screenSize.width), static_cast<float>(screenSize.height) };
-				if (REL::Module::IsVR()) {
-					// The helper maps this canvas onto each eye's field of view, so give it the view's shape.
-					display.x = display.y * EyeView::Aspect();
+				HookHudMovie();
+				if (g_ranBeforeHud.exchange(false, std::memory_order_relaxed)) {
+					return;
 				}
-
-				if (REL::Module::IsVR()) {
-					if (!g_vrHud.IsConnected()) {
-						return;
-					}
-					ApplyVrPlane();
-					// Draws with no layers too, so the panel clears its last frame.
-					g_vrHud.RenderHud(g_d3dDevice, g_d3dContext, display, [display]() {
-						GImGui->NavWindowingTarget = nullptr;
-						DrawLayers(display);
-					});
-				} else {
-					OverlayMask::Publish(OverlayController::GetSingleton()->GetMaskCandidate(), CurrentFit(display));
-					if (g_layers.empty()) {
-						return;
-					}
-					ImGui_ImplDX11_NewFrame();
-					ImGui_ImplWin32_NewFrame();
-					ImGui::GetIO().DisplaySize = display;
-					ImGui::NewFrame();
-					DrawLayers(display);
-					ImGui::EndFrame();
-					ImGui::Render();
-					ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
-				}
+				RunFrame();
 			}
 			static inline REL::Relocation<decltype(thunk)> func;
 			static inline std::size_t idx{ 0x6 };
