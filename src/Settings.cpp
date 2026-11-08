@@ -162,6 +162,7 @@ namespace HONG
 		scale = GetFloat(ini, "Appearance", "fScale", scale, Range::kScale);
 		verticalOffset = GetFloat(ini, "Appearance", "fVerticalOffset", verticalOffset, Range::kVerticalOffset);
 		extendEdges = ini.GetBoolValue("Appearance", "bExtendEdges", extendEdges);
+		hudOnTop = ini.GetBoolValue("Appearance", "bHudOnTop", hudOnTop);
 
 		reactiveLight = ini.GetBoolValue("Light", "bReactive", reactiveLight);
 		lightStrength = GetFloat(ini, "Light", "fStrength", lightStrength, Range::kLightStrength);
@@ -219,6 +220,7 @@ namespace HONG
 		ini.SetDoubleValue("Appearance", "fScale", scale);
 		ini.SetDoubleValue("Appearance", "fVerticalOffset", verticalOffset);
 		ini.SetBoolValue("Appearance", "bExtendEdges", extendEdges);
+		ini.SetBoolValue("Appearance", "bHudOnTop", hudOnTop);
 
 		ini.SetBoolValue("Light", "bReactive", reactiveLight);
 		ini.SetDoubleValue("Light", "fStrength", lightStrength);

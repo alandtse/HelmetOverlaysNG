@@ -283,6 +283,10 @@ namespace HONG::UI
 				Tip("Moves the art up (negative) or down (positive).");
 				ImGuiMCP::Checkbox("Extend image edges", &s->extendEdges);
 				Tip("Stretches the art's outermost pixels over any gap that a smaller scale or a vertical shift opens at the screen edge.");
+				if (!REL::Module::IsVR()) {
+					ImGuiMCP::Checkbox("HUD over overlay", &s->hudOnTop);
+					Tip("Draws the compass, bars and crosshair on top of the helmet art. Off puts the art over the HUD.");
+				}
 			}
 
 			if (ImGuiMCP::CollapsingHeader("Light", ImGuiMCP::ImGuiTreeNodeFlags_DefaultOpen)) {
