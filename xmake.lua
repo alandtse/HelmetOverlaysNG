@@ -10,7 +10,7 @@ includes("lib/commonlibsse-ng")
 set_project("HelmetOverlaysNG")
 set_license("GPL-3.0")
 
-local version = "1.0.0"
+local version = "1.0.1"
 local ver = version:split("%.")
 set_version(version)
 
