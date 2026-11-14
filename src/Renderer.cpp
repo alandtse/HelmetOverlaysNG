@@ -7,6 +7,7 @@
 #include "Debug.h"
 #include "EyeView.h"
 #include "ImGuiVRHelperClientSDK.h"
+#include "MenuOrder.h"
 #include "Muffle.h"
 #include "OverlayAlpha.h"
 #include "OverlayController.h"
@@ -208,16 +209,56 @@ namespace HONG::Renderer
 			}
 		}
 
-		// The vtable is shared by every Scaleform movie, so the thunk must filter on the HUD's own.
+		// The vtable is shared by every Scaleform movie, so the thunk must filter on the movies it draws beneath.
 		std::atomic<RE::GFxMovieView*> g_hudMovie{ nullptr };
+		std::atomic<RE::GFxMovieView*> g_firstMovie{ nullptr };
 		std::atomic<bool> g_displayHooked{ false };
 		std::atomic<bool> g_ranBeforeHud{ false };
+
+		const RE::IMenu* FirstDrawnMenu(const RE::UI* a_ui, const RE::HUDMenu* a_hud)
+		{
+			static std::vector<MenuOrder::Entry> entries;
+			entries.clear();
+			for (const auto& menu : a_ui->menuStack) {
+				entries.push_back({ menu.get() == static_cast<const RE::IMenu*>(a_hud), menu && menu->uiMovie });
+			}
+			const auto index = MenuOrder::FirstDrawn(entries);
+			return index == MenuOrder::kNone ? a_hud : a_ui->menuStack[static_cast<std::uint32_t>(index)].get();
+		}
+
+		std::string MenuName(const RE::UI* a_ui, const RE::IMenu* a_menu)
+		{
+			for (const auto& [name, entry] : a_ui->menuMap) {
+				if (entry.menu.get() == a_menu) {
+					return name.c_str();
+				}
+			}
+			return "?";
+		}
+
+		void RetargetFirstMovie()
+		{
+			const auto ui = RE::UI::GetSingleton();
+			const auto hud = ui ? ui->GetMenu<RE::HUDMenu>() : nullptr;
+			if (!hud || !hud->uiMovie) {
+				return;
+			}
+			g_hudMovie.store(hud->uiMovie.get());
+			const auto first = FirstDrawnMenu(ui, hud.get());
+			const auto movie = first->uiMovie.get();
+			if (g_firstMovie.exchange(movie) != movie) {
+				logger::info("Overlay draws beneath '{}'.", MenuName(ui, first));
+			}
+		}
 
 		struct HudMovieDisplay
 		{
 			static void thunk(RE::GFxMovieView* a_movie)
 			{
-				if (a_movie && a_movie == g_hudMovie.load(std::memory_order_relaxed) && g_initialized.load() && Settings::GetSingleton()->hudOnTop) {
+				// The HUD draws the frame too when the first menu did not, so the art never lands over the HUD.
+				const bool first = a_movie == g_firstMovie.load(std::memory_order_relaxed);
+				const bool hud = a_movie == g_hudMovie.load(std::memory_order_relaxed) && !g_ranBeforeHud.load(std::memory_order_relaxed);
+				if (a_movie && (first || hud) && g_initialized.load() && Settings::GetSingleton()->hudOnTop) {
 					g_ranBeforeHud.store(true, std::memory_order_relaxed);
 					RunFrame();
 				}
@@ -255,6 +296,9 @@ namespace HONG::Renderer
 					return;
 				}
 				HookHudMovie();
+				if (g_displayHooked.load()) {
+					RetargetFirstMovie();
+				}
 				if (g_ranBeforeHud.exchange(false, std::memory_order_relaxed)) {
 					return;
 				}
