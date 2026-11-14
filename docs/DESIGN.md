@@ -38,7 +38,10 @@ a menu; the controller also fades it out for the menus selected in the settings.
 
 On flat, the first `PostDisplay` patches the HUD movie's `GFxMovieView::Display` (vfunc 0x26, filtered to the
 HUD's own movie) and the frame then runs from there, before the HUD draws, so the compass, bars and crosshair
-render on top of the overlay (`bHudOnTop`, default on; off draws from `PostDisplay` and the art covers the HUD). VR keeps the `PostDisplay` path, where the helper composites the plane.
+render on top of the overlay. Mod widget menus can open at runtime below the HUD's depth and draw before it;
+each `PostDisplay` re-picks the first menu in `UI::menuStack` that has a movie (`MenuOrder::FirstDrawn`) and the
+frame runs from that movie's `Display`, so those widgets render on top too. The HUD's `Display` runs the frame
+when that menu did not draw (`bHudOnTop`, default on; off draws from `PostDisplay` and the art covers the HUD). VR keeps the `PostDisplay` path, where the helper composites the plane.
 
 ## VR
 
